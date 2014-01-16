@@ -16,6 +16,7 @@ func NewWebServer(port int) *WebServer {
 }
 
 func (srv *WebServer) Run() error {
+	logInfo("Web server starting on", srv.listenUrl)
 	return http.ListenAndServe(srv.listenUrl, srv)
 }
 
