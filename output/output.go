@@ -10,6 +10,7 @@ var PinOpener = gpio.OpenPin
 type Output interface {
 	Id() string
 	Active() bool
+	Close() error
 }
 
 type output struct {
@@ -31,4 +32,8 @@ func (out *output) Id() string {
 
 func (out *output) Active() bool {
 	return out.pin.Get()
+}
+
+func (out *output) Close() error {
+	return out.pin.Close()
 }

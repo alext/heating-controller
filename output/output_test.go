@@ -92,4 +92,19 @@ var _ = Describe("Heating control output", func() {
 			Expect(output.Active()).To(BeFalse())
 		})
 	})
+
+	Describe("closing the output", func() {
+		It("should close the gpio pin", func() {
+			mockPin.EXPECT().Close().Return(nil)
+
+			Expect(output.Close()).To(BeNil())
+		})
+
+		It("should return any error received closing the gpio pin", func() {
+			err := errors.New("Boom!")
+			mockPin.EXPECT().Close().Return(err)
+
+			Expect(output.Close()).To(Equal(err))
+		})
+	})
 })
