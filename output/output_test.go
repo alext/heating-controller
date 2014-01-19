@@ -93,6 +93,20 @@ var _ = Describe("Heating control output", func() {
 		})
 	})
 
+	Describe("Activating the output", func() {
+		It("should set the gpio pin", func() {
+			mockPin.EXPECT().Set()
+			output.Activate()
+		})
+	})
+
+	Describe("De-activating the output", func() {
+		It("should clear the gpio pin", func() {
+			mockPin.EXPECT().Clear()
+			output.Deactivate()
+		})
+	})
+
 	Describe("closing the output", func() {
 		It("should close the gpio pin", func() {
 			mockPin.EXPECT().Close().Return(nil)
