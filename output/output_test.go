@@ -78,19 +78,34 @@ var _ = Describe("Heating control output", func() {
 	})
 
 	Describe("reading the output state", func() {
+		var errStub *gomock.Call
+		BeforeEach(func() {
+			errStub = mockPin.EXPECT().Err().Return(nil)
+		})
+
 		It("should return true if the gpio value is 1", func() {
 			mockPin.EXPECT().Get().Return(true)
 
-			Expect(output.Active()).To(BeTrue())
+			a, e := output.Active()
+			Expect(a).To(BeTrue())
+			Expect(e).To(BeNil())
 		})
 
 		It("should return false otherwise", func() {
 			mockPin.EXPECT().Get().Return(false)
 
-			Expect(output.Active()).To(BeFalse())
+			a, e := output.Active()
+			Expect(a).To(BeFalse())
+			Expect(e).To(BeNil())
 		})
 
-		PIt("should handle errors", func() {
+		It("should handle errors", func() {
+			err := errors.New("computer says no")
+			errStub.Return(err)
+			mockPin.EXPECT().Get().Return(false)
+
+			_, e := output.Active()
+			Expect(e).To(Equal(err))
 		})
 	})
 
