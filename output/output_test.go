@@ -1,4 +1,4 @@
-package output_test
+package output
 
 import (
 	"code.google.com/p/gomock/gomock"
@@ -8,7 +8,6 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/heating-controller/mock_gpio"
-	. "github.com/alext/heating-controller/output"
 	"github.com/davecheney/gpio"
 	"testing"
 )
@@ -33,7 +32,7 @@ var _ = Describe("constructing the gpio instance", func() {
 	})
 
 	It("should open the given gpio pin in out mode", func() {
-		PinOpener = func(pin int, mode gpio.Mode) (gpio.Pin, error) {
+		pinOpener = func(pin int, mode gpio.Mode) (gpio.Pin, error) {
 			Expect(pin).To(Equal(12))
 			Expect(mode).To(Equal(gpio.ModeOutput))
 			return mock_gpio.NewMockPin(mockCtrl), nil
@@ -43,7 +42,7 @@ var _ = Describe("constructing the gpio instance", func() {
 	})
 
 	It("should return any error raised when opening", func() {
-		PinOpener = func(pin int, mode gpio.Mode) (gpio.Pin, error) {
+		pinOpener = func(pin int, mode gpio.Mode) (gpio.Pin, error) {
 			return nil, errors.New("computer says no")
 		}
 		out, err := NewOutput("foo", 12)
@@ -62,7 +61,7 @@ var _ = Describe("Heating control output", func() {
 	BeforeEach(func() {
 		mockCtrl = gomock.NewController(gomocktestreporter.New())
 		mockPin = mock_gpio.NewMockPin(mockCtrl)
-		PinOpener = func(pin int, mode gpio.Mode) (gpio.Pin, error) {
+		pinOpener = func(pin int, mode gpio.Mode) (gpio.Pin, error) {
 			return mockPin, nil
 		}
 	})

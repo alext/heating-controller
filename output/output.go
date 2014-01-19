@@ -5,7 +5,7 @@ import (
 )
 
 // Variable indirection to facilitate testing.
-var PinOpener = gpio.OpenPin
+var pinOpener = gpio.OpenPin
 
 type Output interface {
 	Id() string
@@ -21,7 +21,7 @@ type output struct {
 }
 
 func NewOutput(id string, pinNo int) (out Output, err error) {
-	pin, err := PinOpener(pinNo, gpio.ModeOutput)
+	pin, err := pinOpener(pinNo, gpio.ModeOutput)
 	if err != nil {
 		return nil, err
 	}
