@@ -20,7 +20,6 @@ func TestOutput(t *testing.T) {
 var _ = Describe("constructing the gpio instance", func() {
 	var (
 		mockCtrl *gomock.Controller
-		//output Output
 	)
 
 	BeforeEach(func() {
@@ -90,6 +89,9 @@ var _ = Describe("Heating control output", func() {
 
 			Expect(output.Active()).To(BeFalse())
 		})
+
+		PIt("should handle errors", func() {
+		})
 	})
 
 	Describe("Activating the output", func() {
@@ -97,12 +99,18 @@ var _ = Describe("Heating control output", func() {
 			mockPin.EXPECT().Set()
 			output.Activate()
 		})
+
+		PIt("should handle errors", func() {
+		})
 	})
 
 	Describe("De-activating the output", func() {
 		It("should clear the gpio pin", func() {
 			mockPin.EXPECT().Clear()
 			output.Deactivate()
+		})
+
+		PIt("should handle errors", func() {
 		})
 	})
 
