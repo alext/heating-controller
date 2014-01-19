@@ -10,8 +10,8 @@ var pinOpener = gpio.OpenPin
 type Output interface {
 	Id() string
 	Active() (bool, error)
-	Activate()
-	Deactivate()
+	Activate() error
+	Deactivate() error
 	Close() error
 }
 
@@ -38,12 +38,14 @@ func (out *output) Active() (res bool, err error) {
 	return
 }
 
-func (out *output) Activate() {
+func (out *output) Activate() error {
 	out.pin.Set()
+	return out.pin.Err()
 }
 
-func (out *output) Deactivate() {
+func (out *output) Deactivate() error {
 	out.pin.Clear()
+	return out.pin.Err()
 }
 
 func (out *output) Close() error {

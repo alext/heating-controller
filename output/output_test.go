@@ -110,22 +110,40 @@ var _ = Describe("Heating control output", func() {
 	})
 
 	Describe("Activating the output", func() {
-		It("should set the gpio pin", func() {
+		var errStub *gomock.Call
+		BeforeEach(func() {
+			errStub = mockPin.EXPECT().Err().Return(nil)
 			mockPin.EXPECT().Set()
-			output.Activate()
 		})
 
-		PIt("should handle errors", func() {
+		It("should set the gpio pin", func() {
+			Expect(output.Activate()).To(BeNil())
+		})
+
+		It("should handle errors", func() {
+			err := errors.New("computer says no")
+			errStub.Return(err)
+
+			Expect(output.Activate()).To(Equal(err))
 		})
 	})
 
 	Describe("De-activating the output", func() {
-		It("should clear the gpio pin", func() {
+		var errStub *gomock.Call
+		BeforeEach(func() {
+			errStub = mockPin.EXPECT().Err().Return(nil)
 			mockPin.EXPECT().Clear()
-			output.Deactivate()
 		})
 
-		PIt("should handle errors", func() {
+		It("should clear the gpio pin", func() {
+			Expect(output.Deactivate()).To(BeNil())
+		})
+
+		It("should handle errors", func() {
+			err := errors.New("computer says no")
+			errStub.Return(err)
+
+			Expect(output.Deactivate()).To(Equal(err))
 		})
 	})
 
