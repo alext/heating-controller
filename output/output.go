@@ -20,7 +20,7 @@ type output struct {
 	pin gpio.Pin
 }
 
-func NewOutput(id string, pinNo int) (out Output, err error) {
+func New(id string, pinNo int) (out Output, err error) {
 	pin, err := pinOpener(pinNo, gpio.ModeOutput)
 	if err != nil {
 		return nil, err

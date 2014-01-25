@@ -36,7 +36,7 @@ var _ = Describe("constructing the gpio instance", func() {
 			Expect(mode).To(Equal(gpio.ModeOutput))
 			return mock_gpio.NewMockPin(mockCtrl), nil
 		}
-		_, err := NewOutput("foo", 12)
+		_, err := New("foo", 12)
 		Expect(err).To(BeNil())
 	})
 
@@ -44,7 +44,7 @@ var _ = Describe("constructing the gpio instance", func() {
 		pinOpener = func(pin int, mode gpio.Mode) (gpio.Pin, error) {
 			return nil, errors.New("computer says no")
 		}
-		out, err := NewOutput("foo", 12)
+		out, err := New("foo", 12)
 		Expect(err.Error()).To(Equal("computer says no"))
 		Expect(out).To(BeNil())
 	})
@@ -70,7 +70,7 @@ var _ = Describe("Heating control output", func() {
 	})
 
 	JustBeforeEach(func() {
-		output, _ = NewOutput("foo", 22)
+		output, _ = New("foo", 22)
 	})
 
 	It("should return the id", func() {
