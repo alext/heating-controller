@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
+	"github.com/alext/heating-controller/output"
 	"log"
+	"time"
 )
 
 var port = flag.Int("port", 8080, "The port to listen on")
@@ -10,8 +12,31 @@ var port = flag.Int("port", 8080, "The port to listen on")
 func main() {
 	flag.Parse()
 
+	output, err := output.New("ch", 22)
+	if err != nil {
+		log.Fatal("Error creating output:", err)
+	}
+	for ; true ; {
+		log.Print("Activating output")
+		err = output.Activate()
+		if err != nil {
+			log.Fatal("Error activating output:", err)
+		}
+
+		log.Print("   sleeping...")
+		time.Sleep(5 * time.Second)
+
+		log.Print("Deactivating output")
+		err = output.Deactivate()
+		if err != nil {
+			log.Fatal("Error deactivating output:", err)
+		}
+
+		log.Print("   sleeping...")
+		time.Sleep(5 * time.Second)
+	}
 	srv := NewWebServer(*port)
-	err := srv.Run()
+	err = srv.Run()
 	if err != nil {
 		log.Fatal("Server.Run: ", err)
 	}
