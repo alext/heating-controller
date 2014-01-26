@@ -1,4 +1,4 @@
-package main
+package webserver
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ type WebServer struct {
 	listenUrl string
 }
 
-func NewWebServer(port int) *WebServer {
+func New(port int) *WebServer {
 	return &WebServer{
 		listenUrl: fmt.Sprintf(":%d", port),
 	}

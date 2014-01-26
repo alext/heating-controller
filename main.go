@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/alext/heating-controller/output"
+	"github.com/alext/heating-controller/webserver"
 	"log"
 	"time"
 )
@@ -35,7 +36,7 @@ func main() {
 		log.Print("   sleeping...")
 		time.Sleep(5 * time.Second)
 	}
-	srv := NewWebServer(*port)
+	srv := webserver.New(*port)
 	err = srv.Run()
 	if err != nil {
 		log.Fatal("Server.Run: ", err)

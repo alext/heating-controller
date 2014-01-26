@@ -1,13 +1,13 @@
-package main_test
+package webserver_test
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/alext/heating-controller/webserver"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"."
 )
 
 func TestWebServer(t *testing.T) {
@@ -18,7 +18,7 @@ func TestWebServer(t *testing.T) {
 var _ = Describe("Web Server", func() {
 
 	It("returns an OK response", func() {
-		server := main.NewWebServer(8080)
+		server := webserver.New(8080)
 		req, _ := http.NewRequest("GET", "http://example.com/", nil)
 
 		w := httptest.NewRecorder()
