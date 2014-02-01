@@ -81,7 +81,7 @@ var _ = Describe("Web Server", func() {
 				server.AddOutput(output2)
 			})
 
-			XIt("should return a list of outputs with their current state", func() {
+			It("should return a list of outputs with their current state", func() {
 				output1.EXPECT().Active().Return(true, nil)
 				output2.EXPECT().Active().Return(false, nil)
 
@@ -89,7 +89,13 @@ var _ = Describe("Web Server", func() {
 
 				Expect(w.Code).To(Equal(200))
 				Expect(w.Header().Get("Content-Type")).To(Equal("application/json"))
-				Expect(w.Body.String()).To(Equal("Some json"))
+
+				var data map[string]jsonOutput
+				json.Unmarshal(w.Body.Bytes(), &data)
+				Expect(data["one"].Id).To(Equal("one"))
+				Expect(data["one"].Active).To(Equal(true))
+				Expect(data["two"].Id).To(Equal("two"))
+				Expect(data["two"].Active).To(Equal(false))
 			})
 
 			It("should return details of an output when requested", func() {
@@ -100,7 +106,8 @@ var _ = Describe("Web Server", func() {
 				Expect(w.Code).To(Equal(200))
 				Expect(w.Header().Get("Content-Type")).To(Equal("application/json"))
 
-				data, _ := decodeJsonOutput(w.Body.Bytes())
+				var data jsonOutput
+				json.Unmarshal(w.Body.Bytes(), &data)
 				Expect(data.Id).To(Equal("one"))
 				Expect(data.Active).To(Equal(true))
 			})
@@ -125,13 +132,4 @@ func doGetRequest(server http.Handler, path string) (w *httptest.ResponseRecorde
 type jsonOutput struct {
 	Id     string `json: id`
 	Active bool   `json: active`
-}
-
-func decodeJsonOutput(data []byte) (jOut *jsonOutput, err error) {
-	//var jOut jsonOutput
-	err = json.Unmarshal(data, &jOut)
-	if err != nil {
-		return nil, err
-	}
-	return
 }

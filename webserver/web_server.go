@@ -48,15 +48,21 @@ func (srv *WebServer) rootHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func (srv *WebServer) outputIndexHandler(w http.ResponseWriter, req *http.Request) {
+	data := make(map[string]*jsonOutput, len(srv.outputs))
+	for id, out := range srv.outputs {
+		data[id], _ = newJsonOutput(out)
+	}
+	jsonData, _ := json.Marshal(data)
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte("{}"))
+	w.Write(jsonData)
 }
 
 func (srv *WebServer) outputHandler(w http.ResponseWriter, req *http.Request) {
 	if req.Method == "GET" {
 		parts := strings.SplitN(req.URL.Path, "/", 3)
 		if out, ok := srv.outputs[parts[2]]; ok {
-			jsonData, _ := newJsonOutput(out)
+			jOut, _ := newJsonOutput(out)
+			jsonData, _ := json.Marshal(jOut)
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(jsonData)
 		}
@@ -69,10 +75,10 @@ type jsonOutput struct {
 	Active bool   `json: active`
 }
 
-func newJsonOutput(out output.Output) ([]byte, error) {
+func newJsonOutput(out output.Output) (*jsonOutput, error) {
 	jOut := &jsonOutput{
 		Id: out.Id(),
 	}
 	jOut.Active, _ = out.Active()
-	return json.Marshal(jOut)
+	return jOut, nil
 }
