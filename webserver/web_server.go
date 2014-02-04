@@ -50,24 +50,45 @@ func (srv *WebServer) rootHandler(w http.ResponseWriter, req *http.Request) {
 func (srv *WebServer) outputIndexHandler(w http.ResponseWriter, req *http.Request) {
 	data := make(map[string]*jsonOutput, len(srv.outputs))
 	for id, out := range srv.outputs {
-		data[id], _ = newJsonOutput(out)
+		jOut, err := newJsonOutput(out)
+		if err != nil {
+			writeError(w, err)
+			return
+		}
+		data[id] = jOut
 	}
-	jsonData, _ := json.Marshal(data)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonData)
+	writeJson(w, data)
 }
 
 func (srv *WebServer) outputHandler(w http.ResponseWriter, req *http.Request) {
 	if req.Method == "GET" {
 		parts := strings.SplitN(req.URL.Path, "/", 3)
 		if out, ok := srv.outputs[parts[2]]; ok {
-			jOut, _ := newJsonOutput(out)
-			jsonData, _ := json.Marshal(jOut)
-			w.Header().Set("Content-Type", "application/json")
-			w.Write(jsonData)
+			jOut, err := newJsonOutput(out)
+			if err != nil {
+				writeError(w, err)
+				return
+			}
+			writeJson(w, jOut)
+			return
 		}
 	}
 	w.WriteHeader(http.StatusNotFound)
+}
+
+func writeJson(w http.ResponseWriter, data interface{}) {
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonData)
+}
+
+func writeError(w http.ResponseWriter, err error) {
+	w.WriteHeader(http.StatusInternalServerError)
+	w.Write([]byte(err.Error()))
 }
 
 type jsonOutput struct {
@@ -75,10 +96,13 @@ type jsonOutput struct {
 	Active bool   `json: active`
 }
 
-func newJsonOutput(out output.Output) (*jsonOutput, error) {
-	jOut := &jsonOutput{
+func newJsonOutput(out output.Output) (jOut *jsonOutput, err error) {
+	jOut = &jsonOutput{
 		Id: out.Id(),
 	}
-	jOut.Active, _ = out.Active()
-	return jOut, nil
+	jOut.Active, err = out.Active()
+	if err != nil {
+		return nil, fmt.Errorf("Error reading output '%s': %s", jOut.Id, err.Error())
+	}
+	return
 }

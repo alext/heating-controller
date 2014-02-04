@@ -3,6 +3,7 @@ package webserver_test
 import (
 	"code.google.com/p/gomock/gomock"
 	"encoding/json"
+	"errors"
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/thirdparty/gomocktestreporter"
 	. "github.com/onsi/gomega"
@@ -81,6 +82,16 @@ var _ = Describe("Web Server", func() {
 				Expect(data["two"].Id).To(Equal("two"))
 				Expect(data["two"].Active).To(Equal(false))
 			})
+
+			It("should return a 500 and error string on error reading output state", func() {
+				err := errors.New("Computer says no!")
+				output1.EXPECT().Active().Return(false, err)
+
+				w := doGetRequest(server, "/outputs")
+
+				Expect(w.Code).To(Equal(500))
+				Expect(w.Body.String()).To(Equal("Error reading output 'one': Computer says no!"))
+			})
 		})
 	})
 
@@ -117,6 +128,16 @@ var _ = Describe("Web Server", func() {
 			w := doGetRequest(server, "/outputs/foo")
 
 			Expect(w.Code).To(Equal(404))
+		})
+
+		It("should return a 500 and error string on error reading output state", func() {
+			err := errors.New("Computer says no!")
+			output1.EXPECT().Active().Return(false, err)
+
+			w := doGetRequest(server, "/outputs/one")
+
+			Expect(w.Code).To(Equal(500))
+			Expect(w.Body.String()).To(Equal("Error reading output 'one': Computer says no!"))
 		})
 	})
 })
