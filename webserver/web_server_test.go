@@ -22,10 +22,12 @@ func TestWebServer(t *testing.T) {
 var _ = Describe("Web Server", func() {
 	var (
 		mockCtrl *gomock.Controller
+		server *webserver.WebServer
 	)
 
 	BeforeEach(func() {
 		mockCtrl = gomock.NewController(gomocktestreporter.New())
+		server = webserver.New(8080)
 	})
 
 	AfterEach(func() {
@@ -33,37 +35,19 @@ var _ = Describe("Web Server", func() {
 	})
 
 	It("returns an OK response", func() {
-		server := webserver.New(8080)
-
 		w := doGetRequest(server, "/")
 
 		Expect(w.Code).To(Equal(200))
 		Expect(w.Body.String()).To(Equal("OK\n"))
 	})
 
-	Describe("Accessing outputs", func() {
-		var (
-			server *webserver.WebServer
-		)
+	Describe("outputs index", func() {
+		It("should return an empty list of outputs as json", func() {
+			w := doGetRequest(server, "/outputs")
 
-		BeforeEach(func() {
-			server = webserver.New(8080)
-		})
-
-		Context("with no given outputs", func() {
-			It("should return an empty list of outputs as json", func() {
-				w := doGetRequest(server, "/outputs")
-
-				Expect(w.Code).To(Equal(200))
-				Expect(w.Header().Get("Content-Type")).To(Equal("application/json"))
-				Expect(w.Body.String()).To(Equal("{}"))
-			})
-
-			It("should return a 404 trying to access a non-existent output", func() {
-				w := doGetRequest(server, "/outputs/foo")
-
-				Expect(w.Code).To(Equal(404))
-			})
+			Expect(w.Code).To(Equal(200))
+			Expect(w.Header().Get("Content-Type")).To(Equal("application/json"))
+			Expect(w.Body.String()).To(Equal("{}"))
 		})
 
 		Context("with some outputs", func() {
@@ -97,26 +81,42 @@ var _ = Describe("Web Server", func() {
 				Expect(data["two"].Id).To(Equal("two"))
 				Expect(data["two"].Active).To(Equal(false))
 			})
+		})
+	})
 
-			It("should return details of an output when requested", func() {
-				output1.EXPECT().Active().Return(true, nil)
+	Describe("reading an output", func() {
+		var (
+			output1 *mock_output.MockOutput
+			output2 *mock_output.MockOutput
+		)
 
-				w := doGetRequest(server, "/outputs/one")
+		BeforeEach(func() {
+			output1 = mock_output.NewMockOutput(mockCtrl)
+			output1.EXPECT().Id().AnyTimes().Return("one")
+			output2 = mock_output.NewMockOutput(mockCtrl)
+			output2.EXPECT().Id().AnyTimes().Return("two")
+			server.AddOutput(output1)
+			server.AddOutput(output2)
+		})
 
-				Expect(w.Code).To(Equal(200))
-				Expect(w.Header().Get("Content-Type")).To(Equal("application/json"))
+		It("should return details of an output when requested", func() {
+			output1.EXPECT().Active().Return(true, nil)
 
-				var data jsonOutput
-				json.Unmarshal(w.Body.Bytes(), &data)
-				Expect(data.Id).To(Equal("one"))
-				Expect(data.Active).To(Equal(true))
-			})
+			w := doGetRequest(server, "/outputs/one")
 
-			It("should 404 for a non-existent output", func() {
-				w := doGetRequest(server, "/outputs/foo")
+			Expect(w.Code).To(Equal(200))
+			Expect(w.Header().Get("Content-Type")).To(Equal("application/json"))
 
-				Expect(w.Code).To(Equal(404))
-			})
+			var data jsonOutput
+			json.Unmarshal(w.Body.Bytes(), &data)
+			Expect(data.Id).To(Equal("one"))
+			Expect(data.Active).To(Equal(true))
+		})
+
+		It("should 404 for a non-existent output", func() {
+			w := doGetRequest(server, "/outputs/foo")
+
+			Expect(w.Code).To(Equal(404))
 		})
 	})
 })
