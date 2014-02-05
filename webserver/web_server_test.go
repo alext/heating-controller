@@ -140,11 +140,82 @@ var _ = Describe("Web Server", func() {
 			Expect(w.Body.String()).To(Equal("Error reading output 'one': Computer says no!"))
 		})
 	})
+
+	Describe("changing an output state", func() {
+		var (
+			output1 *mock_output.MockOutput
+		)
+
+		BeforeEach(func() {
+			output1 = mock_output.NewMockOutput(mockCtrl)
+			output1.EXPECT().Id().AnyTimes().Return("one")
+			server.AddOutput(output1)
+		})
+
+		It("should activate the output and return the state", func() {
+			gomock.InOrder(
+				output1.EXPECT().Activate().Return(nil),
+				output1.EXPECT().Active().Return(true, nil),
+			)
+
+			w := doPutRequest(server, "/outputs/one/activate")
+
+			Expect(w.Code).To(Equal(200))
+
+			var data jsonOutput
+			json.Unmarshal(w.Body.Bytes(), &data)
+			Expect(data.Id).To(Equal("one"))
+			Expect(data.Active).To(Equal(true))
+		})
+
+		It("should deactivate the output and return the state", func() {
+			gomock.InOrder(
+				output1.EXPECT().Deactivate().Return(nil),
+				output1.EXPECT().Active().Return(false, nil),
+			)
+
+			w := doPutRequest(server, "/outputs/one/deactivate")
+
+			Expect(w.Code).To(Equal(200))
+
+			var data jsonOutput
+			json.Unmarshal(w.Body.Bytes(), &data)
+			Expect(data.Id).To(Equal("one"))
+			Expect(data.Active).To(Equal(false))
+		})
+
+		It("should return a 500 and error string if activating fails", func() {
+			err := errors.New("Computer says no!")
+			output1.EXPECT().Activate().Return(err)
+
+			w := doPutRequest(server, "/outputs/one/activate")
+
+			Expect(w.Code).To(Equal(500))
+			Expect(w.Body.String()).To(Equal("Error activating output 'one': Computer says no!"))
+		})
+
+		It("should return a 500 and error string if deactivating fails", func() {
+			err := errors.New("Computer says no!")
+			output1.EXPECT().Deactivate().Return(err)
+
+			w := doPutRequest(server, "/outputs/one/deactivate")
+
+			Expect(w.Code).To(Equal(500))
+			Expect(w.Body.String()).To(Equal("Error deactivating output 'one': Computer says no!"))
+		})
+	})
 })
 
 func doGetRequest(server http.Handler, path string) (w *httptest.ResponseRecorder) {
-	req, _ := http.NewRequest("GET", "http://example.com"+path, nil)
+	return doRequest(server, "GET", path)
+}
 
+func doPutRequest(server http.Handler, path string) (w *httptest.ResponseRecorder) {
+	return doRequest(server, "PUT", path)
+}
+
+func doRequest(server http.Handler, method, path string) (w *httptest.ResponseRecorder) {
+	req, _ := http.NewRequest(method, "http://example.com"+path, nil)
 	w = httptest.NewRecorder()
 	server.ServeHTTP(w, req)
 	return
