@@ -63,28 +63,44 @@ func (srv *WebServer) outputIndexHandler(w http.ResponseWriter, req *http.Reques
 func (srv *WebServer) outputHandler(w http.ResponseWriter, req *http.Request) {
 	parts := strings.Split(req.URL.Path, "/")
 	if out, ok := srv.outputs[parts[2]]; ok {
-		if req.Method == "GET" {
-			writeOutputJson(w, out)
+		switch len(parts) {
+		case 3:
+			if req.Method == "GET" {
+				writeOutputJson(w, out)
+			} else {
+				write405(w, "GET")
+			}
 			return
-		} else if req.Method == "PUT" {
+		case 4:
 			switch parts[3] {
-				case "activate":
+			case "activate":
+				if req.Method == "PUT" {
 					err := out.Activate()
 					if err != nil {
 						writeError(w, fmt.Errorf("Error activating output '%s': %s", out.Id(), err.Error()))
 						return
 					}
-					writeOutputJson(w, out)
+				} else {
+					write405(w, "PUT")
 					return
-				case "deactivate":
+				}
+			case "deactivate":
+				if req.Method == "PUT" {
 					err := out.Deactivate()
 					if err != nil {
 						writeError(w, fmt.Errorf("Error deactivating output '%s': %s", out.Id(), err.Error()))
 						return
 					}
-					writeOutputJson(w, out)
+				} else {
+					write405(w, "PUT")
 					return
+				}
+			default:
+				w.WriteHeader(http.StatusNotFound)
+				return
 			}
+			writeOutputJson(w, out)
+			return
 		}
 	}
 	w.WriteHeader(http.StatusNotFound)
@@ -107,6 +123,11 @@ func writeJson(w http.ResponseWriter, data interface{}) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonData)
+}
+
+func write405(w http.ResponseWriter, allowed string) {
+	w.Header().Set("Allow", allowed)
+	w.WriteHeader(http.StatusMethodNotAllowed)
 }
 
 func writeError(w http.ResponseWriter, err error) {
