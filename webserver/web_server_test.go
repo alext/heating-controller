@@ -90,7 +90,7 @@ var _ = Describe("Web Server", func() {
 				w := doGetRequest(server, "/outputs")
 
 				Expect(w.Code).To(Equal(500))
-				Expect(w.Body.String()).To(Equal("Error reading output 'one': Computer says no!"))
+				Expect(w.Body.String()).To(Equal("Error reading output 'one': Computer says no!\n"))
 			})
 		})
 	})
@@ -137,7 +137,7 @@ var _ = Describe("Web Server", func() {
 			w := doGetRequest(server, "/outputs/one")
 
 			Expect(w.Code).To(Equal(500))
-			Expect(w.Body.String()).To(Equal("Error reading output 'one': Computer says no!"))
+			Expect(w.Body.String()).To(Equal("Error reading output 'one': Computer says no!\n"))
 		})
 
 		It("should 404 trying to get a subpath of an output", func() {
@@ -202,7 +202,7 @@ var _ = Describe("Web Server", func() {
 			w := doPutRequest(server, "/outputs/one/activate")
 
 			Expect(w.Code).To(Equal(500))
-			Expect(w.Body.String()).To(Equal("Error activating output 'one': Computer says no!"))
+			Expect(w.Body.String()).To(Equal("Error activating output 'one': Computer says no!\n"))
 		})
 
 		It("should return a 500 and error string if deactivating fails", func() {
@@ -212,7 +212,7 @@ var _ = Describe("Web Server", func() {
 			w := doPutRequest(server, "/outputs/one/deactivate")
 
 			Expect(w.Code).To(Equal(500))
-			Expect(w.Body.String()).To(Equal("Error deactivating output 'one': Computer says no!"))
+			Expect(w.Body.String()).To(Equal("Error deactivating output 'one': Computer says no!\n"))
 		})
 
 		It("should 404 for a non-existent subpath of output", func() {

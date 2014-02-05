@@ -96,14 +96,14 @@ func (srv *WebServer) outputHandler(w http.ResponseWriter, req *http.Request) {
 					return
 				}
 			default:
-				w.WriteHeader(http.StatusNotFound)
+				http.NotFound(w, req)
 				return
 			}
 			writeOutputJson(w, out)
 			return
 		}
 	}
-	w.WriteHeader(http.StatusNotFound)
+	http.NotFound(w, req)
 }
 
 func writeOutputJson(w http.ResponseWriter, out output.Output) {
@@ -131,8 +131,7 @@ func write405(w http.ResponseWriter, allowed string) {
 }
 
 func writeError(w http.ResponseWriter, err error) {
-	w.WriteHeader(http.StatusInternalServerError)
-	w.Write([]byte(err.Error()))
+	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
 
 type jsonOutput struct {
