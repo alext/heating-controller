@@ -1,7 +1,7 @@
 package output
 
 import (
-	"github.com/davecheney/gpio"
+	"github.com/alext/gpio"
 )
 
 // Variable indirection to facilitate testing.

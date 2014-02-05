@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/heating-controller/mock_gpio"
-	"github.com/davecheney/gpio"
+	"github.com/alext/gpio"
 	"testing"
 )
 

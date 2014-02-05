@@ -5,7 +5,7 @@ package mock_gpio
 
 import (
 	gomock "code.google.com/p/gomock/gomock"
-	. "github.com/davecheney/gpio"
+	. "github.com/alext/gpio"
 )
 
 // Mock of Pin interface
