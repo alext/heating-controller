@@ -2,6 +2,7 @@ package output
 
 import (
 	"github.com/alext/gpio"
+	"sync"
 )
 
 // Variable indirection to facilitate testing.
@@ -18,6 +19,7 @@ type Output interface {
 type output struct {
 	id  string
 	pin gpio.Pin
+	mu  sync.Mutex
 }
 
 func New(id string, pinNo int) (out Output, err error) {
@@ -33,21 +35,29 @@ func (out *output) Id() string {
 }
 
 func (out *output) Active() (res bool, err error) {
+	out.mu.Lock()
+	defer out.mu.Unlock()
 	res = out.pin.Get()
 	err = out.pin.Err()
 	return
 }
 
 func (out *output) Activate() error {
+	out.mu.Lock()
+	defer out.mu.Unlock()
 	out.pin.Set()
 	return out.pin.Err()
 }
 
 func (out *output) Deactivate() error {
+	out.mu.Lock()
+	defer out.mu.Unlock()
 	out.pin.Clear()
 	return out.pin.Err()
 }
 
 func (out *output) Close() error {
+	out.mu.Lock()
+	defer out.mu.Unlock()
 	return out.pin.Close()
 }
