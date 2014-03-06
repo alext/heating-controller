@@ -1,32 +1,52 @@
 package timer
 
 import (
-	"github.com/alext/heating-controller/output"
 	"time"
+
+	"github.com/alext/heating-controller/output"
+)
+
+// variable indirection to enable testing
+var (
+	time_Now   = time.Now
+	time_After = time.After
 )
 
 type Timer interface {
 	Start()
+	Stop()
 }
 
 type timer struct {
-	out output.Output
+	out  output.Output
+	stop chan bool
 }
 
 func New(out output.Output) Timer {
-	return &timer{out: out}
+	return &timer{
+		out:  out,
+		stop: make(chan bool),
+	}
 }
 
 func (t *timer) Start() {
 	go t.run()
 }
 
+func (t *timer) Stop() {
+	t.stop <- true
+}
+
 func (t *timer) run() {
 	for {
-		now := time.Now().Local()
+		now := time_Now().Local()
 		at, do := t.next(now)
-		<- time.After(at.Sub(now))
-		do()
+		select {
+		case now = <-time_After(at.Sub(now)):
+			go do()
+		case <-t.stop:
+			return
+		}
 	}
 }
 
@@ -34,6 +54,17 @@ type event struct {
 	hour   int
 	min    int
 	active bool
+}
+
+func (e *event) actions(t *timer, actionDate time.Time) (at time.Time, do func()) {
+	year, month, day := actionDate.Date()
+	at = time.Date(year, month, day, e.hour, e.min, 0, 0, time.Local)
+	if e.active {
+		do = t.activate
+	} else {
+		do = t.deactivate
+	}
+	return
 }
 
 var events = [...]event{
@@ -44,30 +75,13 @@ var events = [...]event{
 }
 
 func (t *timer) next(now time.Time) (at time.Time, do func()) {
-	year, month, day := now.Date()
 	hour, min, _ := now.Clock()
-	var event event
-	found := false
-	for _, event = range events {
+	for _, event := range events {
 		if event.hour > hour || (event.hour == hour && event.min > min) {
-			at = time.Date(year, month, day, event.hour, event.min, 0, 0, time.Local)
-			found = true
-			break
+			return event.actions(t, now)
 		}
 	}
-	if ! found {
-		event = events[0]
-		at = time.Date(year, month, day, event.hour, event.min, 0, 0, time.Local)
-		at = at.AddDate(0, 0, 1)
-	}
-
-	if event.active {
-		do = t.activate
-	} else {
-		do = t.deactivate
-	}
-
-	return
+	return events[0].actions(t, now.AddDate(0, 0, 1))
 }
 
 func (t *timer) activate() {
