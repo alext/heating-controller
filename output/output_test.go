@@ -1,15 +1,16 @@
 package output
 
 import (
-	"code.google.com/p/gomock/gomock"
 	"errors"
+	"testing"
+
+	"code.google.com/p/gomock/gomock"
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/thirdparty/gomocktestreporter"
 	. "github.com/onsi/gomega"
 
-	"github.com/alext/heating-controller/mock_gpio"
 	"github.com/alext/gpio"
-	"testing"
+	"github.com/alext/heating-controller/mock_gpio"
 )
 
 func TestOutput(t *testing.T) {

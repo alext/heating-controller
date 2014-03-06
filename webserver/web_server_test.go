@@ -1,18 +1,19 @@
 package webserver_test
 
 import (
-	"code.google.com/p/gomock/gomock"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"code.google.com/p/gomock/gomock"
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/thirdparty/gomocktestreporter"
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/heating-controller/output/mock_output"
 	"github.com/alext/heating-controller/webserver"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestWebServer(t *testing.T) {
@@ -23,7 +24,7 @@ func TestWebServer(t *testing.T) {
 var _ = Describe("Web Server", func() {
 	var (
 		mockCtrl *gomock.Controller
-		server *webserver.WebServer
+		server   *webserver.WebServer
 	)
 
 	BeforeEach(func() {
