@@ -21,6 +21,7 @@ var _ = Describe("a basic timer", func() {
 		mockCtrl    *gomock.Controller
 		output      *mock_output.MockOutput
 		mockNow     time.Time
+		nowCount    int
 		timer       Timer
 		afterParam  time.Duration
 		afterCh     chan time.Time
@@ -33,7 +34,9 @@ var _ = Describe("a basic timer", func() {
 		timer = New(output)
 
 		mockNow = time.Now()
+		nowCount = 0
 		time_Now = func() time.Time {
+			nowCount++
 			return mockNow
 		}
 
@@ -53,7 +56,38 @@ var _ = Describe("a basic timer", func() {
 	})
 
 	AfterEach(func() {
+		timer.Stop()
 		mockCtrl.Finish()
+	})
+
+	Describe("starting and stopping the timer", func() {
+		It("should not be running when newly created", func() {
+			Expect(timer.Running()).To(BeFalse())
+		})
+
+		It("should start the timer", func() {
+			timer.Start()
+			Expect(timer.Running()).To(BeTrue())
+		})
+
+		It("should do nothing when attempting to start a running timer", func() {
+			timer.Start()
+			timer.Start()
+			<-afterNotify
+
+			Expect(nowCount).To(Equal(1))
+		})
+
+		It("should stop the timer", func() {
+			timer.Start()
+			timer.Stop()
+			Expect(timer.Running()).To(BeFalse())
+		})
+
+		It("should do nothing when attempting to stop a non-running timer", func(done Done) {
+			timer.Stop()
+			close(done)
+		}, 0.5)
 	})
 
 	Describe("firing events on the regular schedule", func() {
@@ -71,7 +105,6 @@ var _ = Describe("a basic timer", func() {
 			mockNow = todayAt(6, 30, 0)
 			afterCh <- mockNow
 			<-afterNotify
-			timer.Stop()
 		})
 
 		It("should deactivate the output at 7:30", func() {
@@ -87,7 +120,6 @@ var _ = Describe("a basic timer", func() {
 			mockNow = todayAt(7, 30, 0)
 			afterCh <- mockNow
 			<-afterNotify
-			timer.Stop()
 		})
 
 		It("should activate the output at 17:00", func() {
@@ -103,7 +135,6 @@ var _ = Describe("a basic timer", func() {
 			mockNow = todayAt(17, 0, 0)
 			afterCh <- mockNow
 			<-afterNotify
-			timer.Stop()
 		})
 
 		It("should deactivate the output at 21:00", func() {
@@ -119,7 +150,6 @@ var _ = Describe("a basic timer", func() {
 			mockNow = todayAt(21, 0, 0)
 			afterCh <- mockNow
 			<-afterNotify
-			timer.Stop()
 		})
 	})
 })

@@ -1,6 +1,7 @@
 package timer
 
 import (
+	"sync"
 	"time"
 
 	"github.com/alext/heating-controller/output"
@@ -15,11 +16,14 @@ var (
 type Timer interface {
 	Start()
 	Stop()
+	Running() bool
 }
 
 type timer struct {
-	out  output.Output
-	stop chan bool
+	out     output.Output
+	running bool
+	lock    sync.Mutex
+	stop    chan bool
 }
 
 func New(out output.Output) Timer {
@@ -30,11 +34,27 @@ func New(out output.Output) Timer {
 }
 
 func (t *timer) Start() {
-	go t.run()
+	t.lock.Lock()
+	defer t.lock.Unlock()
+	if !t.running {
+		t.running = true
+		go t.run()
+	}
 }
 
 func (t *timer) Stop() {
-	t.stop <- true
+	t.lock.Lock()
+	defer t.lock.Unlock()
+	if t.running {
+		t.running = false
+		t.stop <- true
+	}
+}
+
+func (t *timer) Running() bool {
+	t.lock.Lock()
+	defer t.lock.Unlock()
+	return t.running
 }
 
 func (t *timer) run() {
