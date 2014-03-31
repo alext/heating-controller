@@ -90,7 +90,74 @@ var _ = Describe("a basic timer", func() {
 		}, 0.5)
 	})
 
-	Describe("firing events on the regular schedule", func() {
+	Describe("firing events as scheduled", func() {
+
+		BeforeEach(func() {
+			timer.AddEntry(6, 30, TurnOn)
+			timer.AddEntry(7, 45, TurnOff)
+			timer.AddEntry(17, 33, TurnOn)
+			timer.AddEntry(21, 12, TurnOff)
+		})
+
+		PIt("should fire the given events in order", func() {
+			mockNow = todayAt(6, 20, 0)
+
+			timer.Start()
+			<-afterNotify
+
+			expectedDuration, _ := time.ParseDuration("10m")
+			Expect(afterParam).To(Equal(expectedDuration))
+
+			output.EXPECT().Activate().Return(nil)
+			mockNow = todayAt(6, 30, 0)
+			afterCh <- mockNow
+			<-afterNotify
+
+			expectedDuration, _ = time.ParseDuration("1h15m")
+			Expect(afterParam).To(Equal(expectedDuration))
+
+			output.EXPECT().Deactivate().Return(nil)
+			mockNow = todayAt(7, 45, 0)
+			afterCh <- mockNow
+			<-afterNotify
+
+			expectedDuration, _ = time.ParseDuration("9h48m")
+			Expect(afterParam).To(Equal(expectedDuration))
+
+			output.EXPECT().Activate().Return(nil)
+			mockNow = todayAt(17, 33, 0)
+			afterCh <- mockNow
+			<-afterNotify
+		})
+
+		PIt("should wrap around at the end of the day", func() {
+			mockNow = todayAt(20, 04, 23)
+
+			timer.Start()
+			<-afterNotify
+
+			expectedDuration, _ := time.ParseDuration("7m37s")
+			Expect(afterParam).To(Equal(expectedDuration))
+
+			output.EXPECT().Deactivate().Return(nil)
+			mockNow = todayAt(21, 12, 0)
+			afterCh <- mockNow
+			<-afterNotify
+
+			expectedDuration, _ = time.ParseDuration("9h18m")
+			Expect(afterParam).To(Equal(expectedDuration))
+
+			output.EXPECT().Activate().Return(nil)
+			mockNow = todayAt(6, 30, 0)
+			afterCh <- mockNow
+			<-afterNotify
+		})
+
+		PIt("should handle events added in a non-sequential order", func() {
+		})
+
+		PIt("should handle events added after the timer has been started", func() {
+		})
 
 		It("should activate the output at 6:30", func() {
 			mockNow = todayAt(6, 20, 0)

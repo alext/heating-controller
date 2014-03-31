@@ -24,6 +24,7 @@ type Timer interface {
 	Start()
 	Stop()
 	Running() bool
+	AddEntry(hour, minute int, a action)
 }
 
 type timer struct {
@@ -62,6 +63,9 @@ func (t *timer) Running() bool {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 	return t.running
+}
+
+func (t *timer) AddEntry(hour, min int, a action) {
 }
 
 func (t *timer) run() {
