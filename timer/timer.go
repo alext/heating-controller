@@ -13,6 +13,13 @@ var (
 	time_After = time.After
 )
 
+type action int
+
+const (
+	TurnOn action = iota
+	TurnOff
+)
+
 type Timer interface {
 	Start()
 	Stop()
@@ -73,13 +80,13 @@ func (t *timer) run() {
 type event struct {
 	hour   int
 	min    int
-	active bool
+	action action
 }
 
 func (e *event) actions(t *timer, actionDate time.Time) (at time.Time, do func()) {
 	year, month, day := actionDate.Date()
 	at = time.Date(year, month, day, e.hour, e.min, 0, 0, time.Local)
-	if e.active {
+	if e.action == TurnOn {
 		do = t.activate
 	} else {
 		do = t.deactivate
@@ -88,10 +95,10 @@ func (e *event) actions(t *timer, actionDate time.Time) (at time.Time, do func()
 }
 
 var events = [...]event{
-	{6, 30, true},
-	{7, 30, false},
-	{17, 00, true},
-	{21, 00, false},
+	{6, 30, TurnOn},
+	{7, 30, TurnOff},
+	{17, 00, TurnOn},
+	{21, 00, TurnOff},
 }
 
 func (t *timer) next(now time.Time) (at time.Time, do func()) {
