@@ -27,8 +27,28 @@ type Timer interface {
 	AddEntry(hour, minute int, a action)
 }
 
+type entry struct {
+	hour   int
+	min    int
+	action action
+}
+
+func (e *entry) actionTime(actionDate time.Time) time.Time {
+	year, month, day := actionDate.Date()
+	return time.Date(year, month, day, e.hour, e.min, 0, 0, time.Local)
+}
+
+func (e *entry) do(out output.Output) {
+	if e.action == TurnOn {
+		out.Activate()
+	} else {
+		out.Deactivate()
+	}
+}
+
 type timer struct {
 	out     output.Output
+	entries []*entry
 	running bool
 	lock    sync.Mutex
 	stop    chan bool
@@ -36,8 +56,9 @@ type timer struct {
 
 func New(out output.Output) Timer {
 	return &timer{
-		out:  out,
-		stop: make(chan bool),
+		out:     out,
+		entries: make([]*entry, 0),
+		stop:    make(chan bool),
 	}
 }
 
@@ -66,59 +87,29 @@ func (t *timer) Running() bool {
 }
 
 func (t *timer) AddEntry(hour, min int, a action) {
+	e := &entry{hour: hour, min: min, action: a}
+	t.entries = append(t.entries, e)
 }
 
 func (t *timer) run() {
 	for {
 		now := time_Now().Local()
-		at, do := t.next(now)
+		at, entry := t.next(now)
 		select {
 		case now = <-time_After(at.Sub(now)):
-			go do()
+			go entry.do(t.out)
 		case <-t.stop:
 			return
 		}
 	}
 }
 
-type event struct {
-	hour   int
-	min    int
-	action action
-}
-
-func (e *event) actions(t *timer, actionDate time.Time) (at time.Time, do func()) {
-	year, month, day := actionDate.Date()
-	at = time.Date(year, month, day, e.hour, e.min, 0, 0, time.Local)
-	if e.action == TurnOn {
-		do = t.activate
-	} else {
-		do = t.deactivate
-	}
-	return
-}
-
-var events = [...]event{
-	{6, 30, TurnOn},
-	{7, 30, TurnOff},
-	{17, 00, TurnOn},
-	{21, 00, TurnOff},
-}
-
-func (t *timer) next(now time.Time) (at time.Time, do func()) {
+func (t *timer) next(now time.Time) (at time.Time, e *entry) {
 	hour, min, _ := now.Clock()
-	for _, event := range events {
-		if event.hour > hour || (event.hour == hour && event.min > min) {
-			return event.actions(t, now)
+	for _, entry := range t.entries {
+		if entry.hour > hour || (entry.hour == hour && entry.min > min) {
+			return entry.actionTime(now), entry
 		}
 	}
-	return events[0].actions(t, now.AddDate(0, 0, 1))
-}
-
-func (t *timer) activate() {
-	t.out.Activate()
-}
-
-func (t *timer) deactivate() {
-	t.out.Deactivate()
+	return t.entries[0].actionTime(now.AddDate(0, 0, 1)), t.entries[0]
 }

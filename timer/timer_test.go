@@ -61,6 +61,10 @@ var _ = Describe("a basic timer", func() {
 	})
 
 	Describe("starting and stopping the timer", func() {
+		BeforeEach(func() {
+			timer.AddEntry(6, 30, TurnOn)
+		})
+
 		It("should not be running when newly created", func() {
 			Expect(timer.Running()).To(BeFalse())
 		})
@@ -99,7 +103,7 @@ var _ = Describe("a basic timer", func() {
 			timer.AddEntry(21, 12, TurnOff)
 		})
 
-		PIt("should fire the given events in order", func() {
+		It("should fire the given events in order", func() {
 			mockNow = todayAt(6, 20, 0)
 
 			timer.Start()
@@ -130,13 +134,13 @@ var _ = Describe("a basic timer", func() {
 			<-afterNotify
 		})
 
-		PIt("should wrap around at the end of the day", func() {
+		It("should wrap around at the end of the day", func() {
 			mockNow = todayAt(20, 04, 23)
 
 			timer.Start()
 			<-afterNotify
 
-			expectedDuration, _ := time.ParseDuration("7m37s")
+			expectedDuration, _ := time.ParseDuration("1h7m37s")
 			Expect(afterParam).To(Equal(expectedDuration))
 
 			output.EXPECT().Deactivate().Return(nil)
@@ -158,70 +162,10 @@ var _ = Describe("a basic timer", func() {
 
 		PIt("should handle events added after the timer has been started", func() {
 		})
-
-		It("should activate the output at 6:30", func() {
-			mockNow = todayAt(6, 20, 0)
-
-			timer.Start()
-			<-afterNotify
-
-			expectedDuration, _ := time.ParseDuration("10m")
-			Expect(afterParam).To(Equal(expectedDuration))
-
-			output.EXPECT().Activate().Return(nil)
-			mockNow = todayAt(6, 30, 0)
-			afterCh <- mockNow
-			<-afterNotify
-		})
-
-		It("should deactivate the output at 7:30", func() {
-			mockNow = todayAt(7, 20, 0)
-
-			timer.Start()
-			<-afterNotify
-
-			expectedDuration, _ := time.ParseDuration("10m")
-			Expect(afterParam).To(Equal(expectedDuration))
-
-			output.EXPECT().Deactivate().Return(nil)
-			mockNow = todayAt(7, 30, 0)
-			afterCh <- mockNow
-			<-afterNotify
-		})
-
-		It("should activate the output at 17:00", func() {
-			mockNow = todayAt(16, 45, 0)
-
-			timer.Start()
-			<-afterNotify
-
-			expectedDuration, _ := time.ParseDuration("15m")
-			Expect(afterParam).To(Equal(expectedDuration))
-
-			output.EXPECT().Activate().Return(nil)
-			mockNow = todayAt(17, 0, 0)
-			afterCh <- mockNow
-			<-afterNotify
-		})
-
-		It("should deactivate the output at 21:00", func() {
-			mockNow = todayAt(20, 0, 0)
-
-			timer.Start()
-			<-afterNotify
-
-			expectedDuration, _ := time.ParseDuration("60m")
-			Expect(afterParam).To(Equal(expectedDuration))
-
-			output.EXPECT().Deactivate().Return(nil)
-			mockNow = todayAt(21, 0, 0)
-			afterCh <- mockNow
-			<-afterNotify
-		})
 	})
 })
 
 func todayAt(hour, minute, second int) time.Time {
 	now := time.Now()
-	return time.Date(now.Year(), now.Month(), now.Day(), hour, minute, 0, 0, time.Local)
+	return time.Date(now.Year(), now.Month(), now.Day(), hour, minute, second, 0, time.Local)
 }
