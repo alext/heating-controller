@@ -97,7 +97,9 @@ func (t *timer) run() {
 		at, entry := t.next(now)
 		select {
 		case now = <-time_After(at.Sub(now)):
-			go entry.do(t.out)
+			if entry != nil {
+				go entry.do(t.out)
+			}
 		case <-t.stop:
 			return
 		}
@@ -105,6 +107,9 @@ func (t *timer) run() {
 }
 
 func (t *timer) next(now time.Time) (at time.Time, e *entry) {
+	if len(t.entries) < 1 {
+		return now.AddDate(0, 0, 1), nil
+	}
 	hour, min, _ := now.Clock()
 	for _, entry := range t.entries {
 		if entry.hour > hour || (entry.hour == hour && entry.min > min) {

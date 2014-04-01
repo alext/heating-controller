@@ -61,10 +61,6 @@ var _ = Describe("a basic timer", func() {
 	})
 
 	Describe("starting and stopping the timer", func() {
-		BeforeEach(func() {
-			timer.AddEntry(6, 30, TurnOn)
-		})
-
 		It("should not be running when newly created", func() {
 			Expect(timer.Running()).To(BeFalse())
 		})
@@ -92,6 +88,23 @@ var _ = Describe("a basic timer", func() {
 			timer.Stop()
 			close(done)
 		}, 0.5)
+	})
+
+	It("should continuously sleep for a day when started with no entries", func() {
+		mockNow = todayAt(6, 20, 0)
+
+		timer.Start()
+		<-afterNotify
+
+		expectedDuration, _ := time.ParseDuration("24h")
+		Expect(afterParam).To(Equal(expectedDuration))
+
+		mockNow = mockNow.AddDate(0, 0, 1)
+		afterCh <- mockNow
+		<-afterNotify
+
+		expectedDuration, _ = time.ParseDuration("24h")
+		Expect(afterParam).To(Equal(expectedDuration))
 	})
 
 	Describe("firing events as scheduled", func() {
