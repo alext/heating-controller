@@ -22,7 +22,7 @@ var _ = Describe("a basic timer", func() {
 		output      *mock_output.MockOutput
 		mockNow     time.Time
 		nowCount    int
-		timer       Timer
+		theTimer    Timer
 		afterParam  time.Duration
 		afterCh     chan time.Time
 		afterNotify chan bool
@@ -31,7 +31,7 @@ var _ = Describe("a basic timer", func() {
 	BeforeEach(func() {
 		mockCtrl = gomock.NewController(GinkgoT())
 		output = mock_output.NewMockOutput(mockCtrl)
-		timer = New(output)
+		theTimer = New(output)
 
 		mockNow = time.Now()
 		nowCount = 0
@@ -56,36 +56,36 @@ var _ = Describe("a basic timer", func() {
 	})
 
 	AfterEach(func() {
-		timer.Stop()
+		theTimer.Stop()
 		mockCtrl.Finish()
 	})
 
 	Describe("starting and stopping the timer", func() {
 		It("should not be running when newly created", func() {
-			Expect(timer.Running()).To(BeFalse())
+			Expect(theTimer.Running()).To(BeFalse())
 		})
 
 		It("should start the timer", func() {
-			timer.Start()
-			Expect(timer.Running()).To(BeTrue())
+			theTimer.Start()
+			Expect(theTimer.Running()).To(BeTrue())
 		})
 
 		It("should do nothing when attempting to start a running timer", func() {
-			timer.Start()
-			timer.Start()
+			theTimer.Start()
+			theTimer.Start()
 			<-afterNotify
 
 			Expect(nowCount).To(Equal(1))
 		})
 
 		It("should stop the timer", func() {
-			timer.Start()
-			timer.Stop()
-			Expect(timer.Running()).To(BeFalse())
+			theTimer.Start()
+			theTimer.Stop()
+			Expect(theTimer.Running()).To(BeFalse())
 		})
 
 		It("should do nothing when attempting to stop a non-running timer", func(done Done) {
-			timer.Stop()
+			theTimer.Stop()
 			close(done)
 		}, 0.5)
 	})
@@ -93,7 +93,7 @@ var _ = Describe("a basic timer", func() {
 	It("should continuously sleep for a day when started with no entries", func() {
 		mockNow = todayAt(6, 20, 0)
 
-		timer.Start()
+		theTimer.Start()
 		<-afterNotify
 
 		expectedDuration, _ := time.ParseDuration("24h")
@@ -110,16 +110,16 @@ var _ = Describe("a basic timer", func() {
 	Describe("firing events as scheduled", func() {
 
 		BeforeEach(func() {
-			timer.AddEntry(6, 30, TurnOn)
-			timer.AddEntry(7, 45, TurnOff)
-			timer.AddEntry(17, 33, TurnOn)
-			timer.AddEntry(21, 12, TurnOff)
+			theTimer.AddEntry(6, 30, TurnOn)
+			theTimer.AddEntry(7, 45, TurnOff)
+			theTimer.AddEntry(17, 33, TurnOn)
+			theTimer.AddEntry(21, 12, TurnOff)
 		})
 
 		It("should fire the given events in order", func() {
 			mockNow = todayAt(6, 20, 0)
 
-			timer.Start()
+			theTimer.Start()
 			<-afterNotify
 
 			expectedDuration, _ := time.ParseDuration("10m")
@@ -150,7 +150,7 @@ var _ = Describe("a basic timer", func() {
 		It("should wrap around at the end of the day", func() {
 			mockNow = todayAt(20, 04, 23)
 
-			timer.Start()
+			theTimer.Start()
 			<-afterNotify
 
 			expectedDuration, _ := time.ParseDuration("1h7m37s")
