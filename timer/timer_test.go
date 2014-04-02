@@ -207,7 +207,34 @@ var _ = Describe("a basic timer", func() {
 			Expect(afterParam).To(Equal(expectedDuration))
 		})
 
-		PIt("should handle events added after the timer has been started", func() {
+		It("should handle events added after the timer has been started", func() {
+			mockNow = todayAt(7, 30, 0)
+
+			theTimer.Start()
+			<-afterNotify
+
+			expectedDuration, _ := time.ParseDuration("15m")
+			Expect(afterParam).To(Equal(expectedDuration))
+
+			output.EXPECT().Deactivate().Return(nil)
+			mockNow = todayAt(7, 45, 0)
+			afterCh <- mockNow
+			<-afterNotify
+
+			expectedDuration, _ = time.ParseDuration("9h48m")
+			Expect(afterParam).To(Equal(expectedDuration))
+
+			mockNow = todayAt(9, 30, 0)
+			theTimer.AddEntry(11, 30, TurnOn)
+			<-afterNotify
+
+			expectedDuration, _ = time.ParseDuration("2h")
+			Expect(afterParam).To(Equal(expectedDuration))
+
+			output.EXPECT().Activate().Return(nil)
+			mockNow = todayAt(11, 30, 0)
+			afterCh <- mockNow
+			<-afterNotify
 		})
 	})
 })

@@ -56,18 +56,20 @@ func (a byTime) Less(i, j int) bool {
 }
 
 type timer struct {
-	out     output.Output
-	entries []*entry
-	running bool
-	lock    sync.Mutex
-	stop    chan bool
+	out      output.Output
+	entries  []*entry
+	running  bool
+	lock     sync.Mutex
+	newEntry chan *entry
+	stop     chan bool
 }
 
 func New(out output.Output) Timer {
 	return &timer{
-		out:     out,
-		entries: make([]*entry, 0),
-		stop:    make(chan bool),
+		out:      out,
+		entries:  make([]*entry, 0),
+		newEntry: make(chan *entry),
+		stop:     make(chan bool),
 	}
 }
 
@@ -96,12 +98,18 @@ func (t *timer) Running() bool {
 }
 
 func (t *timer) AddEntry(hour, min int, a action) {
+	t.lock.Lock()
+	defer t.lock.Unlock()
 	e := &entry{hour: hour, min: min, action: a}
+	if t.running {
+		t.newEntry <- e
+		return
+	}
 	t.entries = append(t.entries, e)
-	sort.Sort(byTime(t.entries))
 }
 
 func (t *timer) run() {
+	sort.Sort(byTime(t.entries))
 	for {
 		now := time_Now().Local()
 		at, entry := t.next(now)
@@ -110,6 +118,9 @@ func (t *timer) run() {
 			if entry != nil {
 				go entry.do(t.out)
 			}
+		case entry = <-t.newEntry:
+			t.entries = append(t.entries, entry)
+			sort.Sort(byTime(t.entries))
 		case <-t.stop:
 			return
 		}
