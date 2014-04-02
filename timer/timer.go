@@ -47,17 +47,18 @@ func (e *entry) do(out output.Output) {
 	}
 }
 
-type byTime []*entry
+type entryList []*entry
 
-func (a byTime) Len() int      { return len(a) }
-func (a byTime) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a byTime) Less(i, j int) bool {
-	return a[i].hour < a[j].hour || (a[i].hour == a[j].hour && a[i].min < a[j].min)
+func (el entryList) Len() int      { return len(el) }
+func (el entryList) Swap(i, j int) { el[i], el[j] = el[j], el[i] }
+func (el entryList) Less(i, j int) bool {
+	a, b := el[i], el[j]
+	return a.hour < b.hour || (a.hour == b.hour && a.min < b.min)
 }
 
 type timer struct {
 	out      output.Output
-	entries  []*entry
+	entries  entryList
 	running  bool
 	lock     sync.Mutex
 	newEntry chan *entry
@@ -67,7 +68,7 @@ type timer struct {
 func New(out output.Output) Timer {
 	return &timer{
 		out:      out,
-		entries:  make([]*entry, 0),
+		entries:  make(entryList, 0),
 		newEntry: make(chan *entry),
 		stop:     make(chan bool),
 	}
@@ -109,7 +110,7 @@ func (t *timer) AddEntry(hour, min int, a action) {
 }
 
 func (t *timer) run() {
-	sort.Sort(byTime(t.entries))
+	sort.Sort(t.entries)
 	for {
 		now := time_Now().Local()
 		at, entry := t.next(now)
@@ -120,7 +121,7 @@ func (t *timer) run() {
 			}
 		case entry = <-t.newEntry:
 			t.entries = append(t.entries, entry)
-			sort.Sort(byTime(t.entries))
+			sort.Sort(t.entries)
 		case <-t.stop:
 			return
 		}
