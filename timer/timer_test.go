@@ -170,7 +170,41 @@ var _ = Describe("a basic timer", func() {
 			<-afterNotify
 		})
 
-		PIt("should handle events added in a non-sequential order", func() {
+		It("should handle events added in a non-sequential order", func() {
+			theTimer.AddEntry(13, 00, TurnOff)
+			theTimer.AddEntry(11, 30, TurnOn)
+
+			mockNow = todayAt(7, 30, 0)
+
+			theTimer.Start()
+			<-afterNotify
+
+			expectedDuration, _ := time.ParseDuration("15m")
+			Expect(afterParam).To(Equal(expectedDuration))
+
+			output.EXPECT().Deactivate().Return(nil)
+			mockNow = todayAt(7, 45, 0)
+			afterCh <- mockNow
+			<-afterNotify
+
+			expectedDuration, _ = time.ParseDuration("3h45m")
+			Expect(afterParam).To(Equal(expectedDuration))
+
+			output.EXPECT().Activate().Return(nil)
+			mockNow = todayAt(11, 30, 0)
+			afterCh <- mockNow
+			<-afterNotify
+
+			expectedDuration, _ = time.ParseDuration("1h30m")
+			Expect(afterParam).To(Equal(expectedDuration))
+
+			output.EXPECT().Deactivate().Return(nil)
+			mockNow = todayAt(13, 0, 0)
+			afterCh <- mockNow
+			<-afterNotify
+
+			expectedDuration, _ = time.ParseDuration("4h33m")
+			Expect(afterParam).To(Equal(expectedDuration))
 		})
 
 		PIt("should handle events added after the timer has been started", func() {

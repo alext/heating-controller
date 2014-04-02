@@ -1,6 +1,7 @@
 package timer
 
 import (
+	"sort"
 	"sync"
 	"time"
 
@@ -46,6 +47,14 @@ func (e *entry) do(out output.Output) {
 	}
 }
 
+type byTime []*entry
+
+func (a byTime) Len() int      { return len(a) }
+func (a byTime) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a byTime) Less(i, j int) bool {
+	return a[i].hour < a[j].hour || (a[i].hour == a[j].hour && a[i].min < a[j].min)
+}
+
 type timer struct {
 	out     output.Output
 	entries []*entry
@@ -89,6 +98,7 @@ func (t *timer) Running() bool {
 func (t *timer) AddEntry(hour, min int, a action) {
 	e := &entry{hour: hour, min: min, action: a}
 	t.entries = append(t.entries, e)
+	sort.Sort(byTime(t.entries))
 }
 
 func (t *timer) run() {
