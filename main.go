@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/alext/heating-controller/output"
+	"github.com/alext/heating-controller/timer"
 	"github.com/alext/heating-controller/webserver"
 )
 
@@ -21,6 +22,13 @@ func main() {
 	if err != nil {
 		log.Fatal("Error creating output: ", err)
 	}
+	t := timer.New(out)
+	t.AddEntry(6, 30, timer.TurnOn)
+	t.AddEntry(7, 30, timer.TurnOff)
+	t.AddEntry(19, 30, timer.TurnOn)
+	t.AddEntry(21, 00, timer.TurnOff)
+	t.Start()
+
 	srv.AddOutput(out)
 	err = srv.Run()
 	if err != nil {
