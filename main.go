@@ -2,10 +2,11 @@ package main
 
 import (
 	"flag"
-	"github.com/alext/heating-controller/output"
-	"github.com/alext/heating-controller/webserver"
 	"log"
 	"time"
+
+	"github.com/alext/heating-controller/output"
+	"github.com/alext/heating-controller/webserver"
 )
 
 var port = flag.Int("port", 8080, "The port to listen on")
@@ -32,7 +33,7 @@ func toggleLoop() {
 	if err != nil {
 		log.Fatal("Error creating output:", err)
 	}
-	for ; true ; {
+	for true {
 		log.Print("Activating output")
 		err = out.Activate()
 		if err != nil {
