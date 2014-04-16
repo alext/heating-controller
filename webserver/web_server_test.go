@@ -9,7 +9,6 @@ import (
 
 	"code.google.com/p/gomock/gomock"
 	. "github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/thirdparty/gomocktestreporter"
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/heating-controller/output/mock_output"
@@ -28,7 +27,7 @@ var _ = Describe("Web Server", func() {
 	)
 
 	BeforeEach(func() {
-		mockCtrl = gomock.NewController(gomocktestreporter.New())
+		mockCtrl = gomock.NewController(GinkgoT())
 		server = webserver.New(8080)
 	})
 

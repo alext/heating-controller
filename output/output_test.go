@@ -6,7 +6,6 @@ import (
 
 	"code.google.com/p/gomock/gomock"
 	. "github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/thirdparty/gomocktestreporter"
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/gpio"
@@ -24,7 +23,7 @@ var _ = Describe("constructing the gpio instance", func() {
 	)
 
 	BeforeEach(func() {
-		mockCtrl = gomock.NewController(gomocktestreporter.New())
+		mockCtrl = gomock.NewController(GinkgoT())
 	})
 
 	AfterEach(func() {
@@ -59,7 +58,7 @@ var _ = Describe("Heating control output", func() {
 	)
 
 	BeforeEach(func() {
-		mockCtrl = gomock.NewController(gomocktestreporter.New())
+		mockCtrl = gomock.NewController(GinkgoT())
 		mockPin = mock_gpio.NewMockPin(mockCtrl)
 		pinOpener = func(pin int, mode gpio.Mode) (gpio.Pin, error) {
 			return mockPin, nil
