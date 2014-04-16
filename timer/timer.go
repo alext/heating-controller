@@ -39,6 +39,10 @@ func (e *entry) actionTime(actionDate time.Time) time.Time {
 	return time.Date(year, month, day, e.hour, e.min, 0, 0, time.Local)
 }
 
+func (e *entry) after(hour, min int) bool {
+	return e.hour > hour || (e.hour == hour && e.min > min)
+}
+
 func (e *entry) do(out output.Output) {
 	if e.action == TurnOn {
 		out.Activate()
@@ -111,6 +115,7 @@ func (t *timer) AddEntry(hour, min int, a action) {
 
 func (t *timer) run() {
 	sort.Sort(t.entries)
+	t.setInitialState()
 	for {
 		now := time_Now().Local()
 		at, entry := t.next(now)
@@ -128,13 +133,31 @@ func (t *timer) run() {
 	}
 }
 
+func (t *timer) setInitialState() {
+	if len(t.entries) < 1 {
+		return
+	}
+	hour, min, _ := time_Now().Local().Clock()
+	var previous *entry
+	for _, e := range t.entries {
+		if e.after(hour, min) {
+			break
+		}
+		previous = e
+	}
+	if previous == nil {
+		previous = t.entries[len(t.entries)-1]
+	}
+	previous.do(t.out)
+}
+
 func (t *timer) next(now time.Time) (at time.Time, e *entry) {
 	if len(t.entries) < 1 {
 		return now.AddDate(0, 0, 1), nil
 	}
 	hour, min, _ := now.Clock()
 	for _, entry := range t.entries {
-		if entry.hour > hour || (entry.hour == hour && entry.min > min) {
+		if entry.after(hour, min) {
 			return entry.actionTime(now), entry
 		}
 	}

@@ -88,6 +88,45 @@ var _ = Describe("a basic timer", func() {
 			theTimer.Stop()
 			close(done)
 		}, 0.5)
+
+		Describe("setting the initial output state", func() {
+			Context("with some entries", func() {
+				BeforeEach(func() {
+					theTimer.AddEntry(6, 30, TurnOn)
+					theTimer.AddEntry(7, 45, TurnOff)
+					theTimer.AddEntry(17, 33, TurnOn)
+					theTimer.AddEntry(21, 12, TurnOff)
+				})
+
+				It("should apply the previous entry's state on starting", func() {
+					mockNow = todayAt(6, 45, 0)
+
+					output.EXPECT().Activate().Return(nil)
+					theTimer.Start()
+					<-afterNotify
+					theTimer.Stop()
+
+					mockNow = todayAt(12, 00, 0)
+					output.EXPECT().Deactivate().Return(nil)
+					theTimer.Start()
+					<-afterNotify
+				})
+
+				It("should use the last entry from the previous day if necessary", func() {
+					mockNow = todayAt(4, 45, 0)
+
+					output.EXPECT().Deactivate().Return(nil)
+					theTimer.Start()
+					<-afterNotify
+				})
+			})
+
+			It("should do nothing with no entries", func() {
+				theTimer.Start()
+				<-afterNotify
+				// expect it not to blow up
+			})
+		})
 	})
 
 	It("should continuously sleep for a day when started with no entries", func() {
@@ -117,6 +156,7 @@ var _ = Describe("a basic timer", func() {
 		It("should fire the given events in order", func() {
 			mockNow = todayAt(6, 20, 0)
 
+			output.EXPECT().Deactivate().Return(nil)
 			theTimer.Start()
 			<-afterNotify
 
@@ -145,6 +185,7 @@ var _ = Describe("a basic timer", func() {
 		It("should wrap around at the end of the day", func() {
 			mockNow = todayAt(20, 04, 23)
 
+			output.EXPECT().Activate().Return(nil)
 			theTimer.Start()
 			<-afterNotify
 
@@ -169,6 +210,7 @@ var _ = Describe("a basic timer", func() {
 
 			mockNow = todayAt(7, 30, 0)
 
+			output.EXPECT().Activate().Return(nil)
 			theTimer.Start()
 			<-afterNotify
 
@@ -199,6 +241,7 @@ var _ = Describe("a basic timer", func() {
 		It("should handle events added after the timer has been started", func() {
 			mockNow = todayAt(7, 30, 0)
 
+			output.EXPECT().Activate().Return(nil)
 			theTimer.Start()
 			<-afterNotify
 
