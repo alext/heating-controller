@@ -96,15 +96,13 @@ var _ = Describe("a basic timer", func() {
 		theTimer.Start()
 		<-afterNotify
 
-		expectedDuration, _ := time.ParseDuration("24h")
-		Expect(afterParam).To(Equal(expectedDuration))
+		Expect(afterParam.String()).To(Equal("24h0m0s"))
 
 		mockNow = mockNow.AddDate(0, 0, 1)
 		afterCh <- mockNow
 		<-afterNotify
 
-		expectedDuration, _ = time.ParseDuration("24h")
-		Expect(afterParam).To(Equal(expectedDuration))
+		Expect(afterParam.String()).To(Equal("24h0m0s"))
 	})
 
 	Describe("firing events as scheduled", func() {
@@ -122,24 +120,21 @@ var _ = Describe("a basic timer", func() {
 			theTimer.Start()
 			<-afterNotify
 
-			expectedDuration, _ := time.ParseDuration("10m")
-			Expect(afterParam).To(Equal(expectedDuration))
+			Expect(afterParam.String()).To(Equal("10m0s"))
 
 			output.EXPECT().Activate().Return(nil)
 			mockNow = todayAt(6, 30, 0)
 			afterCh <- mockNow
 			<-afterNotify
 
-			expectedDuration, _ = time.ParseDuration("1h15m")
-			Expect(afterParam).To(Equal(expectedDuration))
+			Expect(afterParam.String()).To(Equal("1h15m0s"))
 
 			output.EXPECT().Deactivate().Return(nil)
 			mockNow = todayAt(7, 45, 0)
 			afterCh <- mockNow
 			<-afterNotify
 
-			expectedDuration, _ = time.ParseDuration("9h48m")
-			Expect(afterParam).To(Equal(expectedDuration))
+			Expect(afterParam.String()).To(Equal("9h48m0s"))
 
 			output.EXPECT().Activate().Return(nil)
 			mockNow = todayAt(17, 33, 0)
@@ -153,16 +148,14 @@ var _ = Describe("a basic timer", func() {
 			theTimer.Start()
 			<-afterNotify
 
-			expectedDuration, _ := time.ParseDuration("1h7m37s")
-			Expect(afterParam).To(Equal(expectedDuration))
+			Expect(afterParam.String()).To(Equal("1h7m37s"))
 
 			output.EXPECT().Deactivate().Return(nil)
 			mockNow = todayAt(21, 12, 0)
 			afterCh <- mockNow
 			<-afterNotify
 
-			expectedDuration, _ = time.ParseDuration("9h18m")
-			Expect(afterParam).To(Equal(expectedDuration))
+			Expect(afterParam.String()).To(Equal("9h18m0s"))
 
 			output.EXPECT().Activate().Return(nil)
 			mockNow = todayAt(6, 30, 0)
@@ -179,32 +172,28 @@ var _ = Describe("a basic timer", func() {
 			theTimer.Start()
 			<-afterNotify
 
-			expectedDuration, _ := time.ParseDuration("15m")
-			Expect(afterParam).To(Equal(expectedDuration))
+			Expect(afterParam.String()).To(Equal("15m0s"))
 
 			output.EXPECT().Deactivate().Return(nil)
 			mockNow = todayAt(7, 45, 0)
 			afterCh <- mockNow
 			<-afterNotify
 
-			expectedDuration, _ = time.ParseDuration("3h45m")
-			Expect(afterParam).To(Equal(expectedDuration))
+			Expect(afterParam.String()).To(Equal("3h45m0s"))
 
 			output.EXPECT().Activate().Return(nil)
 			mockNow = todayAt(11, 30, 0)
 			afterCh <- mockNow
 			<-afterNotify
 
-			expectedDuration, _ = time.ParseDuration("1h30m")
-			Expect(afterParam).To(Equal(expectedDuration))
+			Expect(afterParam.String()).To(Equal("1h30m0s"))
 
 			output.EXPECT().Deactivate().Return(nil)
 			mockNow = todayAt(13, 0, 0)
 			afterCh <- mockNow
 			<-afterNotify
 
-			expectedDuration, _ = time.ParseDuration("4h33m")
-			Expect(afterParam).To(Equal(expectedDuration))
+			Expect(afterParam.String()).To(Equal("4h33m0s"))
 		})
 
 		It("should handle events added after the timer has been started", func() {
@@ -213,23 +202,20 @@ var _ = Describe("a basic timer", func() {
 			theTimer.Start()
 			<-afterNotify
 
-			expectedDuration, _ := time.ParseDuration("15m")
-			Expect(afterParam).To(Equal(expectedDuration))
+			Expect(afterParam.String()).To(Equal("15m0s"))
 
 			output.EXPECT().Deactivate().Return(nil)
 			mockNow = todayAt(7, 45, 0)
 			afterCh <- mockNow
 			<-afterNotify
 
-			expectedDuration, _ = time.ParseDuration("9h48m")
-			Expect(afterParam).To(Equal(expectedDuration))
+			Expect(afterParam.String()).To(Equal("9h48m0s"))
 
 			mockNow = todayAt(9, 30, 0)
 			theTimer.AddEntry(11, 30, TurnOn)
 			<-afterNotify
 
-			expectedDuration, _ = time.ParseDuration("2h")
-			Expect(afterParam).To(Equal(expectedDuration))
+			Expect(afterParam.String()).To(Equal("2h0m0s"))
 
 			output.EXPECT().Activate().Return(nil)
 			mockNow = todayAt(11, 30, 0)
