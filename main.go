@@ -2,7 +2,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
+	"regexp"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/alext/heating-controller/output"
@@ -10,7 +14,10 @@ import (
 	"github.com/alext/heating-controller/webserver"
 )
 
-var port = flag.Int("port", 8080, "The port to listen on")
+var (
+	port = flag.Int("port", 8080, "The port to listen on")
+	schedule = flag.String("schedule", "", "The schedule to use - (hh:mm,(On|Off);)*")
+)
 
 func main() {
 	flag.Parse()
@@ -23,10 +30,10 @@ func main() {
 		log.Fatal("Error creating output: ", err)
 	}
 	t := timer.New(out)
-	t.AddEntry(6, 30, timer.TurnOn)
-	t.AddEntry(7, 30, timer.TurnOff)
-	t.AddEntry(19, 30, timer.TurnOn)
-	t.AddEntry(21, 00, timer.TurnOff)
+	err = processCmdlineSchedule(*schedule, t)
+	if err != nil {
+		log.Fatal(err)
+	}
 	t.Start()
 
 	srv.AddOutput(out)
@@ -34,6 +41,32 @@ func main() {
 	if err != nil {
 		log.Fatal("Server.Run: ", err)
 	}
+}
+
+var schedulePart = regexp.MustCompile(`^(\d+):(\d+),(On|Off)$`)
+
+func processCmdlineSchedule(schedule string, t timer.Timer) error {
+	for _, part := range strings.Split(schedule, ";") {
+		if part == "" {
+			continue
+		}
+		matches := schedulePart.FindStringSubmatch(part)
+		if matches == nil {
+			return fmt.Errorf("Invalid schedule entry %s", part)
+		}
+
+		hour, _ := strconv.Atoi(matches[1])
+		min, _ := strconv.Atoi(matches[2])
+		if hour < 0 || hour > 23 || min < 0 || min > 59 {
+			return fmt.Errorf("Invalid schedule entry %s", part)
+		}
+		if matches[3] == "On" {
+			t.AddEntry(hour, min, timer.TurnOn)
+		} else {
+			t.AddEntry(hour, min, timer.TurnOff)
+		}
+	}
+	return nil
 }
 
 func toggleLoop() {
