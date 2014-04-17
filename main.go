@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/output"
@@ -26,8 +25,6 @@ func main() {
 	flag.Parse()
 
 	setupLogging()
-
-	//toggleLoop()
 
 	srv := webserver.New(*port)
 	out, err := output.New("ch", 22)
@@ -90,45 +87,4 @@ func processCmdlineSchedule(schedule string, t timer.Timer) error {
 		}
 	}
 	return nil
-}
-
-func toggleLoop() {
-	out, err := output.New("ch", 22)
-	if err != nil {
-		log.Fatal("Error creating output:", err)
-	}
-	for true {
-		log.Print("Activating output")
-		err = out.Activate()
-		if err != nil {
-			log.Fatal("Error activating output:", err)
-		}
-		state, err := out.Active()
-		if err != nil {
-			log.Fatal("Error reading state:", err)
-		}
-		log.Printf("  Current state: %v", state)
-		state, err = out.Active()
-		if err != nil {
-			log.Fatal("Error reading state:", err)
-		}
-		log.Printf("  Current state: %v", state)
-
-		log.Print("   sleeping...")
-		time.Sleep(5 * time.Second)
-
-		log.Print("Deactivating output")
-		err = out.Deactivate()
-		if err != nil {
-			log.Fatal("Error deactivating output:", err)
-		}
-		state, err = out.Active()
-		if err != nil {
-			log.Fatal("Error reading state:", err)
-		}
-		log.Printf("  Current state: %v", state)
-
-		log.Print("   sleeping...")
-		time.Sleep(5 * time.Second)
-	}
 }
