@@ -1,10 +1,12 @@
 package timer
 
 import (
+	"fmt"
 	"sort"
 	"sync"
 	"time"
 
+	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/output"
 )
 
@@ -17,8 +19,8 @@ var (
 type Action int
 
 const (
-	TurnOn Action = iota
-	TurnOff
+	TurnOff Action = iota
+	TurnOn
 )
 
 type Timer interface {
@@ -44,10 +46,24 @@ func (e *entry) after(hour, min int) bool {
 }
 
 func (e *entry) do(out output.Output) {
+	var err error
 	if e.action == TurnOn {
-		out.Activate()
+		logger.Infof("[Timer:%s] Activating output", out.Id())
+		err = out.Activate()
 	} else {
-		out.Deactivate()
+		logger.Infof("[Timer:%s] Deactivating output", out.Id())
+		err = out.Deactivate()
+	}
+	if err != nil {
+		logger.Warnf("[Timer:%s] Output error: %v", out.Id(), err)
+	}
+}
+
+func (e *entry) String() string {
+	if e.action == TurnOn {
+		return fmt.Sprintf("%d:%d On", e.hour, e.min)
+	} else {
+		return fmt.Sprintf("%d:%d Off", e.hour, e.min)
 	}
 }
 
@@ -82,6 +98,7 @@ func (t *timer) Start() {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 	if !t.running {
+		logger.Infof("[Timer:%s] Starting", t.out.Id())
 		t.running = true
 		go t.run()
 	}
@@ -91,6 +108,7 @@ func (t *timer) Stop() {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 	if t.running {
+		logger.Infof("[Timer:%s] Stopping", t.out.Id())
 		t.running = false
 		t.stop <- true
 	}
@@ -106,6 +124,7 @@ func (t *timer) AddEntry(hour, min int, a Action) {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 	e := &entry{hour: hour, min: min, action: a}
+	logger.Debugf("[Timer:%s] Adding entry: %v", t.out.Id(), e)
 	if t.running {
 		t.newEntry <- e
 		return
@@ -119,6 +138,7 @@ func (t *timer) run() {
 	for {
 		now := time_Now().Local()
 		at, entry := t.next(now)
+		logger.Debugf("[Timer:%s] Next entry at %v - %v", t.out.Id(), at, entry)
 		select {
 		case now = <-time_After(at.Sub(now)):
 			if entry != nil {
