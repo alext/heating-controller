@@ -51,3 +51,10 @@ func Warn(msg ...interface{}) {
 func Warnf(format string, v ...interface{}) {
 	outputAbovef(WARN, format, v...)
 }
+
+func Fatal(msg ...interface{}) {
+	log.Fatalln(msg...)
+}
+func Fatalf(format string, v ...interface{}) {
+	log.Fatalf(format, v...)
+}
