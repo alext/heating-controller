@@ -3,9 +3,11 @@ package webserver
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/alext/heating-controller/output"
 	"net/http"
 	"strings"
+
+	"github.com/alext/heating-controller/logger"
+	"github.com/alext/heating-controller/output"
 )
 
 type WebServer struct {
@@ -35,7 +37,7 @@ func (srv *WebServer) AddOutput(out output.Output) {
 }
 
 func (srv *WebServer) Run() error {
-	logInfo("Web server starting on", srv.listenUrl)
+	logger.Info("Web server starting on", srv.listenUrl)
 	return http.ListenAndServe(srv.listenUrl, srv)
 }
 

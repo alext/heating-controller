@@ -8,11 +8,15 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/output/mock_output"
 )
 
 func TestOutput(t *testing.T) {
 	RegisterFailHandler(Fail)
+
+	logger.Level = logger.WARN
+
 	RunSpecs(t, "Timer")
 }
 
@@ -31,6 +35,7 @@ var _ = Describe("a basic timer", func() {
 	BeforeEach(func() {
 		mockCtrl = gomock.NewController(GinkgoT())
 		output = mock_output.NewMockOutput(mockCtrl)
+		output.EXPECT().Id().AnyTimes().Return("out")
 		theTimer = New(output)
 
 		mockNow = time.Now()
