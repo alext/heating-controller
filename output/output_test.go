@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/gpio"
-	"github.com/alext/heating-controller/mock_gpio"
+	"github.com/alext/gpio/mock_gpio"
 )
 
 func TestOutput(t *testing.T) {
