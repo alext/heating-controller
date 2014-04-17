@@ -16,12 +16,16 @@ import (
 )
 
 var (
-	port = flag.Int("port", 8080, "The port to listen on")
+	port     = flag.Int("port", 8080, "The port to listen on")
+	logDest  = flag.String("log", "STDERR", "Where to log to - STDOUT, STDERR or a filename")
+	logLevel = flag.String("loglevel", "INFO", "Logging verbosity - DEBUG, INFO or WARN")
 	schedule = flag.String("schedule", "", "The schedule to use - (hh:mm,(On|Off);)*")
 )
 
 func main() {
 	flag.Parse()
+
+	setupLogging()
 
 	//toggleLoop()
 
@@ -42,6 +46,23 @@ func main() {
 	err = srv.Run()
 	if err != nil {
 		logger.Fatal("Server.Run: ", err)
+	}
+}
+
+func setupLogging() {
+	err := logger.SetDestination(*logDest)
+	if err != nil {
+		log.Fatalln("Error opening log", err)
+	}
+	switch *logLevel {
+	case "DEBUG":
+		logger.Level = logger.DEBUG
+	case "INFO":
+		logger.Level = logger.INFO
+	case "WARN":
+		logger.Level = logger.WARN
+	default:
+		log.Fatalln("Unrecognised log level:", *logLevel)
 	}
 }
 
