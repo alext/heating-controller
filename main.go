@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/timer"
 	"github.com/alext/heating-controller/webserver"
@@ -27,19 +28,20 @@ func main() {
 	srv := webserver.New(*port)
 	out, err := output.New("ch", 22)
 	if err != nil {
-		log.Fatal("Error creating output: ", err)
+		logger.Fatal("Error creating output: ", err)
 	}
 	t := timer.New(out)
 	err = processCmdlineSchedule(*schedule, t)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
+
 	t.Start()
 
 	srv.AddOutput(out)
 	err = srv.Run()
 	if err != nil {
-		log.Fatal("Server.Run: ", err)
+		logger.Fatal("Server.Run: ", err)
 	}
 }
 
