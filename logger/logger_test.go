@@ -21,7 +21,7 @@ var _ = Describe("logging at various levels", func() {
 
 	BeforeEach(func() {
 		output = new(bytes.Buffer)
-		SetOutput(output)
+		SetDestination(output)
 
 		log.SetFlags(0) // Disable timestamps to make testing easier
 	})

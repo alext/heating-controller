@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 )
 
 const (
@@ -27,8 +28,26 @@ func outputAbovef(level int, format string, v ...interface{}) {
 	}
 }
 
-func SetOutput(w io.Writer) {
-	log.SetOutput(w)
+func SetDestination(dest interface{}) error {
+	switch dest := dest.(type) {
+	case io.Writer:
+		log.SetOutput(dest)
+	case string:
+		if dest == "STDERR" {
+			log.SetOutput(os.Stderr)
+		} else if dest == "STDOUT" {
+			log.SetOutput(os.Stdout)
+		} else {
+			file, err := os.OpenFile(dest, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
+			if err != nil {
+				return err
+			}
+			log.SetOutput(file)
+		}
+	default:
+		return fmt.Errorf("Invalid log destination %T(%v)", dest, dest)
+	}
+	return nil
 }
 
 func Debug(msg ...interface{}) {
