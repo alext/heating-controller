@@ -14,10 +14,10 @@ var (
 	time_After = time.After
 )
 
-type action int
+type Action int
 
 const (
-	TurnOn action = iota
+	TurnOn Action = iota
 	TurnOff
 )
 
@@ -25,13 +25,13 @@ type Timer interface {
 	Start()
 	Stop()
 	Running() bool
-	AddEntry(hour, minute int, a action)
+	AddEntry(hour, minute int, a Action)
 }
 
 type entry struct {
 	hour   int
 	min    int
-	action action
+	action Action
 }
 
 func (e *entry) actionTime(actionDate time.Time) time.Time {
@@ -102,7 +102,7 @@ func (t *timer) Running() bool {
 	return t.running
 }
 
-func (t *timer) AddEntry(hour, min int, a action) {
+func (t *timer) AddEntry(hour, min int, a Action) {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 	e := &entry{hour: hour, min: min, action: a}
