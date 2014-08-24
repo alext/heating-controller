@@ -29,6 +29,16 @@ func (_m *MockTimer) EXPECT() *_MockTimerRecorder {
 	return _m.recorder
 }
 
+func (_m *MockTimer) Id() string {
+	ret := _m.ctrl.Call(_m, "Id")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+func (_mr *_MockTimerRecorder) Id() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Id")
+}
+
 func (_m *MockTimer) Start() {
 	_m.ctrl.Call(_m, "Start")
 }

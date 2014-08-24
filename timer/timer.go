@@ -24,6 +24,7 @@ const (
 )
 
 type Timer interface {
+	Id() string
 	Start()
 	Stop()
 	Running() bool
@@ -92,6 +93,10 @@ func New(out output.Output) Timer {
 		newEntry: make(chan *entry),
 		stop:     make(chan bool),
 	}
+}
+
+func (t *timer) Id() string {
+	return t.out.Id()
 }
 
 func (t *timer) Start() {
