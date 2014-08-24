@@ -9,18 +9,21 @@ import (
 
 	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/output"
+	"github.com/alext/heating-controller/timer"
 )
 
 type WebServer struct {
 	listenUrl string
 	mux       http.Handler
 	outputs   map[string]output.Output
+	timers    map[string]timer.Timer
 }
 
 func New(port int) (srv *WebServer) {
 	srv = &WebServer{
 		listenUrl: fmt.Sprintf(":%d", port),
 		outputs:   make(map[string]output.Output),
+		timers:    make(map[string]timer.Timer),
 	}
 	srv.buildMux()
 	return
@@ -41,12 +44,20 @@ func (srv *WebServer) buildMux() {
 		r.Put("/activate", srv.outputActivate)
 		r.Put("/deactivate", srv.outputDeactivate)
 	}, srv.findOutput)
+	m.Get("/timers", srv.timerIndex)
+	m.Group("/timers.:id", func(r martini.Router) {
+		r.Get("", srv.timerShow)
+	}, srv.findTimer)
 
 	srv.mux = m
 }
 
 func (srv *WebServer) AddOutput(out output.Output) {
 	srv.outputs[out.Id()] = out
+}
+
+func (srv *WebServer) AddTimer(t timer.Timer) {
+	srv.timers[t.Id()] = t
 }
 
 func (srv *WebServer) Run() error {
@@ -108,6 +119,28 @@ func writeOutputJson(w http.ResponseWriter, out output.Output) {
 		return
 	}
 	writeJson(w, jOut)
+}
+
+func (srv *WebServer) findTimer(w http.ResponseWriter, c martini.Context, params martini.Params) {
+	if tmr, ok := srv.timers[params["id"]]; ok {
+		c.Map(tmr)
+	} else {
+		write404(w)
+	}
+}
+
+func (srv *WebServer) timerIndex(w http.ResponseWriter) {
+	writeJson(w, map[string]interface{}{})
+}
+
+func (srv *WebServer) timerShow(w http.ResponseWriter, tmr timer.Timer) {
+	writeTimerJson(w, tmr)
+}
+
+func writeTimerJson(w http.ResponseWriter, timer timer.Timer) {
+	data := make(map[string]interface{})
+	data["id"] = timer.Id()
+	writeJson(w, data)
 }
 
 func writeJson(w http.ResponseWriter, data interface{}) {
