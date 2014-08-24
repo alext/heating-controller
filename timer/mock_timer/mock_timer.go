@@ -65,6 +65,16 @@ func (_mr *_MockTimerRecorder) Running() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "Running")
 }
 
+func (_m *MockTimer) OutputActive() bool {
+	ret := _m.ctrl.Call(_m, "OutputActive")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+func (_mr *_MockTimerRecorder) OutputActive() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "OutputActive")
+}
+
 func (_m *MockTimer) AddEntry(hour int, minute int, a timer.Action) {
 	_m.ctrl.Call(_m, "AddEntry", hour, minute, a)
 }

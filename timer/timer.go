@@ -28,10 +28,12 @@ type Timer interface {
 	Start()
 	Stop()
 	Running() bool
+	OutputActive() bool
 	AddEntry(hour, minute int, a Action)
 }
 
 type entry struct {
+	t      *timer
 	hour   int
 	min    int
 	action Action
@@ -46,17 +48,19 @@ func (e *entry) after(hour, min int) bool {
 	return e.hour > hour || (e.hour == hour && e.min > min)
 }
 
-func (e *entry) do(out output.Output) {
+func (e *entry) do() {
 	var err error
 	if e.action == TurnOn {
-		logger.Infof("[Timer:%s] Activating output", out.Id())
-		err = out.Activate()
+		logger.Infof("[Timer:%s] Activating output", e.t.out.Id())
+		e.t.outputActive = true
+		err = e.t.out.Activate()
 	} else {
-		logger.Infof("[Timer:%s] Deactivating output", out.Id())
-		err = out.Deactivate()
+		logger.Infof("[Timer:%s] Deactivating output", e.t.out.Id())
+		e.t.outputActive = false
+		err = e.t.out.Deactivate()
 	}
 	if err != nil {
-		logger.Warnf("[Timer:%s] Output error: %v", out.Id(), err)
+		logger.Warnf("[Timer:%s] Output error: %v", e.t.out.Id(), err)
 	}
 }
 
@@ -78,12 +82,13 @@ func (el entryList) Less(i, j int) bool {
 }
 
 type timer struct {
-	out      output.Output
-	entries  entryList
-	running  bool
-	lock     sync.Mutex
-	newEntry chan *entry
-	stop     chan bool
+	out          output.Output
+	entries      entryList
+	running      bool
+	outputActive bool
+	lock         sync.Mutex
+	newEntry     chan *entry
+	stop         chan bool
 }
 
 func New(out output.Output) Timer {
@@ -125,10 +130,16 @@ func (t *timer) Running() bool {
 	return t.running
 }
 
+func (t *timer) OutputActive() bool {
+	t.lock.Lock()
+	defer t.lock.Unlock()
+	return t.running && t.outputActive
+}
+
 func (t *timer) AddEntry(hour, min int, a Action) {
 	t.lock.Lock()
 	defer t.lock.Unlock()
-	e := &entry{hour: hour, min: min, action: a}
+	e := &entry{t: t, hour: hour, min: min, action: a}
 	logger.Debugf("[Timer:%s] Adding entry: %v", t.out.Id(), e)
 	if t.running {
 		t.newEntry <- e
@@ -147,7 +158,7 @@ func (t *timer) run() {
 		select {
 		case now = <-time_After(at.Sub(now)):
 			if entry != nil {
-				go entry.do(t.out)
+				go entry.do()
 			}
 		case entry = <-t.newEntry:
 			t.entries = append(t.entries, entry)
@@ -173,7 +184,7 @@ func (t *timer) setInitialState() {
 	if previous == nil {
 		previous = t.entries[len(t.entries)-1]
 	}
-	previous.do(t.out)
+	previous.do()
 }
 
 func (t *timer) next(now time.Time) (at time.Time, e *entry) {
