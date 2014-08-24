@@ -134,6 +134,7 @@ func (srv *WebServer) timerShow(w http.ResponseWriter, tmr timer.Timer) {
 func writeTimerJson(w http.ResponseWriter, timer timer.Timer) {
 	data := make(map[string]interface{})
 	data["id"] = timer.Id()
+	data["output_active"] = timer.OutputActive()
 	writeJson(w, data)
 }
 

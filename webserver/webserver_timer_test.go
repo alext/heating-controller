@@ -51,6 +51,7 @@ var _ = Describe("Timer API", func() {
 		BeforeEach(func() {
 			timer1 = mock_timer.NewMockTimer(mockCtrl)
 			timer1.EXPECT().Id().AnyTimes().Return("one")
+			timer1.EXPECT().OutputActive().AnyTimes().Return(true)
 			ctrl.AddTimer(timer1)
 		})
 
@@ -62,6 +63,7 @@ var _ = Describe("Timer API", func() {
 
 			data := decodeJsonResponse(w)
 			Expect(data["id"]).To(Equal("one"))
+			Expect(data["output_active"]).To(Equal(true))
 		})
 
 		It("should 404 for a non-existent timer", func() {
