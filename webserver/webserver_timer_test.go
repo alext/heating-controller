@@ -6,6 +6,7 @@ import (
 	. "github.com/onsi/gomega"
 	"code.google.com/p/gomock/gomock"
 
+	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/timer/mock_timer"
 	"github.com/alext/heating-controller/webserver"
 )
@@ -13,12 +14,14 @@ import (
 var _ = Describe("Timer API", func() {
 	var (
 		mockCtrl *gomock.Controller
+		ctrl	  controller.Controller
 		server   *webserver.WebServer
 	)
 
 	BeforeEach(func() {
 		mockCtrl = gomock.NewController(GinkgoT())
-		server = webserver.New(8080)
+		ctrl = controller.New()
+		server = webserver.New(ctrl, 8080)
 	})
 
 	AfterEach(func() {
@@ -48,7 +51,7 @@ var _ = Describe("Timer API", func() {
 		BeforeEach(func() {
 			timer1 = mock_timer.NewMockTimer(mockCtrl)
 			timer1.EXPECT().Id().AnyTimes().Return("one")
-			server.AddTimer(timer1)
+			ctrl.AddTimer(timer1)
 		})
 
 		It("should return details of the requested timer", func() {

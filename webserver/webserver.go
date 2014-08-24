@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-martini/martini"
 
+	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/timer"
@@ -15,15 +16,13 @@ import (
 type WebServer struct {
 	listenUrl string
 	mux       http.Handler
-	outputs   map[string]output.Output
-	timers    map[string]timer.Timer
+	ctrl	  controller.Controller
 }
 
-func New(port int) (srv *WebServer) {
+func New(ctrl controller.Controller, port int) (srv *WebServer) {
 	srv = &WebServer{
 		listenUrl: fmt.Sprintf(":%d", port),
-		outputs:   make(map[string]output.Output),
-		timers:    make(map[string]timer.Timer),
+		ctrl:      ctrl,
 	}
 	srv.buildMux()
 	return
@@ -52,14 +51,6 @@ func (srv *WebServer) buildMux() {
 	srv.mux = m
 }
 
-func (srv *WebServer) AddOutput(out output.Output) {
-	srv.outputs[out.Id()] = out
-}
-
-func (srv *WebServer) AddTimer(t timer.Timer) {
-	srv.timers[t.Id()] = t
-}
-
 func (srv *WebServer) Run() error {
 	logger.Info("Web server starting on", srv.listenUrl)
 	return http.ListenAndServe(srv.listenUrl, srv)
@@ -70,7 +61,8 @@ func (srv *WebServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func (srv *WebServer) findOutput(w http.ResponseWriter, c martini.Context, params martini.Params) {
-	if out, ok := srv.outputs[params["id"]]; ok {
+	out := srv.ctrl.Output(params["id"])
+	if out != nil {
 		c.Map(out)
 	} else {
 		write404(w)
@@ -78,8 +70,9 @@ func (srv *WebServer) findOutput(w http.ResponseWriter, c martini.Context, param
 }
 
 func (srv *WebServer) outputIndex(w http.ResponseWriter) {
-	data := make(map[string]*jsonOutput, len(srv.outputs))
-	for id, out := range srv.outputs {
+	outputs := srv.ctrl.Outputs()
+	data := make(map[string]*jsonOutput, len(outputs))
+	for id, out := range outputs {
 		jOut, err := newJsonOutput(out)
 		if err != nil {
 			writeError(w, err)
@@ -122,7 +115,8 @@ func writeOutputJson(w http.ResponseWriter, out output.Output) {
 }
 
 func (srv *WebServer) findTimer(w http.ResponseWriter, c martini.Context, params martini.Params) {
-	if tmr, ok := srv.timers[params["id"]]; ok {
+	tmr := srv.ctrl.Timer(params["id"])
+	if tmr != nil {
 		c.Map(tmr)
 	} else {
 		write404(w)

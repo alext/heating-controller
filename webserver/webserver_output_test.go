@@ -7,6 +7,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/output/mock_output"
 	"github.com/alext/heating-controller/webserver"
@@ -15,12 +16,14 @@ import (
 var _ = Describe("Output API", func() {
 	var (
 		mockCtrl *gomock.Controller
+		ctrl	 controller.Controller
 		server   *webserver.WebServer
 	)
 
 	BeforeEach(func() {
 		mockCtrl = gomock.NewController(GinkgoT())
-		server = webserver.New(8080)
+		ctrl = controller.New()
+		server = webserver.New(ctrl, 8080)
 	})
 
 	AfterEach(func() {
@@ -45,8 +48,8 @@ var _ = Describe("Output API", func() {
 			BeforeEach(func() {
 				output1 = output.Virtual("one")
 				output2 = output.Virtual("two")
-				server.AddOutput(output1)
-				server.AddOutput(output2)
+				ctrl.AddOutput(output1)
+				ctrl.AddOutput(output2)
 			})
 
 			It("should return a list of outputs with their current state", func() {
@@ -71,7 +74,7 @@ var _ = Describe("Output API", func() {
 			It("should return a 500 and error string on error reading output state", func() {
 				mock_output := mock_output.NewMockOutput(mockCtrl)
 				mock_output.EXPECT().Id().AnyTimes().Return("mock")
-				server.AddOutput(mock_output)
+				ctrl.AddOutput(mock_output)
 
 				err := errors.New("Computer says no!")
 				mock_output.EXPECT().Active().Return(false, err)
@@ -91,7 +94,7 @@ var _ = Describe("Output API", func() {
 
 		BeforeEach(func() {
 			output1 = output.Virtual("one")
-			server.AddOutput(output1)
+			ctrl.AddOutput(output1)
 		})
 
 		It("should return details of an output when requested", func() {
@@ -116,7 +119,7 @@ var _ = Describe("Output API", func() {
 		It("should return a 500 and error string on error reading output state", func() {
 			mock_output := mock_output.NewMockOutput(mockCtrl)
 			mock_output.EXPECT().Id().AnyTimes().Return("mock")
-			server.AddOutput(mock_output)
+			ctrl.AddOutput(mock_output)
 
 			err := errors.New("Computer says no!")
 			mock_output.EXPECT().Active().Return(false, err)
@@ -140,7 +143,7 @@ var _ = Describe("Output API", func() {
 
 		BeforeEach(func() {
 			output1 = output.Virtual("one")
-			server.AddOutput(output1)
+			ctrl.AddOutput(output1)
 		})
 
 		It("should activate the output and return the state", func() {
@@ -172,7 +175,7 @@ var _ = Describe("Output API", func() {
 		It("should return a 500 and error string if activating fails", func() {
 			mock_output := mock_output.NewMockOutput(mockCtrl)
 			mock_output.EXPECT().Id().AnyTimes().Return("mock")
-			server.AddOutput(mock_output)
+			ctrl.AddOutput(mock_output)
 
 			err := errors.New("Computer says no!")
 			mock_output.EXPECT().Activate().Return(err)
@@ -186,7 +189,7 @@ var _ = Describe("Output API", func() {
 		It("should return a 500 and error string if deactivating fails", func() {
 			mock_output := mock_output.NewMockOutput(mockCtrl)
 			mock_output.EXPECT().Id().AnyTimes().Return("mock")
-			server.AddOutput(mock_output)
+			ctrl.AddOutput(mock_output)
 
 			err := errors.New("Computer says no!")
 			mock_output.EXPECT().Deactivate().Return(err)

@@ -9,6 +9,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/webserver"
 )
 
@@ -23,7 +24,7 @@ var _ = Describe("Root URL", func() {
 	)
 
 	BeforeEach(func() {
-		server = webserver.New(8080)
+		server = webserver.New(controller.New(), 8080)
 	})
 
 	It("returns an OK response", func() {

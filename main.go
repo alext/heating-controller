@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/timer"
@@ -27,7 +28,7 @@ func main() {
 
 	setupLogging()
 
-	srv := webserver.New(*port)
+	ctrl := controller.New()
 	out, err := output.New("ch", *gpio)
 	if err != nil {
 		logger.Fatal("Error creating output: ", err)
@@ -40,7 +41,10 @@ func main() {
 
 	t.Start()
 
-	srv.AddOutput(out)
+	ctrl.AddOutput(out)
+	ctrl.AddTimer(t)
+
+	srv := webserver.New(ctrl, *port)
 	err = srv.Run()
 	if err != nil {
 		logger.Fatal("Server.Run: ", err)
