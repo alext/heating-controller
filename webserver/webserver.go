@@ -124,18 +124,27 @@ func (srv *WebServer) findTimer(w http.ResponseWriter, c martini.Context, params
 }
 
 func (srv *WebServer) timerIndex(w http.ResponseWriter) {
-	writeJson(w, map[string]interface{}{})
+	timers := srv.ctrl.Timers()
+	data := make(map[string]interface{}, len(timers))
+	for id, t := range timers {
+		data[id] = timerData(t)
+	}
+	writeJson(w, data)
 }
 
 func (srv *WebServer) timerShow(w http.ResponseWriter, tmr timer.Timer) {
 	writeTimerJson(w, tmr)
 }
 
-func writeTimerJson(w http.ResponseWriter, timer timer.Timer) {
+func writeTimerJson(w http.ResponseWriter, t timer.Timer) {
+	writeJson(w, timerData(t))
+}
+
+func timerData(t timer.Timer) map[string]interface{} {
 	data := make(map[string]interface{})
-	data["id"] = timer.Id()
-	data["output_active"] = timer.OutputActive()
-	writeJson(w, data)
+	data["id"] = t.Id()
+	data["output_active"] = t.OutputActive()
+	return data
 }
 
 func writeJson(w http.ResponseWriter, data interface{}) {

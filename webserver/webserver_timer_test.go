@@ -37,8 +37,34 @@ var _ = Describe("Timer API", func() {
 			Expect(w.Body.String()).To(Equal("{}"))
 		})
 
-		PContext("with some timers", func() {
+		Context("with some timers", func() {
+			BeforeEach(func() {
+				timer1 := mock_timer.NewMockTimer(mockCtrl)
+				timer1.EXPECT().Id().AnyTimes().Return("one")
+				timer1.EXPECT().OutputActive().AnyTimes().Return(true)
+				timer2 := mock_timer.NewMockTimer(mockCtrl)
+				timer2.EXPECT().Id().AnyTimes().Return("two")
+				timer2.EXPECT().OutputActive().AnyTimes().Return(false)
+
+				ctrl.AddTimer(timer1)
+				ctrl.AddTimer(timer2)
+			})
+
 			It("should return a list of timers with basic info", func() {
+				w := doGetRequest(server, "/timers")
+
+				Expect(w.Code).To(Equal(200))
+				Expect(w.Header().Get("Content-Type")).To(Equal("application/json"))
+
+				data := decodeJsonResponse(w)
+				data1, ok := data["one"].(map[string]interface{})
+				Expect(ok).To(BeTrue())
+				Expect(data1["id"]).To(Equal("one"))
+				Expect(data1["output_active"]).To(Equal(true))
+				data2, ok := data["two"].(map[string]interface{})
+				Expect(ok).To(BeTrue())
+				Expect(data2["id"]).To(Equal("two"))
+				Expect(data2["output_active"]).To(Equal(false))
 			})
 		})
 	})
