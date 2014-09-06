@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/go-martini/martini"
 
@@ -34,10 +33,10 @@ func (srv *WebServer) buildMux() {
 	m.Get("/", func() string {
 		return "OK\n"
 	})
-	m.Get("/outputs", srv.outputIndexHandler)
-	m.Get("/outputs/:id", srv.outputHandler)
-	m.Put("/outputs/:id/activate", srv.outputHandler)
-	m.Put("/outputs/:id/deactivate", srv.outputHandler)
+	m.Get("/outputs", srv.outputIndex)
+	m.Get("/outputs/:id", srv.outputShow)
+	m.Put("/outputs/:id/activate", srv.outputActivate)
+	m.Put("/outputs/:id/deactivate", srv.outputDeactivate)
 
 	srv.mux = m
 }
@@ -55,7 +54,7 @@ func (srv *WebServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	srv.mux.ServeHTTP(w, req)
 }
 
-func (srv *WebServer) outputIndexHandler(w http.ResponseWriter, req *http.Request) {
+func (srv *WebServer) outputIndex(w http.ResponseWriter) {
 	data := make(map[string]*jsonOutput, len(srv.outputs))
 	for id, out := range srv.outputs {
 		jOut, err := newJsonOutput(out)
@@ -68,50 +67,38 @@ func (srv *WebServer) outputIndexHandler(w http.ResponseWriter, req *http.Reques
 	writeJson(w, data)
 }
 
-func (srv *WebServer) outputHandler(w http.ResponseWriter, req *http.Request) {
-	parts := strings.Split(req.URL.Path, "/")
-	if out, ok := srv.outputs[parts[2]]; ok {
-		switch len(parts) {
-		case 3:
-			if req.Method == "GET" {
-				writeOutputJson(w, out)
-			} else {
-				write405(w, "GET")
-			}
-			return
-		case 4:
-			switch parts[3] {
-			case "activate":
-				if req.Method == "PUT" {
-					err := out.Activate()
-					if err != nil {
-						writeError(w, fmt.Errorf("Error activating output '%s': %s", out.Id(), err.Error()))
-						return
-					}
-				} else {
-					write405(w, "PUT")
-					return
-				}
-			case "deactivate":
-				if req.Method == "PUT" {
-					err := out.Deactivate()
-					if err != nil {
-						writeError(w, fmt.Errorf("Error deactivating output '%s': %s", out.Id(), err.Error()))
-						return
-					}
-				} else {
-					write405(w, "PUT")
-					return
-				}
-			default:
-				http.NotFound(w, req)
-				return
-			}
-			writeOutputJson(w, out)
+func (srv *WebServer) outputShow(w http.ResponseWriter, params martini.Params) {
+	if out, ok := srv.outputs[params["id"]]; ok {
+		writeOutputJson(w, out)
+	} else {
+		write404(w)
+	}
+}
+
+func (srv *WebServer) outputActivate(w http.ResponseWriter, params martini.Params) {
+	if out, ok := srv.outputs[params["id"]]; ok {
+		err := out.Activate()
+		if err != nil {
+			writeError(w, fmt.Errorf("Error activating output '%s': %s", out.Id(), err.Error()))
 			return
 		}
+		writeOutputJson(w, out)
+	} else {
+		write404(w)
 	}
-	http.NotFound(w, req)
+}
+
+func (srv *WebServer) outputDeactivate(w http.ResponseWriter, params martini.Params) {
+	if out, ok := srv.outputs[params["id"]]; ok {
+		err := out.Deactivate()
+		if err != nil {
+			writeError(w, fmt.Errorf("Error deactivating output '%s': %s", out.Id(), err.Error()))
+			return
+		}
+		writeOutputJson(w, out)
+	} else {
+		write404(w)
+	}
 }
 
 func writeOutputJson(w http.ResponseWriter, out output.Output) {
@@ -133,9 +120,8 @@ func writeJson(w http.ResponseWriter, data interface{}) {
 	w.Write(jsonData)
 }
 
-func write405(w http.ResponseWriter, allowed string) {
-	w.Header().Set("Allow", allowed)
-	w.WriteHeader(http.StatusMethodNotAllowed)
+func write404(w http.ResponseWriter) {
+	http.Error(w, "Not found", http.StatusNotFound)
 }
 
 func writeError(w http.ResponseWriter, err error) {
