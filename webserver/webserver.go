@@ -137,8 +137,8 @@ func writeError(w http.ResponseWriter, err error) {
 }
 
 type jsonOutput struct {
-	Id     string `json: id`
-	Active bool   `json: active`
+	Id     string `json:"id"`
+	Active bool   `json:"active"`
 }
 
 func newJsonOutput(out output.Output) (jOut *jsonOutput, err error) {
