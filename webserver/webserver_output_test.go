@@ -7,6 +7,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/output/mock_output"
 	"github.com/alext/heating-controller/webserver"
 )
@@ -37,22 +38,19 @@ var _ = Describe("Output API", func() {
 
 		Context("with some outputs", func() {
 			var (
-				output1 *mock_output.MockOutput
-				output2 *mock_output.MockOutput
+				output1 output.Output
+				output2 output.Output
 			)
 
 			BeforeEach(func() {
-				output1 = mock_output.NewMockOutput(mockCtrl)
-				output1.EXPECT().Id().AnyTimes().Return("one")
-				output2 = mock_output.NewMockOutput(mockCtrl)
-				output2.EXPECT().Id().AnyTimes().Return("two")
+				output1 = output.Virtual("one")
+				output2 = output.Virtual("two")
 				server.AddOutput(output1)
 				server.AddOutput(output2)
 			})
 
 			It("should return a list of outputs with their current state", func() {
-				output1.EXPECT().Active().Return(true, nil)
-				output2.EXPECT().Active().Return(false, nil)
+				output1.Activate()
 
 				w := doGetRequest(server, "/outputs")
 
@@ -71,34 +69,33 @@ var _ = Describe("Output API", func() {
 			})
 
 			It("should return a 500 and error string on error reading output state", func() {
+				mock_output := mock_output.NewMockOutput(mockCtrl)
+				mock_output.EXPECT().Id().AnyTimes().Return("mock")
+				server.AddOutput(mock_output)
+
 				err := errors.New("Computer says no!")
-				output1.EXPECT().Active().Return(false, err)
+				mock_output.EXPECT().Active().Return(false, err)
 
 				w := doGetRequest(server, "/outputs")
 
 				Expect(w.Code).To(Equal(500))
-				Expect(w.Body.String()).To(Equal("Error reading output 'one': Computer says no!\n"))
+				Expect(w.Body.String()).To(Equal("Error reading output 'mock': Computer says no!\n"))
 			})
 		})
 	})
 
 	Describe("reading an output", func() {
 		var (
-			output1 *mock_output.MockOutput
-			output2 *mock_output.MockOutput
+			output1 output.Output
 		)
 
 		BeforeEach(func() {
-			output1 = mock_output.NewMockOutput(mockCtrl)
-			output1.EXPECT().Id().AnyTimes().Return("one")
-			output2 = mock_output.NewMockOutput(mockCtrl)
-			output2.EXPECT().Id().AnyTimes().Return("two")
+			output1 = output.Virtual("one")
 			server.AddOutput(output1)
-			server.AddOutput(output2)
 		})
 
 		It("should return details of an output when requested", func() {
-			output1.EXPECT().Active().Return(true, nil)
+			output1.Activate()
 
 			w := doGetRequest(server, "/outputs/one")
 
@@ -117,13 +114,17 @@ var _ = Describe("Output API", func() {
 		})
 
 		It("should return a 500 and error string on error reading output state", func() {
-			err := errors.New("Computer says no!")
-			output1.EXPECT().Active().Return(false, err)
+			mock_output := mock_output.NewMockOutput(mockCtrl)
+			mock_output.EXPECT().Id().AnyTimes().Return("mock")
+			server.AddOutput(mock_output)
 
-			w := doGetRequest(server, "/outputs/one")
+			err := errors.New("Computer says no!")
+			mock_output.EXPECT().Active().Return(false, err)
+
+			w := doGetRequest(server, "/outputs/mock")
 
 			Expect(w.Code).To(Equal(500))
-			Expect(w.Body.String()).To(Equal("Error reading output 'one': Computer says no!\n"))
+			Expect(w.Body.String()).To(Equal("Error reading output 'mock': Computer says no!\n"))
 		})
 
 		It("should 404 trying to get a subpath of an output", func() {
@@ -140,21 +141,15 @@ var _ = Describe("Output API", func() {
 
 	Describe("changing an output state", func() {
 		var (
-			output1 *mock_output.MockOutput
+			output1 output.Output
 		)
 
 		BeforeEach(func() {
-			output1 = mock_output.NewMockOutput(mockCtrl)
-			output1.EXPECT().Id().AnyTimes().Return("one")
+			output1 = output.Virtual("one")
 			server.AddOutput(output1)
 		})
 
 		It("should activate the output and return the state", func() {
-			gomock.InOrder(
-				output1.EXPECT().Activate().Return(nil),
-				output1.EXPECT().Active().Return(true, nil),
-			)
-
 			w := doPutRequest(server, "/outputs/one/activate")
 
 			Expect(w.Code).To(Equal(200))
@@ -162,13 +157,12 @@ var _ = Describe("Output API", func() {
 			data := decodeJsonResponse(w)
 			Expect(data["id"]).To(Equal("one"))
 			Expect(data["active"]).To(Equal(true))
+
+			Expect(output1.Active()).To(Equal(true))
 		})
 
 		It("should deactivate the output and return the state", func() {
-			gomock.InOrder(
-				output1.EXPECT().Deactivate().Return(nil),
-				output1.EXPECT().Active().Return(false, nil),
-			)
+			output1.Activate()
 
 			w := doPutRequest(server, "/outputs/one/deactivate")
 
@@ -177,26 +171,36 @@ var _ = Describe("Output API", func() {
 			data := decodeJsonResponse(w)
 			Expect(data["id"]).To(Equal("one"))
 			Expect(data["active"]).To(Equal(false))
+
+			Expect(output1.Active()).To(Equal(false))
 		})
 
 		It("should return a 500 and error string if activating fails", func() {
-			err := errors.New("Computer says no!")
-			output1.EXPECT().Activate().Return(err)
+			mock_output := mock_output.NewMockOutput(mockCtrl)
+			mock_output.EXPECT().Id().AnyTimes().Return("mock")
+			server.AddOutput(mock_output)
 
-			w := doPutRequest(server, "/outputs/one/activate")
+			err := errors.New("Computer says no!")
+			mock_output.EXPECT().Activate().Return(err)
+
+			w := doPutRequest(server, "/outputs/mock/activate")
 
 			Expect(w.Code).To(Equal(500))
-			Expect(w.Body.String()).To(Equal("Error activating output 'one': Computer says no!\n"))
+			Expect(w.Body.String()).To(Equal("Error activating output 'mock': Computer says no!\n"))
 		})
 
 		It("should return a 500 and error string if deactivating fails", func() {
-			err := errors.New("Computer says no!")
-			output1.EXPECT().Deactivate().Return(err)
+			mock_output := mock_output.NewMockOutput(mockCtrl)
+			mock_output.EXPECT().Id().AnyTimes().Return("mock")
+			server.AddOutput(mock_output)
 
-			w := doPutRequest(server, "/outputs/one/deactivate")
+			err := errors.New("Computer says no!")
+			mock_output.EXPECT().Deactivate().Return(err)
+
+			w := doPutRequest(server, "/outputs/mock/deactivate")
 
 			Expect(w.Code).To(Equal(500))
-			Expect(w.Body.String()).To(Equal("Error deactivating output 'one': Computer says no!\n"))
+			Expect(w.Body.String()).To(Equal("Error deactivating output 'mock': Computer says no!\n"))
 		})
 
 		It("should 404 for a non-existent subpath of output", func() {
