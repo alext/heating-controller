@@ -131,12 +131,6 @@ var _ = Describe("Output API", func() {
 			w := doGetRequest(server, "/outputs/one/foo")
 			Expect(w.Code).To(Equal(404))
 		})
-
-		It("should 405 trying to PUT to an output", func() {
-			w := doPutRequest(server, "/outputs/one")
-			Expect(w.Code).To(Equal(405))
-			Expect(w.Header().Get("Allow")).To(Equal("GET"))
-		})
 	})
 
 	Describe("changing an output state", func() {
@@ -206,16 +200,6 @@ var _ = Describe("Output API", func() {
 		It("should 404 for a non-existent subpath of output", func() {
 			w := doPutRequest(server, "/outputs/one/foo")
 			Expect(w.Code).To(Equal(404))
-		})
-
-		It("should 405 for a get request", func() {
-			w := doGetRequest(server, "/outputs/one/activate")
-			Expect(w.Code).To(Equal(405))
-			Expect(w.Header().Get("Allow")).To(Equal("PUT"))
-
-			w = doGetRequest(server, "/outputs/one/deactivate")
-			Expect(w.Code).To(Equal(405))
-			Expect(w.Header().Get("Allow")).To(Equal("PUT"))
 		})
 	})
 })

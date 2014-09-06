@@ -6,13 +6,15 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/go-martini/martini"
+
 	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/output"
 )
 
 type WebServer struct {
 	listenUrl string
-	mux       *http.ServeMux
+	mux       http.Handler
 	outputs   map[string]output.Output
 }
 
@@ -26,10 +28,18 @@ func New(port int) (srv *WebServer) {
 }
 
 func (srv *WebServer) buildMux() {
-	srv.mux = http.NewServeMux()
-	srv.mux.HandleFunc("/", srv.rootHandler)
-	srv.mux.HandleFunc("/outputs", srv.outputIndexHandler)
-	srv.mux.HandleFunc("/outputs/", srv.outputHandler)
+	m := martini.Classic()
+	m.Handlers(martini.Recovery())
+
+	m.Get("/", func() string {
+		return "OK\n"
+	})
+	m.Get("/outputs", srv.outputIndexHandler)
+	m.Get("/outputs/:id", srv.outputHandler)
+	m.Put("/outputs/:id/activate", srv.outputHandler)
+	m.Put("/outputs/:id/deactivate", srv.outputHandler)
+
+	srv.mux = m
 }
 
 func (srv *WebServer) AddOutput(out output.Output) {
@@ -43,10 +53,6 @@ func (srv *WebServer) Run() error {
 
 func (srv *WebServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	srv.mux.ServeHTTP(w, req)
-}
-
-func (srv *WebServer) rootHandler(w http.ResponseWriter, req *http.Request) {
-	w.Write([]byte("OK\n"))
 }
 
 func (srv *WebServer) outputIndexHandler(w http.ResponseWriter, req *http.Request) {
