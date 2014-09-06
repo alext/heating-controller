@@ -3,9 +3,6 @@ package webserver_test
 import (
 	"encoding/json"
 	"errors"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 
 	"code.google.com/p/gomock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -15,12 +12,7 @@ import (
 	"github.com/alext/heating-controller/webserver"
 )
 
-func TestWebServer(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Web Server Suite")
-}
-
-var _ = Describe("Web Server", func() {
+var _ = Describe("Output API", func() {
 	var (
 		mockCtrl *gomock.Controller
 		server   *webserver.WebServer
@@ -33,13 +25,6 @@ var _ = Describe("Web Server", func() {
 
 	AfterEach(func() {
 		mockCtrl.Finish()
-	})
-
-	It("returns an OK response", func() {
-		w := doGetRequest(server, "/")
-
-		Expect(w.Code).To(Equal(200))
-		Expect(w.Body.String()).To(Equal("OK\n"))
 	})
 
 	Describe("outputs index", func() {
@@ -231,23 +216,3 @@ var _ = Describe("Web Server", func() {
 		})
 	})
 })
-
-func doGetRequest(server http.Handler, path string) (w *httptest.ResponseRecorder) {
-	return doRequest(server, "GET", path)
-}
-
-func doPutRequest(server http.Handler, path string) (w *httptest.ResponseRecorder) {
-	return doRequest(server, "PUT", path)
-}
-
-func doRequest(server http.Handler, method, path string) (w *httptest.ResponseRecorder) {
-	req, _ := http.NewRequest(method, "http://example.com"+path, nil)
-	w = httptest.NewRecorder()
-	server.ServeHTTP(w, req)
-	return
-}
-
-type jsonOutput struct {
-	Id     string `json: id`
-	Active bool   `json: active`
-}
