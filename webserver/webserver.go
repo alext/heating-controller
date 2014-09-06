@@ -34,9 +34,11 @@ func (srv *WebServer) buildMux() {
 		return "OK\n"
 	})
 	m.Get("/outputs", srv.outputIndex)
-	m.Get("/outputs/:id", srv.outputShow)
-	m.Put("/outputs/:id/activate", srv.outputActivate)
-	m.Put("/outputs/:id/deactivate", srv.outputDeactivate)
+	m.Group("/outputs/:id", func(r martini.Router) {
+		r.Get("", srv.outputShow)
+		r.Put("/activate", srv.outputActivate)
+		r.Put("/deactivate", srv.outputDeactivate)
+	}, srv.findOutput)
 
 	srv.mux = m
 }
@@ -54,6 +56,14 @@ func (srv *WebServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	srv.mux.ServeHTTP(w, req)
 }
 
+func (srv *WebServer) findOutput(w http.ResponseWriter, c martini.Context, params martini.Params) {
+	if out, ok := srv.outputs[params["id"]]; ok {
+		c.Map(out)
+	} else {
+		write404(w)
+	}
+}
+
 func (srv *WebServer) outputIndex(w http.ResponseWriter) {
 	data := make(map[string]*jsonOutput, len(srv.outputs))
 	for id, out := range srv.outputs {
@@ -67,38 +77,26 @@ func (srv *WebServer) outputIndex(w http.ResponseWriter) {
 	writeJson(w, data)
 }
 
-func (srv *WebServer) outputShow(w http.ResponseWriter, params martini.Params) {
-	if out, ok := srv.outputs[params["id"]]; ok {
-		writeOutputJson(w, out)
-	} else {
-		write404(w)
-	}
+func (srv *WebServer) outputShow(w http.ResponseWriter, out output.Output) {
+	writeOutputJson(w, out)
 }
 
-func (srv *WebServer) outputActivate(w http.ResponseWriter, params martini.Params) {
-	if out, ok := srv.outputs[params["id"]]; ok {
-		err := out.Activate()
-		if err != nil {
-			writeError(w, fmt.Errorf("Error activating output '%s': %s", out.Id(), err.Error()))
-			return
-		}
-		writeOutputJson(w, out)
-	} else {
-		write404(w)
+func (srv *WebServer) outputActivate(w http.ResponseWriter, out output.Output) {
+	err := out.Activate()
+	if err != nil {
+		writeError(w, fmt.Errorf("Error activating output '%s': %s", out.Id(), err.Error()))
+		return
 	}
+	writeOutputJson(w, out)
 }
 
-func (srv *WebServer) outputDeactivate(w http.ResponseWriter, params martini.Params) {
-	if out, ok := srv.outputs[params["id"]]; ok {
-		err := out.Deactivate()
-		if err != nil {
-			writeError(w, fmt.Errorf("Error deactivating output '%s': %s", out.Id(), err.Error()))
-			return
-		}
-		writeOutputJson(w, out)
-	} else {
-		write404(w)
+func (srv *WebServer) outputDeactivate(w http.ResponseWriter, out output.Output) {
+	err := out.Deactivate()
+	if err != nil {
+		writeError(w, fmt.Errorf("Error deactivating output '%s': %s", out.Id(), err.Error()))
+		return
 	}
+	writeOutputJson(w, out)
 }
 
 func writeOutputJson(w http.ResponseWriter, out output.Output) {
