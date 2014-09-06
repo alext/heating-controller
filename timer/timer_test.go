@@ -4,12 +4,11 @@ import (
 	"testing"
 	"time"
 
-	"code.google.com/p/gomock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/heating-controller/logger"
-	"github.com/alext/heating-controller/output/mock_output"
+	"github.com/alext/heating-controller/output"
 )
 
 func TestOutput(t *testing.T) {
@@ -22,8 +21,7 @@ func TestOutput(t *testing.T) {
 
 var _ = Describe("a basic timer", func() {
 	var (
-		mockCtrl    *gomock.Controller
-		output      *mock_output.MockOutput
+		theOutput   output.Output
 		mockNow     time.Time
 		nowCount    int
 		theTimer    Timer
@@ -33,10 +31,8 @@ var _ = Describe("a basic timer", func() {
 	)
 
 	BeforeEach(func() {
-		mockCtrl = gomock.NewController(GinkgoT())
-		output = mock_output.NewMockOutput(mockCtrl)
-		output.EXPECT().Id().AnyTimes().Return("out")
-		theTimer = New(output)
+		theOutput = output.Virtual("out")
+		theTimer = New(theOutput)
 
 		mockNow = time.Now()
 		nowCount = 0
@@ -62,7 +58,6 @@ var _ = Describe("a basic timer", func() {
 
 	AfterEach(func() {
 		theTimer.Stop()
-		mockCtrl.Finish()
 	})
 
 	Describe("starting and stopping the timer", func() {
@@ -106,23 +101,23 @@ var _ = Describe("a basic timer", func() {
 				It("should apply the previous entry's state on starting", func() {
 					mockNow = todayAt(6, 45, 0)
 
-					output.EXPECT().Activate().Return(nil)
 					theTimer.Start()
 					<-afterNotify
+					Expect(theOutput.Active()).To(BeTrue())
 					theTimer.Stop()
 
 					mockNow = todayAt(12, 00, 0)
-					output.EXPECT().Deactivate().Return(nil)
 					theTimer.Start()
 					<-afterNotify
+					Expect(theOutput.Active()).To(BeFalse())
 				})
 
 				It("should use the last entry from the previous day if necessary", func() {
 					mockNow = todayAt(4, 45, 0)
 
-					output.EXPECT().Deactivate().Return(nil)
 					theTimer.Start()
 					<-afterNotify
+					Expect(theOutput.Active()).To(BeFalse())
 				})
 			})
 
@@ -161,52 +156,52 @@ var _ = Describe("a basic timer", func() {
 		It("should fire the given events in order", func() {
 			mockNow = todayAt(6, 20, 0)
 
-			output.EXPECT().Deactivate().Return(nil)
 			theTimer.Start()
 			<-afterNotify
+			Expect(theOutput.Active()).To(BeFalse())
 
 			Expect(afterParam.String()).To(Equal("10m0s"))
 
-			output.EXPECT().Activate().Return(nil)
 			mockNow = todayAt(6, 30, 0)
 			afterCh <- mockNow
 			<-afterNotify
+			Expect(theOutput.Active()).To(BeTrue())
 
 			Expect(afterParam.String()).To(Equal("1h15m0s"))
 
-			output.EXPECT().Deactivate().Return(nil)
 			mockNow = todayAt(7, 45, 0)
 			afterCh <- mockNow
 			<-afterNotify
+			Expect(theOutput.Active()).To(BeFalse())
 
 			Expect(afterParam.String()).To(Equal("9h48m0s"))
 
-			output.EXPECT().Activate().Return(nil)
 			mockNow = todayAt(17, 33, 0)
 			afterCh <- mockNow
 			<-afterNotify
+			Expect(theOutput.Active()).To(BeTrue())
 		})
 
 		It("should wrap around at the end of the day", func() {
 			mockNow = todayAt(20, 04, 23)
 
-			output.EXPECT().Activate().Return(nil)
 			theTimer.Start()
 			<-afterNotify
+			Expect(theOutput.Active()).To(BeTrue())
 
 			Expect(afterParam.String()).To(Equal("1h7m37s"))
 
-			output.EXPECT().Deactivate().Return(nil)
 			mockNow = todayAt(21, 12, 0)
 			afterCh <- mockNow
 			<-afterNotify
+			Expect(theOutput.Active()).To(BeFalse())
 
 			Expect(afterParam.String()).To(Equal("9h18m0s"))
 
-			output.EXPECT().Activate().Return(nil)
 			mockNow = todayAt(6, 30, 0)
 			afterCh <- mockNow
 			<-afterNotify
+			Expect(theOutput.Active()).To(BeTrue())
 		})
 
 		It("should handle events added in a non-sequential order", func() {
@@ -215,30 +210,30 @@ var _ = Describe("a basic timer", func() {
 
 			mockNow = todayAt(7, 30, 0)
 
-			output.EXPECT().Activate().Return(nil)
 			theTimer.Start()
 			<-afterNotify
+			Expect(theOutput.Active()).To(BeTrue())
 
 			Expect(afterParam.String()).To(Equal("15m0s"))
 
-			output.EXPECT().Deactivate().Return(nil)
 			mockNow = todayAt(7, 45, 0)
 			afterCh <- mockNow
 			<-afterNotify
+			Expect(theOutput.Active()).To(BeFalse())
 
 			Expect(afterParam.String()).To(Equal("3h45m0s"))
 
-			output.EXPECT().Activate().Return(nil)
 			mockNow = todayAt(11, 30, 0)
 			afterCh <- mockNow
 			<-afterNotify
+			Expect(theOutput.Active()).To(BeTrue())
 
 			Expect(afterParam.String()).To(Equal("1h30m0s"))
 
-			output.EXPECT().Deactivate().Return(nil)
 			mockNow = todayAt(13, 0, 0)
 			afterCh <- mockNow
 			<-afterNotify
+			Expect(theOutput.Active()).To(BeFalse())
 
 			Expect(afterParam.String()).To(Equal("4h33m0s"))
 		})
@@ -246,16 +241,16 @@ var _ = Describe("a basic timer", func() {
 		It("should handle events added after the timer has been started", func() {
 			mockNow = todayAt(7, 30, 0)
 
-			output.EXPECT().Activate().Return(nil)
 			theTimer.Start()
 			<-afterNotify
+			Expect(theOutput.Active()).To(BeTrue())
 
 			Expect(afterParam.String()).To(Equal("15m0s"))
 
-			output.EXPECT().Deactivate().Return(nil)
 			mockNow = todayAt(7, 45, 0)
 			afterCh <- mockNow
 			<-afterNotify
+			Expect(theOutput.Active()).To(BeFalse())
 
 			Expect(afterParam.String()).To(Equal("9h48m0s"))
 
@@ -265,10 +260,10 @@ var _ = Describe("a basic timer", func() {
 
 			Expect(afterParam.String()).To(Equal("2h0m0s"))
 
-			output.EXPECT().Activate().Return(nil)
 			mockNow = todayAt(11, 30, 0)
 			afterCh <- mockNow
 			<-afterNotify
+			Expect(theOutput.Active()).To(BeTrue())
 		})
 	})
 })
