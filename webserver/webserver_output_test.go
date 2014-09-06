@@ -1,7 +1,6 @@
 package webserver_test
 
 import (
-	"encoding/json"
 	"errors"
 
 	"code.google.com/p/gomock/gomock"
@@ -60,12 +59,15 @@ var _ = Describe("Output API", func() {
 				Expect(w.Code).To(Equal(200))
 				Expect(w.Header().Get("Content-Type")).To(Equal("application/json"))
 
-				var data map[string]jsonOutput
-				json.Unmarshal(w.Body.Bytes(), &data)
-				Expect(data["one"].Id).To(Equal("one"))
-				Expect(data["one"].Active).To(Equal(true))
-				Expect(data["two"].Id).To(Equal("two"))
-				Expect(data["two"].Active).To(Equal(false))
+				data := decodeJsonResponse(w)
+				data1, ok := data["one"].(map[string]interface{})
+				Expect(ok).To(BeTrue())
+				Expect(data1["id"]).To(Equal("one"))
+				Expect(data1["active"]).To(Equal(true))
+				data2, ok := data["two"].(map[string]interface{})
+				Expect(ok).To(BeTrue())
+				Expect(data2["id"]).To(Equal("two"))
+				Expect(data2["active"]).To(Equal(false))
 			})
 
 			It("should return a 500 and error string on error reading output state", func() {
@@ -103,10 +105,9 @@ var _ = Describe("Output API", func() {
 			Expect(w.Code).To(Equal(200))
 			Expect(w.Header().Get("Content-Type")).To(Equal("application/json"))
 
-			var data jsonOutput
-			json.Unmarshal(w.Body.Bytes(), &data)
-			Expect(data.Id).To(Equal("one"))
-			Expect(data.Active).To(Equal(true))
+			data := decodeJsonResponse(w)
+			Expect(data["id"]).To(Equal("one"))
+			Expect(data["active"]).To(Equal(true))
 		})
 
 		It("should 404 for a non-existent output", func() {
@@ -158,10 +159,9 @@ var _ = Describe("Output API", func() {
 
 			Expect(w.Code).To(Equal(200))
 
-			var data jsonOutput
-			json.Unmarshal(w.Body.Bytes(), &data)
-			Expect(data.Id).To(Equal("one"))
-			Expect(data.Active).To(Equal(true))
+			data := decodeJsonResponse(w)
+			Expect(data["id"]).To(Equal("one"))
+			Expect(data["active"]).To(Equal(true))
 		})
 
 		It("should deactivate the output and return the state", func() {
@@ -174,10 +174,9 @@ var _ = Describe("Output API", func() {
 
 			Expect(w.Code).To(Equal(200))
 
-			var data jsonOutput
-			json.Unmarshal(w.Body.Bytes(), &data)
-			Expect(data.Id).To(Equal("one"))
-			Expect(data.Active).To(Equal(false))
+			data := decodeJsonResponse(w)
+			Expect(data["id"]).To(Equal("one"))
+			Expect(data["active"]).To(Equal(false))
 		})
 
 		It("should return a 500 and error string if activating fails", func() {

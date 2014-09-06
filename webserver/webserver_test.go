@@ -1,6 +1,7 @@
 package webserver_test
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -48,7 +49,9 @@ func doRequest(server http.Handler, method, path string) (w *httptest.ResponseRe
 	return
 }
 
-type jsonOutput struct {
-	Id     string `json: id`
-	Active bool   `json: active`
+func decodeJsonResponse(w *httptest.ResponseRecorder) (map[string]interface{}) {
+	var data map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &data)
+	Expect(err).To(BeNil())
+	return data
 }
