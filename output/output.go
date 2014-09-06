@@ -1,8 +1,9 @@
 package output
 
 import (
-	"github.com/alext/gpio"
 	"sync"
+
+	"github.com/alext/gpio"
 )
 
 // Variable indirection to facilitate testing.
@@ -34,26 +35,22 @@ func (out *output) Id() string {
 	return out.id
 }
 
-func (out *output) Active() (res bool, err error) {
+func (out *output) Active() (bool, error) {
 	out.mu.Lock()
 	defer out.mu.Unlock()
-	res = out.pin.Get()
-	err = out.pin.Err()
-	return
+	return out.pin.Get()
 }
 
 func (out *output) Activate() error {
 	out.mu.Lock()
 	defer out.mu.Unlock()
-	out.pin.Set()
-	return out.pin.Err()
+	return out.pin.Set()
 }
 
 func (out *output) Deactivate() error {
 	out.mu.Lock()
 	defer out.mu.Unlock()
-	out.pin.Clear()
-	return out.pin.Err()
+	return out.pin.Clear()
 }
 
 func (out *output) Close() error {

@@ -78,13 +78,8 @@ var _ = Describe("Heating control output", func() {
 	})
 
 	Describe("reading the output state", func() {
-		var errStub *gomock.Call
-		BeforeEach(func() {
-			errStub = mockPin.EXPECT().Err().Return(nil)
-		})
-
 		It("should return true if the gpio value is 1", func() {
-			mockPin.EXPECT().Get().Return(true)
+			mockPin.EXPECT().Get().Return(true, nil)
 
 			a, e := output.Active()
 			Expect(a).To(BeTrue())
@@ -92,7 +87,7 @@ var _ = Describe("Heating control output", func() {
 		})
 
 		It("should return false otherwise", func() {
-			mockPin.EXPECT().Get().Return(false)
+			mockPin.EXPECT().Get().Return(false, nil)
 
 			a, e := output.Active()
 			Expect(a).To(BeFalse())
@@ -101,8 +96,7 @@ var _ = Describe("Heating control output", func() {
 
 		It("should handle errors", func() {
 			err := errors.New("computer says no")
-			errStub.Return(err)
-			mockPin.EXPECT().Get().Return(false)
+			mockPin.EXPECT().Get().Return(false, err)
 
 			_, e := output.Active()
 			Expect(e).To(Equal(err))
@@ -110,38 +104,30 @@ var _ = Describe("Heating control output", func() {
 	})
 
 	Describe("Activating the output", func() {
-		var errStub *gomock.Call
-		BeforeEach(func() {
-			errStub = mockPin.EXPECT().Err().Return(nil)
-			mockPin.EXPECT().Set()
-		})
-
 		It("should set the gpio pin", func() {
+			mockPin.EXPECT().Set().Return(nil)
+
 			Expect(output.Activate()).To(BeNil())
 		})
 
 		It("should handle errors", func() {
 			err := errors.New("computer says no")
-			errStub.Return(err)
+			mockPin.EXPECT().Set().Return(err)
 
 			Expect(output.Activate()).To(Equal(err))
 		})
 	})
 
 	Describe("De-activating the output", func() {
-		var errStub *gomock.Call
-		BeforeEach(func() {
-			errStub = mockPin.EXPECT().Err().Return(nil)
-			mockPin.EXPECT().Clear()
-		})
-
 		It("should clear the gpio pin", func() {
+			mockPin.EXPECT().Clear().Return(nil)
+
 			Expect(output.Deactivate()).To(BeNil())
 		})
 
 		It("should handle errors", func() {
 			err := errors.New("computer says no")
-			errStub.Return(err)
+			mockPin.EXPECT().Clear().Return(err)
 
 			Expect(output.Deactivate()).To(Equal(err))
 		})
