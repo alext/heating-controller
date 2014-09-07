@@ -28,7 +28,9 @@ func New(port int) (srv *WebServer) {
 
 func (srv *WebServer) buildMux() {
 	m := martini.Classic()
-	m.Handlers(martini.Recovery())
+	m.Handlers() // Clear default handlers
+	m.Use(martini.Recovery())
+	m.Use(martini.Static("public", martini.StaticOptions{SkipLogging: true}))
 
 	m.Get("/", func() string {
 		return "OK\n"
