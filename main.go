@@ -15,6 +15,7 @@ import (
 )
 
 var (
+	gpio     = flag.Int("gpio", 27, "The GPIO pin to use")
 	port     = flag.Int("port", 8080, "The port to listen on")
 	logDest  = flag.String("log", "STDERR", "Where to log to - STDOUT, STDERR or a filename")
 	logLevel = flag.String("loglevel", "INFO", "Logging verbosity - DEBUG, INFO or WARN")
@@ -27,7 +28,7 @@ func main() {
 	setupLogging()
 
 	srv := webserver.New(*port)
-	out, err := output.New("ch", 22)
+	out, err := output.New("ch", *gpio)
 	if err != nil {
 		logger.Fatal("Error creating output: ", err)
 	}
