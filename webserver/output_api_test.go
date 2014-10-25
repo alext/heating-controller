@@ -29,7 +29,7 @@ var _ = Describe("Output API", func() {
 
 	Describe("outputs index", func() {
 		It("should return an empty list of outputs as json", func() {
-			w := doGetRequest(server, "/outputs")
+			w := doGetRequest(server, "/api/outputs")
 
 			Expect(w.Code).To(Equal(200))
 			Expect(w.Header().Get("Content-Type")).To(Equal("application/json"))
@@ -52,7 +52,7 @@ var _ = Describe("Output API", func() {
 			It("should return a list of outputs with their current state", func() {
 				output1.Activate()
 
-				w := doGetRequest(server, "/outputs")
+				w := doGetRequest(server, "/api/outputs")
 
 				Expect(w.Code).To(Equal(200))
 				Expect(w.Header().Get("Content-Type")).To(Equal("application/json"))
@@ -76,7 +76,7 @@ var _ = Describe("Output API", func() {
 				err := errors.New("Computer says no!")
 				mock_output.EXPECT().Active().Return(false, err)
 
-				w := doGetRequest(server, "/outputs")
+				w := doGetRequest(server, "/api/outputs")
 
 				Expect(w.Code).To(Equal(500))
 				Expect(w.Body.String()).To(Equal("Error reading output 'mock': Computer says no!\n"))
@@ -97,7 +97,7 @@ var _ = Describe("Output API", func() {
 		It("should return details of an output when requested", func() {
 			output1.Activate()
 
-			w := doGetRequest(server, "/outputs/one")
+			w := doGetRequest(server, "/api/outputs/one")
 
 			Expect(w.Code).To(Equal(200))
 			Expect(w.Header().Get("Content-Type")).To(Equal("application/json"))
@@ -108,7 +108,7 @@ var _ = Describe("Output API", func() {
 		})
 
 		It("should 404 for a non-existent output", func() {
-			w := doGetRequest(server, "/outputs/foo")
+			w := doGetRequest(server, "/api/outputs/foo")
 
 			Expect(w.Code).To(Equal(404))
 		})
@@ -121,14 +121,14 @@ var _ = Describe("Output API", func() {
 			err := errors.New("Computer says no!")
 			mock_output.EXPECT().Active().Return(false, err)
 
-			w := doGetRequest(server, "/outputs/mock")
+			w := doGetRequest(server, "/api/outputs/mock")
 
 			Expect(w.Code).To(Equal(500))
 			Expect(w.Body.String()).To(Equal("Error reading output 'mock': Computer says no!\n"))
 		})
 
 		It("should 404 trying to get a subpath of an output", func() {
-			w := doGetRequest(server, "/outputs/one/foo")
+			w := doGetRequest(server, "/api/outputs/one/foo")
 			Expect(w.Code).To(Equal(404))
 		})
 	})
@@ -144,7 +144,7 @@ var _ = Describe("Output API", func() {
 		})
 
 		It("should activate the output and return the state", func() {
-			w := doPutRequest(server, "/outputs/one/activate")
+			w := doPutRequest(server, "/api/outputs/one/activate")
 
 			Expect(w.Code).To(Equal(200))
 
@@ -158,7 +158,7 @@ var _ = Describe("Output API", func() {
 		It("should deactivate the output and return the state", func() {
 			output1.Activate()
 
-			w := doPutRequest(server, "/outputs/one/deactivate")
+			w := doPutRequest(server, "/api/outputs/one/deactivate")
 
 			Expect(w.Code).To(Equal(200))
 
@@ -177,7 +177,7 @@ var _ = Describe("Output API", func() {
 			err := errors.New("Computer says no!")
 			mock_output.EXPECT().Activate().Return(err)
 
-			w := doPutRequest(server, "/outputs/mock/activate")
+			w := doPutRequest(server, "/api/outputs/mock/activate")
 
 			Expect(w.Code).To(Equal(500))
 			Expect(w.Body.String()).To(Equal("Error activating output 'mock': Computer says no!\n"))
@@ -191,14 +191,14 @@ var _ = Describe("Output API", func() {
 			err := errors.New("Computer says no!")
 			mock_output.EXPECT().Deactivate().Return(err)
 
-			w := doPutRequest(server, "/outputs/mock/deactivate")
+			w := doPutRequest(server, "/api/outputs/mock/deactivate")
 
 			Expect(w.Code).To(Equal(500))
 			Expect(w.Body.String()).To(Equal("Error deactivating output 'mock': Computer says no!\n"))
 		})
 
 		It("should 404 for a non-existent subpath of output", func() {
-			w := doPutRequest(server, "/outputs/one/foo")
+			w := doPutRequest(server, "/api/outputs/one/foo")
 			Expect(w.Code).To(Equal(404))
 		})
 	})
