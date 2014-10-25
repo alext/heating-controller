@@ -31,7 +31,7 @@ func main() {
 
 	setupLogging()
 
-	srv := webserver.New(*port)
+	srv := webserver.New(*port, "webserver/templates")
 	err := setupOutputs(*outputs, srv)
 	if err != nil {
 		logger.Fatal("Error setting up outputs: ", err)

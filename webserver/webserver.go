@@ -11,15 +11,17 @@ import (
 )
 
 type WebServer struct {
-	listenUrl string
-	mux       http.Handler
-	outputs   map[string]output.Output
+	listenUrl     string
+	templatesPath string
+	mux           http.Handler
+	outputs       map[string]output.Output
 }
 
-func New(port int) (srv *WebServer) {
+func New(port int, templatesPath string) (srv *WebServer) {
 	srv = &WebServer{
-		listenUrl: fmt.Sprintf(":%d", port),
-		outputs:   make(map[string]output.Output),
+		listenUrl:     fmt.Sprintf(":%d", port),
+		templatesPath: templatesPath,
+		outputs:       make(map[string]output.Output),
 	}
 	srv.buildMux()
 	return

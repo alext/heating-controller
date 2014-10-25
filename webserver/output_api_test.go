@@ -20,7 +20,7 @@ var _ = Describe("Output API", func() {
 
 	BeforeEach(func() {
 		mockCtrl = gomock.NewController(GinkgoT())
-		server = webserver.New(8080)
+		server = webserver.New(8080, "")
 	})
 
 	AfterEach(func() {

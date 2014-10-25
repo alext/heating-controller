@@ -5,9 +5,7 @@ import (
 )
 
 func (srv *WebServer) buildRoutes(r martini.Router) {
-	r.Get("/", func() string {
-		return "OK\n"
-	})
+	r.Get("/", srv.outputsIndex)
 
 	r.Group("/api", func(r martini.Router) {
 		r.Get("/outputs", srv.apiOutputIndex)

@@ -1,0 +1,19 @@
+{{ define "content" }}
+<h1>Outputs</h1>
+{{ if len . }}
+<table>
+  <tr>
+    <th>Output</th>
+    <th>State</th>
+  </tr>
+  {{ range . }}
+  <tr>
+    <td>{{ .Id }}</td>
+    <td>{{ if .Active }}active{{ else }}inactive{{end}}</td>
+  </tr>
+  {{ end }}
+</table>
+{{ else }}
+<p>No outputs</p>
+{{ end }}
+{{ end }}
