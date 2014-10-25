@@ -15,12 +15,16 @@ import (
 )
 
 var (
-	gpio     = flag.Int("gpio", 27, "The GPIO pin to use")
 	port     = flag.Int("port", 8080, "The port to listen on")
 	logDest  = flag.String("log", "STDERR", "Where to log to - STDOUT, STDERR or a filename")
 	logLevel = flag.String("loglevel", "INFO", "Logging verbosity - DEBUG, INFO or WARN")
+	outputs  = flag.String("outputs", "", "The list of outputs to use - (id:(pin|'v'),)*")
 	schedule = flag.String("schedule", "", "The schedule to use - (hh:mm,(On|Off);)*")
 )
+
+type OutputAdder interface {
+	AddOutput(out output.Output)
+}
 
 func main() {
 	flag.Parse()
@@ -28,19 +32,10 @@ func main() {
 	setupLogging()
 
 	srv := webserver.New(*port)
-	out, err := output.New("ch", *gpio)
+	err := setupOutputs(*outputs, srv)
 	if err != nil {
-		logger.Fatal("Error creating output: ", err)
+		logger.Fatal("Error setting up outputs: ", err)
 	}
-	t := timer.New(out)
-	err = processCmdlineSchedule(*schedule, t)
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	t.Start()
-
-	srv.AddOutput(out)
 	err = srv.Run()
 	if err != nil {
 		logger.Fatal("Server.Run: ", err)
@@ -62,6 +57,45 @@ func setupLogging() {
 	default:
 		log.Fatalln("Unrecognised log level:", *logLevel)
 	}
+}
+
+var output_New = output.New // variable indirection to facilitate testing
+
+var outputPart = regexp.MustCompile(`^([a-z]+):(\d+|v)$`)
+
+func setupOutputs(outputsParam string, server OutputAdder) error {
+	for _, part := range strings.Split(outputsParam, ",") {
+		if part == "" {
+			continue
+		}
+
+		matches := outputPart.FindStringSubmatch(part)
+		if matches == nil {
+			return fmt.Errorf("Invalid output entry '%s'", part)
+		}
+
+		var out output.Output
+		if matches[2] == "v" {
+			out = output.Virtual(matches[1])
+		} else {
+			pin, _ := strconv.Atoi(matches[2])
+			var err error
+			out, err = output_New(matches[1], pin)
+			if err != nil {
+				return err
+			}
+		}
+		if out.Id() == "ch" {
+			t := timer.New(out)
+			err := processCmdlineSchedule(*schedule, t)
+			if err != nil {
+				return err
+			}
+			t.Start()
+		}
+		server.AddOutput(out)
+	}
+	return nil
 }
 
 var schedulePart = regexp.MustCompile(`^(\d+):(\d+),(On|Off)$`)
