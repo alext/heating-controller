@@ -8,7 +8,7 @@ import (
 	"github.com/alext/heating-controller/output"
 )
 
-func (srv *WebServer) apiOutputIndex(w http.ResponseWriter) {
+func (srv *WebServer) apiOutputIndex(w http.ResponseWriter, req *http.Request) {
 	data := make(map[string]*jsonOutput, len(srv.outputs))
 	for id, out := range srv.outputs {
 		jOut, err := newJsonOutput(out)
@@ -21,11 +21,13 @@ func (srv *WebServer) apiOutputIndex(w http.ResponseWriter) {
 	writeJson(w, data)
 }
 
-func (srv *WebServer) apiOutputShow(w http.ResponseWriter, out output.Output) {
+func (srv *WebServer) apiOutputShow(w http.ResponseWriter, req *http.Request) {
+	out := srv.foundOutput(req)
 	writeOutputJson(w, out)
 }
 
-func (srv *WebServer) apiOutputActivate(w http.ResponseWriter, out output.Output) {
+func (srv *WebServer) apiOutputActivate(w http.ResponseWriter, req *http.Request) {
+	out := srv.foundOutput(req)
 	err := out.Activate()
 	if err != nil {
 		writeError(w, fmt.Errorf("Error activating output '%s': %s", out.Id(), err.Error()))
@@ -34,7 +36,8 @@ func (srv *WebServer) apiOutputActivate(w http.ResponseWriter, out output.Output
 	writeOutputJson(w, out)
 }
 
-func (srv *WebServer) apiOutputDeactivate(w http.ResponseWriter, out output.Output) {
+func (srv *WebServer) apiOutputDeactivate(w http.ResponseWriter, req *http.Request) {
+	out := srv.foundOutput(req)
 	err := out.Deactivate()
 	if err != nil {
 		writeError(w, fmt.Errorf("Error deactivating output '%s': %s", out.Id(), err.Error()))

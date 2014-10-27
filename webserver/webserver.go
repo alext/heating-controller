@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/go-martini/martini"
-
 	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/output"
 )
@@ -23,19 +21,8 @@ func New(port int, templatesPath string) (srv *WebServer) {
 		templatesPath: templatesPath,
 		outputs:       make(map[string]output.Output),
 	}
-	srv.buildMux()
+	srv.mux = srv.buildRouter()
 	return
-}
-
-func (srv *WebServer) buildMux() {
-	m := martini.Classic()
-	m.Handlers() // Clear default handlers
-	m.Use(martini.Recovery())
-	m.Use(martini.Static("public", martini.StaticOptions{SkipLogging: true}))
-
-	srv.buildRoutes(m)
-
-	srv.mux = m
 }
 
 func (srv *WebServer) AddOutput(out output.Output) {
@@ -49,14 +36,6 @@ func (srv *WebServer) Run() error {
 
 func (srv *WebServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	srv.mux.ServeHTTP(w, req)
-}
-
-func (srv *WebServer) findOutput(w http.ResponseWriter, c martini.Context, params martini.Params) {
-	if out, ok := srv.outputs[params["id"]]; ok {
-		c.Map(out)
-	} else {
-		write404(w)
-	}
 }
 
 func write404(w http.ResponseWriter) {

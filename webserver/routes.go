@@ -1,18 +1,42 @@
 package webserver
 
 import (
-	"github.com/go-martini/martini"
+	"net/http"
+
+	"github.com/gorilla/context"
+	"github.com/gorilla/mux"
+
+	"github.com/alext/heating-controller/output"
 )
 
-func (srv *WebServer) buildRoutes(r martini.Router) {
-	r.Get("/", srv.outputsIndex)
+func (srv *WebServer) buildRouter() http.Handler {
+	r := mux.NewRouter()
+	r.Methods("GET").Path("/").HandlerFunc(srv.outputsIndex)
 
-	r.Group("/api", func(r martini.Router) {
-		r.Get("/outputs", srv.apiOutputIndex)
-		r.Group("/outputs/:id", func(r martini.Router) {
-			r.Get("", srv.apiOutputShow)
-			r.Put("/activate", srv.apiOutputActivate)
-			r.Put("/deactivate", srv.apiOutputDeactivate)
-		}, srv.findOutput)
-	})
+	api := r.PathPrefix("/api").Subrouter()
+	api.Methods("GET").Path("/outputs").HandlerFunc(srv.apiOutputIndex)
+	api.Methods("GET").Path("/outputs/{output_id}").HandlerFunc(srv.withOutput(srv.apiOutputShow))
+	api.Methods("PUT").Path("/outputs/{output_id}/activate").HandlerFunc(srv.withOutput(srv.apiOutputActivate))
+	api.Methods("PUT").Path("/outputs/{output_id}/deactivate").HandlerFunc(srv.withOutput(srv.apiOutputDeactivate))
+
+	return r
+}
+
+func (srv *WebServer) withOutput(hf http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		if out, ok := srv.outputs[mux.Vars(req)["output_id"]]; ok {
+			context.Set(req, "output", out)
+			hf(w, req)
+		} else {
+			write404(w)
+		}
+	}
+}
+
+func (srv *WebServer) foundOutput(req *http.Request) output.Output {
+	if out := context.Get(req, "output"); out != nil {
+		return out.(output.Output)
+	}
+	// should never happen
+	return nil
 }

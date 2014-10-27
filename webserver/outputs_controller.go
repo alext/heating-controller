@@ -8,7 +8,7 @@ import (
 	"github.com/alext/heating-controller/logger"
 )
 
-func (srv *WebServer) outputsIndex(w http.ResponseWriter) {
+func (srv *WebServer) outputsIndex(w http.ResponseWriter, req *http.Request) {
 	t, err := template.ParseFiles(
 		srv.templatesPath+"/_base.html",
 		srv.templatesPath+"/index.html",
