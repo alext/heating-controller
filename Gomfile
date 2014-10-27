@@ -1,0 +1,7 @@
+gom 'github.com/alext/gpio'
+gom 'github.com/codegangsta/inject', :tag => 'v1.0-rc1'
+gom 'github.com/go-martini/martini', :tag => 'v1.0'
+
+gom 'github.com/onsi/ginkgo', :tag => 'v1.1.0'
+gom 'github.com/onsi/gomega', :tag => 'v1.0'
+gom 'code.google.com/p/gomock/gomock'
