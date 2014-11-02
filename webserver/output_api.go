@@ -21,13 +21,11 @@ func (srv *WebServer) apiOutputIndex(w http.ResponseWriter, req *http.Request) {
 	writeJson(w, data)
 }
 
-func (srv *WebServer) apiOutputShow(w http.ResponseWriter, req *http.Request) {
-	out := srv.foundOutput(req)
+func (srv *WebServer) apiOutputShow(w http.ResponseWriter, req *http.Request, out output.Output) {
 	writeOutputJson(w, out)
 }
 
-func (srv *WebServer) apiOutputActivate(w http.ResponseWriter, req *http.Request) {
-	out := srv.foundOutput(req)
+func (srv *WebServer) apiOutputActivate(w http.ResponseWriter, req *http.Request, out output.Output) {
 	err := out.Activate()
 	if err != nil {
 		writeError(w, fmt.Errorf("Error activating output '%s': %s", out.Id(), err.Error()))
@@ -36,8 +34,7 @@ func (srv *WebServer) apiOutputActivate(w http.ResponseWriter, req *http.Request
 	writeOutputJson(w, out)
 }
 
-func (srv *WebServer) apiOutputDeactivate(w http.ResponseWriter, req *http.Request) {
-	out := srv.foundOutput(req)
+func (srv *WebServer) apiOutputDeactivate(w http.ResponseWriter, req *http.Request, out output.Output) {
 	err := out.Deactivate()
 	if err != nil {
 		writeError(w, fmt.Errorf("Error deactivating output '%s': %s", out.Id(), err.Error()))

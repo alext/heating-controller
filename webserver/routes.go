@@ -3,7 +3,6 @@ package webserver
 import (
 	"net/http"
 
-	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 
 	"github.com/alext/heating-controller/output"
@@ -22,21 +21,14 @@ func (srv *WebServer) buildRouter() http.Handler {
 	return r
 }
 
-func (srv *WebServer) withOutput(hf http.HandlerFunc) http.HandlerFunc {
+type outputHandlerFunc func(http.ResponseWriter, *http.Request, output.Output)
+
+func (srv *WebServer) withOutput(hf outputHandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		if out, ok := srv.outputs[mux.Vars(req)["output_id"]]; ok {
-			context.Set(req, "output", out)
-			hf(w, req)
+			hf(w, req, out)
 		} else {
 			write404(w)
 		}
 	}
-}
-
-func (srv *WebServer) foundOutput(req *http.Request) output.Output {
-	if out := context.Get(req, "output"); out != nil {
-		return out.(output.Output)
-	}
-	// should never happen
-	return nil
 }
