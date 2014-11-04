@@ -265,6 +265,23 @@ var _ = Describe("a basic timer", func() {
 			<-afterNotify
 			Expect(theOutput.Active()).To(BeTrue())
 		})
+
+		PIt("should handle an entry being added at the moment the next event is due to fire", func() {
+			mockNow = todayAt(6, 15, 0)
+			theTimer.Start()
+			<-afterNotify
+			Expect(theOutput.Active()).To(BeFalse())
+
+			Expect(afterParam.String()).To(Equal("15m0s"))
+
+			mockNow = todayAt(6, 30, 0)
+
+			theTimer.AddEntry(12, 45, TurnOn)
+			<-afterNotify
+
+			// Should still be trying to fire the 6:30 entry
+			Expect(afterParam.String()).To(Equal("0"))
+		})
 	})
 })
 
