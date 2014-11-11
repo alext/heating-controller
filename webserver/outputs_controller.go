@@ -2,10 +2,12 @@ package webserver
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"net/http"
 
 	"github.com/alext/heating-controller/logger"
+	"github.com/alext/heating-controller/output"
 )
 
 func (srv *WebServer) outputsIndex(w http.ResponseWriter, req *http.Request) {
@@ -26,4 +28,22 @@ func (srv *WebServer) outputsIndex(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	w.Write(b.Bytes())
+}
+
+func (srv *WebServer) outputActivate(w http.ResponseWriter, req *http.Request, out output.Output) {
+	err := out.Activate()
+	if err != nil {
+		writeError(w, fmt.Errorf("Error activating output '%s': %s", out.Id(), err.Error()))
+		return
+	}
+	http.Redirect(w, req, "/", http.StatusFound)
+}
+
+func (srv *WebServer) outputDeactivate(w http.ResponseWriter, req *http.Request, out output.Output) {
+	err := out.Deactivate()
+	if err != nil {
+		writeError(w, fmt.Errorf("Error deactivating output '%s': %s", out.Id(), err.Error()))
+		return
+	}
+	http.Redirect(w, req, "/", http.StatusFound)
 }

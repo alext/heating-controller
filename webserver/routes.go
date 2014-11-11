@@ -11,6 +11,8 @@ import (
 func (srv *WebServer) buildRouter() http.Handler {
 	r := mux.NewRouter()
 	r.Methods("GET").Path("/").HandlerFunc(srv.outputsIndex)
+	r.Methods("PUT").Path("/outputs/{output_id}/activate").HandlerFunc(srv.withOutput(srv.outputActivate))
+	r.Methods("PUT").Path("/outputs/{output_id}/deactivate").HandlerFunc(srv.withOutput(srv.outputDeactivate))
 
 	api := r.PathPrefix("/api").Subrouter()
 	api.Methods("GET").Path("/outputs").HandlerFunc(srv.apiOutputIndex)
