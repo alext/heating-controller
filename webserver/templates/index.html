@@ -5,11 +5,24 @@
   <tr>
     <th>Output</th>
     <th>State</th>
+    <th>&nbsp;</th>
   </tr>
   {{ range . }}
   <tr>
     <td>{{ .Id }}</td>
     <td>{{ if .Active }}active{{ else }}inactive{{end}}</td>
+    <td>
+      {{ if .Active }}
+      <form action="/outputs/{{ .Id }}/deactivate" method="post">
+        <input type="hidden" name="_method" value="PUT">
+        <input type="submit" value="Deactivate">
+      </form>
+      {{ else }}
+      <form action="/outputs/{{ .Id }}/activate" method="post">
+        <input type="hidden" name="_method" value="PUT">
+        <input type="submit" value="Activate">
+      </form>
+      {{end}}</td>
   </tr>
   {{ end }}
 </table>
