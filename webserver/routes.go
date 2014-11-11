@@ -20,7 +20,7 @@ func (srv *WebServer) buildRouter() http.Handler {
 	api.Methods("PUT").Path("/outputs/{output_id}/activate").HandlerFunc(srv.withOutput(srv.apiOutputActivate))
 	api.Methods("PUT").Path("/outputs/{output_id}/deactivate").HandlerFunc(srv.withOutput(srv.apiOutputDeactivate))
 
-	return r
+	return httpMethodOverrideHandler(r)
 }
 
 type outputHandlerFunc func(http.ResponseWriter, *http.Request, output.Output)
@@ -33,4 +33,17 @@ func (srv *WebServer) withOutput(hf outputHandlerFunc) http.HandlerFunc {
 			write404(w)
 		}
 	}
+}
+
+// Adapted from https://github.com/gorilla/handlers/blob/master/handlers.go#L343
+func httpMethodOverrideHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			om := r.FormValue("_method")
+			if om == "PUT" || om == "PATCH" || om == "DELETE" {
+				r.Method = om
+			}
+		}
+		h.ServeHTTP(w, r)
+	})
 }

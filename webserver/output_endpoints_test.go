@@ -43,13 +43,13 @@ var _ = Describe("Endpoints for an output", func() {
 		Describe("activating", func() {
 
 			It("should activate the output", func() {
-				doPutRequest(server, "/outputs/one/activate")
+				doFakePutRequest(server, "/outputs/one/activate")
 
 				Expect(output1.Active()).To(Equal(true))
 			})
 
 			It("should redirect to the index", func() {
-				w := doPutRequest(server, "/outputs/one/activate")
+				w := doFakePutRequest(server, "/outputs/one/activate")
 
 				Expect(w.Code).To(Equal(302))
 				Expect(w.Header().Get("Location")).To(Equal("/"))
@@ -63,7 +63,7 @@ var _ = Describe("Endpoints for an output", func() {
 				err := errors.New("Computer says no!")
 				mock_output.EXPECT().Activate().Return(err)
 
-				w := doPutRequest(server, "/outputs/mock/activate")
+				w := doFakePutRequest(server, "/outputs/mock/activate")
 
 				Expect(w.Code).To(Equal(500))
 				Expect(w.Body.String()).To(Equal("Error activating output 'mock': Computer says no!\n"))
@@ -76,13 +76,13 @@ var _ = Describe("Endpoints for an output", func() {
 			})
 
 			It("should deactivate the output", func() {
-				doPutRequest(server, "/outputs/one/deactivate")
+				doFakePutRequest(server, "/outputs/one/deactivate")
 
 				Expect(output1.Active()).To(Equal(false))
 			})
 
 			It("should redirect to the index", func() {
-				w := doPutRequest(server, "/outputs/one/deactivate")
+				w := doFakePutRequest(server, "/outputs/one/deactivate")
 
 				Expect(w.Code).To(Equal(302))
 				Expect(w.Header().Get("Location")).To(Equal("/"))
@@ -96,7 +96,7 @@ var _ = Describe("Endpoints for an output", func() {
 				err := errors.New("Computer says no!")
 				mock_output.EXPECT().Deactivate().Return(err)
 
-				w := doPutRequest(server, "/outputs/mock/deactivate")
+				w := doFakePutRequest(server, "/outputs/mock/deactivate")
 
 				Expect(w.Code).To(Equal(500))
 				Expect(w.Body.String()).To(Equal("Error deactivating output 'mock': Computer says no!\n"))
