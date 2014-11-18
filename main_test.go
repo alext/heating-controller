@@ -90,10 +90,10 @@ var _ = Describe("Reading schedule from cmdline", func() {
 	It("Should add all given entries to the given timer", func() {
 
 		schedule := "6:30,On;7:30,Off;19:30,On;21:00,Off"
-		theTimer.EXPECT().AddEntry(6, 30, timer.TurnOn)
-		theTimer.EXPECT().AddEntry(7, 30, timer.TurnOff)
-		theTimer.EXPECT().AddEntry(19, 30, timer.TurnOn)
-		theTimer.EXPECT().AddEntry(21, 0, timer.TurnOff)
+		theTimer.EXPECT().AddEvent(timer.Event{Hour: 6, Min: 30, Action: timer.TurnOn})
+		theTimer.EXPECT().AddEvent(timer.Event{Hour: 7, Min: 30, Action: timer.TurnOff})
+		theTimer.EXPECT().AddEvent(timer.Event{Hour: 19, Min: 30, Action: timer.TurnOn})
+		theTimer.EXPECT().AddEvent(timer.Event{Hour: 21, Min: 0, Action: timer.TurnOff})
 
 		err := processCmdlineSchedule(schedule, theTimer)
 		Expect(err).To(BeNil())
@@ -106,8 +106,8 @@ var _ = Describe("Reading schedule from cmdline", func() {
 
 	It("Should ignore a trailing ';'", func() {
 		schedule := "6:30,On;7:30,Off;"
-		theTimer.EXPECT().AddEntry(6, 30, timer.TurnOn)
-		theTimer.EXPECT().AddEntry(7, 30, timer.TurnOff)
+		theTimer.EXPECT().AddEvent(timer.Event{Hour: 6, Min: 30, Action: timer.TurnOn})
+		theTimer.EXPECT().AddEvent(timer.Event{Hour: 7, Min: 30, Action: timer.TurnOff})
 
 		err := processCmdlineSchedule(schedule, theTimer)
 		Expect(err).To(BeNil())
@@ -115,7 +115,7 @@ var _ = Describe("Reading schedule from cmdline", func() {
 
 	Context("Error handling", func() {
 		BeforeEach(func() {
-			theTimer.EXPECT().AddEntry(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+			theTimer.EXPECT().AddEvent(gomock.Any()).AnyTimes()
 		})
 
 		It("Should return an error with any invalid times", func() {

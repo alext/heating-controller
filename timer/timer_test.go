@@ -92,10 +92,10 @@ var _ = Describe("a basic timer", func() {
 		Describe("setting the initial output state", func() {
 			Context("with some entries", func() {
 				BeforeEach(func() {
-					theTimer.AddEntry(6, 30, TurnOn)
-					theTimer.AddEntry(7, 45, TurnOff)
-					theTimer.AddEntry(17, 33, TurnOn)
-					theTimer.AddEntry(21, 12, TurnOff)
+					theTimer.AddEvent(Event{Hour: 6, Min: 30, Action: TurnOn})
+					theTimer.AddEvent(Event{Hour: 7, Min: 45, Action: TurnOff})
+					theTimer.AddEvent(Event{Hour: 17, Min: 33, Action: TurnOn})
+					theTimer.AddEvent(Event{Hour: 21, Min: 12, Action: TurnOff})
 				})
 
 				It("should apply the previous entry's state on starting", func() {
@@ -147,10 +147,10 @@ var _ = Describe("a basic timer", func() {
 	Describe("firing events as scheduled", func() {
 
 		BeforeEach(func() {
-			theTimer.AddEntry(6, 30, TurnOn)
-			theTimer.AddEntry(7, 45, TurnOff)
-			theTimer.AddEntry(17, 33, TurnOn)
-			theTimer.AddEntry(21, 12, TurnOff)
+			theTimer.AddEvent(Event{Hour: 6, Min: 30, Action: TurnOn})
+			theTimer.AddEvent(Event{Hour: 7, Min: 45, Action: TurnOff})
+			theTimer.AddEvent(Event{Hour: 17, Min: 33, Action: TurnOn})
+			theTimer.AddEvent(Event{Hour: 21, Min: 12, Action: TurnOff})
 		})
 
 		It("should fire the given events in order", func() {
@@ -205,8 +205,8 @@ var _ = Describe("a basic timer", func() {
 		})
 
 		It("should handle events added in a non-sequential order", func() {
-			theTimer.AddEntry(13, 00, TurnOff)
-			theTimer.AddEntry(11, 30, TurnOn)
+			theTimer.AddEvent(Event{Hour: 13, Min: 00, Action: TurnOff})
+			theTimer.AddEvent(Event{Hour: 11, Min: 30, Action: TurnOn})
 
 			mockNow = todayAt(7, 30, 0)
 
@@ -255,7 +255,7 @@ var _ = Describe("a basic timer", func() {
 			Expect(afterParam.String()).To(Equal("9h48m0s"))
 
 			mockNow = todayAt(9, 30, 0)
-			theTimer.AddEntry(11, 30, TurnOn)
+			theTimer.AddEvent(Event{Hour: 11, Min: 30, Action: TurnOn})
 			<-afterNotify
 
 			Expect(afterParam.String()).To(Equal("2h0m0s"))

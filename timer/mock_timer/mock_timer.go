@@ -55,10 +55,10 @@ func (_mr *_MockTimerRecorder) Running() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "Running")
 }
 
-func (_m *MockTimer) AddEntry(hour int, minute int, a timer.Action) {
-	_m.ctrl.Call(_m, "AddEntry", hour, minute, a)
+func (_m *MockTimer) AddEvent(_param0 timer.Event) {
+	_m.ctrl.Call(_m, "AddEvent", _param0)
 }
 
-func (_mr *_MockTimerRecorder) AddEntry(arg0, arg1, arg2 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddEntry", arg0, arg1, arg2)
+func (_mr *_MockTimerRecorder) AddEvent(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddEvent", arg0)
 }

@@ -27,27 +27,27 @@ type Timer interface {
 	Start()
 	Stop()
 	Running() bool
-	AddEntry(hour, minute int, a Action)
+	AddEvent(Event)
 }
 
-type entry struct {
-	hour   int
-	min    int
-	action Action
+type Event struct {
+	Hour   int
+	Min    int
+	Action Action
 }
 
-func (e *entry) actionTime(actionDate time.Time) time.Time {
+func (e *Event) actionTime(actionDate time.Time) time.Time {
 	year, month, day := actionDate.Date()
-	return time.Date(year, month, day, e.hour, e.min, 0, 0, time.Local)
+	return time.Date(year, month, day, e.Hour, e.Min, 0, 0, time.Local)
 }
 
-func (e *entry) after(hour, min int) bool {
-	return e.hour > hour || (e.hour == hour && e.min > min)
+func (e *Event) after(hour, min int) bool {
+	return e.Hour > hour || (e.Hour == hour && e.Min > min)
 }
 
-func (e *entry) do(out output.Output) {
+func (e *Event) do(out output.Output) {
 	var err error
-	if e.action == TurnOn {
+	if e.Action == TurnOn {
 		logger.Infof("[Timer:%s] Activating output", out.Id())
 		err = out.Activate()
 	} else {
@@ -59,37 +59,37 @@ func (e *entry) do(out output.Output) {
 	}
 }
 
-func (e *entry) String() string {
-	if e.action == TurnOn {
-		return fmt.Sprintf("%d:%d On", e.hour, e.min)
+func (e *Event) String() string {
+	if e.Action == TurnOn {
+		return fmt.Sprintf("%d:%d On", e.Hour, e.Min)
 	} else {
-		return fmt.Sprintf("%d:%d Off", e.hour, e.min)
+		return fmt.Sprintf("%d:%d Off", e.Hour, e.Min)
 	}
 }
 
-type entryList []*entry
+type eventList []*Event
 
-func (el entryList) Len() int      { return len(el) }
-func (el entryList) Swap(i, j int) { el[i], el[j] = el[j], el[i] }
-func (el entryList) Less(i, j int) bool {
+func (el eventList) Len() int      { return len(el) }
+func (el eventList) Swap(i, j int) { el[i], el[j] = el[j], el[i] }
+func (el eventList) Less(i, j int) bool {
 	a, b := el[i], el[j]
-	return a.hour < b.hour || (a.hour == b.hour && a.min < b.min)
+	return a.Hour < b.Hour || (a.Hour == b.Hour && a.Min < b.Min)
 }
 
 type timer struct {
 	out      output.Output
-	entries  entryList
+	events   eventList
 	running  bool
 	lock     sync.Mutex
-	newEntry chan *entry
+	newEvent chan *Event
 	stop     chan bool
 }
 
 func New(out output.Output) Timer {
 	return &timer{
 		out:      out,
-		entries:  make(entryList, 0),
-		newEntry: make(chan *entry),
+		events:   make(eventList, 0),
+		newEvent: make(chan *Event),
 		stop:     make(chan bool),
 	}
 }
@@ -120,33 +120,32 @@ func (t *timer) Running() bool {
 	return t.running
 }
 
-func (t *timer) AddEntry(hour, min int, a Action) {
+func (t *timer) AddEvent(e Event) {
 	t.lock.Lock()
 	defer t.lock.Unlock()
-	e := &entry{hour: hour, min: min, action: a}
-	logger.Debugf("[Timer:%s] Adding entry: %v", t.out.Id(), e)
+	logger.Debugf("[Timer:%s] Adding event: %v", t.out.Id(), e)
 	if t.running {
-		t.newEntry <- e
+		t.newEvent <- &e
 		return
 	}
-	t.entries = append(t.entries, e)
+	t.events = append(t.events, &e)
 }
 
 func (t *timer) run() {
-	sort.Sort(t.entries)
+	sort.Sort(t.events)
 	t.setInitialState()
 	for {
 		now := time_Now().Local()
-		at, entry := t.next(now)
-		logger.Debugf("[Timer:%s] Next entry at %v - %v", t.out.Id(), at, entry)
+		at, event := t.next(now)
+		logger.Debugf("[Timer:%s] Next entry at %v - %v", t.out.Id(), at, event)
 		select {
 		case now = <-time_After(at.Sub(now)):
-			if entry != nil {
-				go entry.do(t.out)
+			if event != nil {
+				go event.do(t.out)
 			}
-		case entry = <-t.newEntry:
-			t.entries = append(t.entries, entry)
-			sort.Sort(t.entries)
+		case event = <-t.newEvent:
+			t.events = append(t.events, event)
+			sort.Sort(t.events)
 		case <-t.stop:
 			return
 		}
@@ -154,32 +153,32 @@ func (t *timer) run() {
 }
 
 func (t *timer) setInitialState() {
-	if len(t.entries) < 1 {
+	if len(t.events) < 1 {
 		return
 	}
 	hour, min, _ := time_Now().Local().Clock()
-	var previous *entry
-	for _, e := range t.entries {
+	var previous *Event
+	for _, e := range t.events {
 		if e.after(hour, min) {
 			break
 		}
 		previous = e
 	}
 	if previous == nil {
-		previous = t.entries[len(t.entries)-1]
+		previous = t.events[len(t.events)-1]
 	}
 	previous.do(t.out)
 }
 
-func (t *timer) next(now time.Time) (at time.Time, e *entry) {
-	if len(t.entries) < 1 {
+func (t *timer) next(now time.Time) (at time.Time, e *Event) {
+	if len(t.events) < 1 {
 		return now.AddDate(0, 0, 1), nil
 	}
 	hour, min, _ := now.Clock()
-	for _, entry := range t.entries {
-		if entry.after(hour, min) {
-			return entry.actionTime(now), entry
+	for _, event := range t.events {
+		if event.after(hour, min) {
+			return event.actionTime(now), event
 		}
 	}
-	return t.entries[0].actionTime(now.AddDate(0, 0, 1)), t.entries[0]
+	return t.events[0].actionTime(now.AddDate(0, 0, 1)), t.events[0]
 }

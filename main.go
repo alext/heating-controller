@@ -117,11 +117,13 @@ func processCmdlineSchedule(schedule string, t timer.Timer) error {
 		if hour < 0 || hour > 23 || min < 0 || min > 59 {
 			return fmt.Errorf("Invalid schedule entry %s", part)
 		}
+		e := timer.Event{Hour: hour, Min: min}
 		if matches[3] == "On" {
-			t.AddEntry(hour, min, timer.TurnOn)
+			e.Action = timer.TurnOn
 		} else {
-			t.AddEntry(hour, min, timer.TurnOff)
+			e.Action = timer.TurnOff
 		}
+		t.AddEvent(e)
 	}
 	return nil
 }
