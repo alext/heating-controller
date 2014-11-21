@@ -28,6 +28,7 @@ type Timer interface {
 	Stop()
 	Running() bool
 	AddEvent(Event)
+	NextEvent() *Event
 }
 
 type Event struct {
@@ -129,10 +130,17 @@ func (t *timer) AddEvent(e Event) {
 		return
 	}
 	t.events = append(t.events, &e)
+	sort.Sort(t.events)
+}
+
+func (t *timer) NextEvent() *Event {
+	t.lock.Lock()
+	defer t.lock.Unlock()
+	_, nextEvent := t.next(time_Now().Local())
+	return nextEvent
 }
 
 func (t *timer) run() {
-	sort.Sort(t.events)
 	t.setInitialState()
 	for {
 		now := time_Now().Local()

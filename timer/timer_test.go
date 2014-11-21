@@ -266,6 +266,37 @@ var _ = Describe("a basic timer", func() {
 			Expect(theOutput.Active()).To(BeTrue())
 		})
 	})
+
+	Describe("querying the next event", func() {
+
+		It("should return nil with no events", func() {
+			Expect(theTimer.NextEvent()).To(BeNil())
+		})
+
+		Context("with some events", func() {
+			BeforeEach(func() {
+				theTimer.AddEvent(Event{Hour: 6, Min: 30, Action: TurnOn})
+				theTimer.AddEvent(Event{Hour: 17, Min: 33, Action: TurnOn})
+				theTimer.AddEvent(Event{Hour: 7, Min: 45, Action: TurnOff})
+				theTimer.AddEvent(Event{Hour: 21, Min: 12, Action: TurnOff})
+			})
+
+			It("should return the next event", func() {
+
+				Expect(theTimer.NextEvent()).To(Equal(&Event{Hour: 6, Min: 30, Action: TurnOn}))
+
+				mockNow = todayAt(7, 30, 0)
+
+				Expect(theTimer.NextEvent()).To(Equal(&Event{Hour: 7, Min: 45, Action: TurnOff}))
+			})
+
+			It("should handle the wrap around at the end of the day", func() {
+				mockNow = todayAt(21, 30, 0)
+
+				Expect(theTimer.NextEvent()).To(Equal(&Event{Hour: 6, Min: 30, Action: TurnOn}))
+			})
+		})
+	})
 })
 
 func todayAt(hour, minute, second int) time.Time {
