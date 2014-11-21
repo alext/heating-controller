@@ -14,12 +14,6 @@ func (srv *WebServer) buildRouter() http.Handler {
 	r.Methods("PUT").Path("/outputs/{output_id}/activate").HandlerFunc(srv.withOutput(srv.outputActivate))
 	r.Methods("PUT").Path("/outputs/{output_id}/deactivate").HandlerFunc(srv.withOutput(srv.outputDeactivate))
 
-	api := r.PathPrefix("/api").Subrouter()
-	api.Methods("GET").Path("/outputs").HandlerFunc(srv.apiOutputIndex)
-	api.Methods("GET").Path("/outputs/{output_id}").HandlerFunc(srv.withOutput(srv.apiOutputShow))
-	api.Methods("PUT").Path("/outputs/{output_id}/activate").HandlerFunc(srv.withOutput(srv.apiOutputActivate))
-	api.Methods("PUT").Path("/outputs/{output_id}/deactivate").HandlerFunc(srv.withOutput(srv.apiOutputDeactivate))
-
 	return httpMethodOverrideHandler(r)
 }
 
