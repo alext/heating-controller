@@ -20,7 +20,7 @@ func (out *virtual) Id() string {
 	return out.id
 }
 
-func (out *virtual) Active() (res bool, err error) {
+func (out *virtual) Active() (bool, error) {
 	out.mu.Lock()
 	defer out.mu.Unlock()
 	return out.state, nil

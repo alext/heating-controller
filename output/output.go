@@ -23,7 +23,7 @@ type output struct {
 	mu  sync.Mutex
 }
 
-func New(id string, pinNo int) (out Output, err error) {
+func New(id string, pinNo int) (Output, error) {
 	pin, err := pinOpener(pinNo, gpio.ModeOutput)
 	if err != nil {
 		return nil, err
