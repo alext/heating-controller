@@ -5,12 +5,14 @@
   <tr>
     <th>Zone</th>
     <th>State</th>
+    <th>Next Event</th>
     <th>&nbsp;</th>
   </tr>
   {{ range . }}
   <tr>
     <td>{{ .ID }}</td>
     <td>{{ if .Active }}active{{ else }}inactive{{end}}</td>
+    <td>{{ .Timer.NextEvent }}</td>
     <td>
       {{ if .Active }}
       <form action="/zones/{{ .ID }}/deactivate" method="post">
@@ -22,7 +24,8 @@
         <input type="hidden" name="_method" value="PUT">
         <input type="submit" value="Activate">
       </form>
-      {{end}}</td>
+      {{end}}
+    </td>
   </tr>
   {{ end }}
 </table>

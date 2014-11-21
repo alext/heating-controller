@@ -18,6 +18,13 @@ var (
 
 type Action int
 
+func (a Action) String() string {
+	if a == TurnOn {
+		return "On"
+	}
+	return "Off"
+}
+
 const (
 	TurnOff Action = iota
 	TurnOn
@@ -61,11 +68,7 @@ func (e *Event) do(out output.Output) {
 }
 
 func (e *Event) String() string {
-	if e.Action == TurnOn {
-		return fmt.Sprintf("%d:%d On", e.Hour, e.Min)
-	} else {
-		return fmt.Sprintf("%d:%d Off", e.Hour, e.Min)
-	}
+	return fmt.Sprintf("%d:%d %s", e.Hour, e.Min, e.Action)
 }
 
 type eventList []*Event
