@@ -11,59 +11,64 @@ import (
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/timer"
 	"github.com/alext/heating-controller/timer/mock_timer"
+	"github.com/alext/heating-controller/zone"
 )
 
-func TestOutput(t *testing.T) {
+func TestMain(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Main")
 }
 
-type testOutputAdder struct {
-	Outputs []output.Output
+type testZoneAdder struct {
+	Zones []*zone.Zone
 }
 
-func (t *testOutputAdder) AddOutput(out output.Output) {
-	t.Outputs = append(t.Outputs, out)
+func (t *testZoneAdder) AddZone(z *zone.Zone) {
+	t.Zones = append(t.Zones, z)
 }
 
-var _ = Describe("Reading outputs from cmdline", func() {
+var _ = Describe("Reading zones from cmdline", func() {
 	var (
-		srv *testOutputAdder
+		srv *testZoneAdder
 	)
 
 	BeforeEach(func() {
-		srv = &testOutputAdder{make([]output.Output, 0)}
+		srv = &testZoneAdder{make([]*zone.Zone, 0)}
 		output_New = func(id string, pin int) (output.Output, error) {
 			out := output.Virtual(fmt.Sprintf("%s-gpio%d", id, pin))
 			return out, nil
 		}
 	})
 
-	It("Should do nothing with a blank list of outputs", func() {
-		err := setupOutputs("", srv)
+	It("Should do nothing with a blank list of zones", func() {
+		err := setupZones("", srv)
 		Expect(err).To(BeNil())
 
-		Expect(srv.Outputs).To(HaveLen(0))
+		Expect(srv.Zones).To(HaveLen(0))
 	})
 
-	It("Should add virtual outputs", func() {
-		err := setupOutputs("foo:v,bar:v", srv)
+	It("Should add zones with virtual outputs", func() {
+		err := setupZones("foo:v,bar:v", srv)
 		Expect(err).To(BeNil())
 
-		Expect(srv.Outputs).To(HaveLen(2))
+		Expect(srv.Zones).To(HaveLen(2))
 
-		Expect(srv.Outputs[0].Id()).To(Equal("foo"))
-		Expect(srv.Outputs[1].Id()).To(Equal("bar"))
+		Expect(srv.Zones[0].ID).To(Equal("foo"))
+		Expect(srv.Zones[1].ID).To(Equal("bar"))
+		Expect(srv.Zones[0].Out.Id()).To(Equal("foo"))
+		Expect(srv.Zones[1].Out.Id()).To(Equal("bar"))
 	})
 
 	It("Should add real outputs with correct pin", func() {
-		err := setupOutputs("foo:10,bar:47", srv)
+		err := setupZones("foo:10,bar:47", srv)
 		Expect(err).To(BeNil())
 
-		Expect(srv.Outputs).To(HaveLen(2))
+		Expect(srv.Zones).To(HaveLen(2))
 
-		Expect(srv.Outputs[0].Id()).To(Equal("foo-gpio10"))
-		Expect(srv.Outputs[1].Id()).To(Equal("bar-gpio47"))
+		Expect(srv.Zones[0].ID).To(Equal("foo"))
+		Expect(srv.Zones[1].ID).To(Equal("bar"))
+		Expect(srv.Zones[0].Out.Id()).To(Equal("foo-gpio10"))
+		Expect(srv.Zones[1].Out.Id()).To(Equal("bar-gpio47"))
 	})
 })
 

@@ -12,18 +12,19 @@ import (
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/timer"
 	"github.com/alext/heating-controller/webserver"
+	"github.com/alext/heating-controller/zone"
 )
 
 var (
 	port     = flag.Int("port", 8080, "The port to listen on")
 	logDest  = flag.String("log", "STDERR", "Where to log to - STDOUT, STDERR or a filename")
 	logLevel = flag.String("loglevel", "INFO", "Logging verbosity - DEBUG, INFO or WARN")
-	outputs  = flag.String("outputs", "", "The list of outputs to use - (id:(pin|'v'),)*")
+	zones    = flag.String("zones", "", "The list of zones to use with their corresponding outputs - (id:(pin|'v'),)*")
 	schedule = flag.String("schedule", "", "The schedule to use - (hh:mm,(On|Off);)*")
 )
 
-type OutputAdder interface {
-	AddOutput(out output.Output)
+type ZoneAdder interface {
+	AddZone(*zone.Zone)
 }
 
 func main() {
@@ -32,7 +33,7 @@ func main() {
 	setupLogging()
 
 	srv := webserver.New(*port, "webserver/templates")
-	err := setupOutputs(*outputs, srv)
+	err := setupZones(*zones, srv)
 	if err != nil {
 		logger.Fatal("Error setting up outputs: ", err)
 	}
@@ -61,39 +62,40 @@ func setupLogging() {
 
 var output_New = output.New // variable indirection to facilitate testing
 
-var outputPart = regexp.MustCompile(`^([a-z]+):(\d+|v)$`)
+var zonePart = regexp.MustCompile(`^([a-z]+):(\d+|v)$`)
 
-func setupOutputs(outputsParam string, server OutputAdder) error {
-	for _, part := range strings.Split(outputsParam, ",") {
+func setupZones(zonesParam string, server ZoneAdder) error {
+	for _, part := range strings.Split(zonesParam, ",") {
 		if part == "" {
 			continue
 		}
 
-		matches := outputPart.FindStringSubmatch(part)
+		matches := zonePart.FindStringSubmatch(part)
 		if matches == nil {
 			return fmt.Errorf("Invalid output entry '%s'", part)
 		}
 
+		id := matches[1]
 		var out output.Output
 		if matches[2] == "v" {
-			out = output.Virtual(matches[1])
+			out = output.Virtual(id)
 		} else {
 			pin, _ := strconv.Atoi(matches[2])
 			var err error
-			out, err = output_New(matches[1], pin)
+			out, err = output_New(id, pin)
 			if err != nil {
 				return err
 			}
 		}
-		if out.Id() == "ch" {
-			t := timer.New(out)
-			err := processCmdlineSchedule(*schedule, t)
+		z := zone.New(id, out)
+		if z.ID == "ch" {
+			err := processCmdlineSchedule(*schedule, z.Timer)
 			if err != nil {
 				return err
 			}
-			t.Start()
+			z.Timer.Start()
 		}
-		server.AddOutput(out)
+		server.AddZone(z)
 	}
 	return nil
 }

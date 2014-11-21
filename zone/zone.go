@@ -18,3 +18,7 @@ func New(id string, out output.Output) *Zone {
 		Timer: timer.New(out),
 	}
 }
+
+func (z *Zone) Active() (bool, error) {
+	return z.Out.Active()
+}

@@ -5,24 +5,24 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/alext/heating-controller/output"
+	"github.com/alext/heating-controller/zone"
 )
 
 func (srv *WebServer) buildRouter() http.Handler {
 	r := mux.NewRouter()
-	r.Methods("GET").Path("/").HandlerFunc(srv.outputsIndex)
-	r.Methods("PUT").Path("/outputs/{output_id}/activate").HandlerFunc(srv.withOutput(srv.outputActivate))
-	r.Methods("PUT").Path("/outputs/{output_id}/deactivate").HandlerFunc(srv.withOutput(srv.outputDeactivate))
+	r.Methods("GET").Path("/").HandlerFunc(srv.zonesIndex)
+	r.Methods("PUT").Path("/zones/{zone_id}/activate").HandlerFunc(srv.withZone(srv.zoneActivate))
+	r.Methods("PUT").Path("/zones/{zone_id}/deactivate").HandlerFunc(srv.withZone(srv.zoneDeactivate))
 
 	return httpMethodOverrideHandler(r)
 }
 
-type outputHandlerFunc func(http.ResponseWriter, *http.Request, output.Output)
+type zoneHandlerFunc func(http.ResponseWriter, *http.Request, *zone.Zone)
 
-func (srv *WebServer) withOutput(hf outputHandlerFunc) http.HandlerFunc {
+func (srv *WebServer) withZone(hf zoneHandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		if out, ok := srv.outputs[mux.Vars(req)["output_id"]]; ok {
-			hf(w, req, out)
+		if z, ok := srv.zones[mux.Vars(req)["zone_id"]]; ok {
+			hf(w, req, z)
 		} else {
 			write404(w)
 		}

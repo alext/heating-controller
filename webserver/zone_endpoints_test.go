@@ -10,9 +10,10 @@ import (
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/output/mock_output"
 	"github.com/alext/heating-controller/webserver"
+	"github.com/alext/heating-controller/zone"
 )
 
-var _ = Describe("Endpoints for an output", func() {
+var _ = Describe("Endpoints for a zone", func() {
 	var (
 		mockCtrl *gomock.Controller
 		server   *webserver.WebServer
@@ -27,76 +28,76 @@ var _ = Describe("Endpoints for an output", func() {
 		mockCtrl.Finish()
 	})
 
-	Describe("viewing details for an output", func() {
+	Describe("viewing details for a zone", func() {
 	})
 
 	Describe("changing an output state", func() {
 		var (
 			output1 output.Output
+			zone1   *zone.Zone
 		)
 
 		BeforeEach(func() {
 			output1 = output.Virtual("one")
-			server.AddOutput(output1)
+			zone1 = zone.New("one", output1)
+			server.AddZone(zone1)
 		})
 
-		Describe("activating", func() {
+		Describe("activating the zone's output", func() {
 
 			It("should activate the output", func() {
-				doFakePutRequest(server, "/outputs/one/activate")
+				doFakePutRequest(server, "/zones/one/activate")
 
 				Expect(output1.Active()).To(Equal(true))
 			})
 
 			It("should redirect to the index", func() {
-				w := doFakePutRequest(server, "/outputs/one/activate")
+				w := doFakePutRequest(server, "/zones/one/activate")
 
 				Expect(w.Code).To(Equal(302))
 				Expect(w.Header().Get("Location")).To(Equal("/"))
 			})
 
 			It("should show an error if activating fails", func() {
-				mock_output := mock_output.NewMockOutput(mockCtrl)
-				mock_output.EXPECT().Id().AnyTimes().Return("mock")
-				server.AddOutput(mock_output)
+				mockOutput := mock_output.NewMockOutput(mockCtrl)
+				server.AddZone(zone.New("mock", mockOutput))
 
 				err := errors.New("Computer says no!")
-				mock_output.EXPECT().Activate().Return(err)
+				mockOutput.EXPECT().Activate().Return(err)
 
-				w := doFakePutRequest(server, "/outputs/mock/activate")
+				w := doFakePutRequest(server, "/zones/mock/activate")
 
 				Expect(w.Code).To(Equal(500))
 				Expect(w.Body.String()).To(Equal("Error activating output 'mock': Computer says no!\n"))
 			})
 		})
 
-		Describe("deactivating", func() {
+		Describe("deactivating the zone's output", func() {
 			BeforeEach(func() {
 				output1.Activate()
 			})
 
 			It("should deactivate the output", func() {
-				doFakePutRequest(server, "/outputs/one/deactivate")
+				doFakePutRequest(server, "/zones/one/deactivate")
 
 				Expect(output1.Active()).To(Equal(false))
 			})
 
 			It("should redirect to the index", func() {
-				w := doFakePutRequest(server, "/outputs/one/deactivate")
+				w := doFakePutRequest(server, "/zones/one/deactivate")
 
 				Expect(w.Code).To(Equal(302))
 				Expect(w.Header().Get("Location")).To(Equal("/"))
 			})
 
 			It("should show an error if activating fails", func() {
-				mock_output := mock_output.NewMockOutput(mockCtrl)
-				mock_output.EXPECT().Id().AnyTimes().Return("mock")
-				server.AddOutput(mock_output)
+				mockOutput := mock_output.NewMockOutput(mockCtrl)
+				server.AddZone(zone.New("mock", mockOutput))
 
 				err := errors.New("Computer says no!")
-				mock_output.EXPECT().Deactivate().Return(err)
+				mockOutput.EXPECT().Deactivate().Return(err)
 
-				w := doFakePutRequest(server, "/outputs/mock/deactivate")
+				w := doFakePutRequest(server, "/zones/mock/deactivate")
 
 				Expect(w.Code).To(Equal(500))
 				Expect(w.Body.String()).To(Equal("Error deactivating output 'mock': Computer says no!\n"))

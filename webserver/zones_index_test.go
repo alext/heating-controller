@@ -10,6 +10,7 @@ import (
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/output/mock_output"
 	"github.com/alext/heating-controller/webserver"
+	"github.com/alext/heating-controller/zone"
 )
 
 var _ = Describe("The index page", func() {
@@ -27,29 +28,33 @@ var _ = Describe("The index page", func() {
 		mockCtrl.Finish()
 	})
 
-	Context("with no outputs", func() {
-		It("should show a message indicating there are no outputs", func() {
+	Context("with no zones", func() {
+		It("should show a message indicating there are no zones", func() {
 			response := doGetRequest(server, "/")
 
 			Expect(response.Code).To(Equal(200))
-			Expect(response.Body.String()).To(ContainSubstring("No outputs"))
+			Expect(response.Body.String()).To(ContainSubstring("No zones"))
 		})
 	})
 
-	Context("with some outputs", func() {
+	Context("with some zones", func() {
 		var (
 			output1 output.Output
 			output2 output.Output
+			zone1   *zone.Zone
+			zone2   *zone.Zone
 		)
 
 		BeforeEach(func() {
 			output1 = output.Virtual("one")
 			output2 = output.Virtual("two")
-			server.AddOutput(output1)
-			server.AddOutput(output2)
+			zone1 = zone.New("one", output1)
+			zone2 = zone.New("two", output2)
+			server.AddZone(zone1)
+			server.AddZone(zone2)
 		})
 
-		It("should return a list of outputs with their current state", func() {
+		It("should return a list of zones with their current state", func() {
 			output1.Activate()
 
 			response := doGetRequest(server, "/")
@@ -60,16 +65,15 @@ var _ = Describe("The index page", func() {
 			Expect(body).To(MatchRegexp(`one</td>\s*<td>active`))
 			Expect(body).To(MatchRegexp(`two</td>\s*<td>inactive`))
 
-			Expect(response.Body.String()).NotTo(ContainSubstring("No outputs"))
+			Expect(response.Body.String()).NotTo(ContainSubstring("No zones"))
 		})
 
 		It("should return a 500 and error string on error reading output state", func() {
-			mock_output := mock_output.NewMockOutput(mockCtrl)
-			mock_output.EXPECT().Id().AnyTimes().Return("mock")
-			server.AddOutput(mock_output)
+			mockOutput := mock_output.NewMockOutput(mockCtrl)
+			server.AddZone(zone.New("mock", mockOutput))
 
 			err := errors.New("Computer says no!")
-			mock_output.EXPECT().Active().Return(false, err)
+			mockOutput.EXPECT().Active().Return(false, err)
 
 			w := doGetRequest(server, "/")
 

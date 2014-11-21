@@ -1,24 +1,24 @@
 {{ define "content" }}
-<h1>Outputs</h1>
+<h1>Zones</h1>
 {{ if len . }}
 <table>
   <tr>
-    <th>Output</th>
+    <th>Zone</th>
     <th>State</th>
     <th>&nbsp;</th>
   </tr>
   {{ range . }}
   <tr>
-    <td>{{ .Id }}</td>
+    <td>{{ .ID }}</td>
     <td>{{ if .Active }}active{{ else }}inactive{{end}}</td>
     <td>
       {{ if .Active }}
-      <form action="/outputs/{{ .Id }}/deactivate" method="post">
+      <form action="/zones/{{ .ID }}/deactivate" method="post">
         <input type="hidden" name="_method" value="PUT">
         <input type="submit" value="Deactivate">
       </form>
       {{ else }}
-      <form action="/outputs/{{ .Id }}/activate" method="post">
+      <form action="/zones/{{ .ID }}/activate" method="post">
         <input type="hidden" name="_method" value="PUT">
         <input type="submit" value="Activate">
       </form>
@@ -27,6 +27,6 @@
   {{ end }}
 </table>
 {{ else }}
-<p>No outputs</p>
+<p>No zones</p>
 {{ end }}
 {{ end }}

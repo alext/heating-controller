@@ -7,10 +7,10 @@ import (
 	"net/http"
 
 	"github.com/alext/heating-controller/logger"
-	"github.com/alext/heating-controller/output"
+	"github.com/alext/heating-controller/zone"
 )
 
-func (srv *WebServer) outputsIndex(w http.ResponseWriter, req *http.Request) {
+func (srv *WebServer) zonesIndex(w http.ResponseWriter, req *http.Request) {
 	t, err := template.ParseFiles(
 		srv.templatesPath+"/_base.html",
 		srv.templatesPath+"/index.html",
@@ -21,7 +21,7 @@ func (srv *WebServer) outputsIndex(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	var b bytes.Buffer
-	err = t.Execute(&b, srv.outputs)
+	err = t.Execute(&b, srv.zones)
 	if err != nil {
 		logger.Warn("Error executing template:", err)
 		writeError(w, err)
@@ -30,19 +30,19 @@ func (srv *WebServer) outputsIndex(w http.ResponseWriter, req *http.Request) {
 	w.Write(b.Bytes())
 }
 
-func (srv *WebServer) outputActivate(w http.ResponseWriter, req *http.Request, out output.Output) {
-	err := out.Activate()
+func (srv *WebServer) zoneActivate(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
+	err := z.Out.Activate()
 	if err != nil {
-		writeError(w, fmt.Errorf("Error activating output '%s': %s", out.Id(), err.Error()))
+		writeError(w, fmt.Errorf("Error activating output '%s': %s", z.ID, err.Error()))
 		return
 	}
 	http.Redirect(w, req, "/", http.StatusFound)
 }
 
-func (srv *WebServer) outputDeactivate(w http.ResponseWriter, req *http.Request, out output.Output) {
-	err := out.Deactivate()
+func (srv *WebServer) zoneDeactivate(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
+	err := z.Out.Deactivate()
 	if err != nil {
-		writeError(w, fmt.Errorf("Error deactivating output '%s': %s", out.Id(), err.Error()))
+		writeError(w, fmt.Errorf("Error deactivating output '%s': %s", z.ID, err.Error()))
 		return
 	}
 	http.Redirect(w, req, "/", http.StatusFound)
