@@ -19,18 +19,50 @@ func TestOutput(t *testing.T) {
 	RunSpecs(t, "Timer")
 }
 
+var (
+	clockTimerCh chan time.Time
+	resetParam   time.Duration
+	resetNotify  chan bool
+)
+
+type dummyClockTimer struct{}
+
+func (tmr *dummyClockTimer) Channel() <-chan time.Time {
+	return clockTimerCh
+}
+
+func (tmr *dummyClockTimer) Reset(d time.Duration) bool {
+	resetParam = d
+
+	// Notify the channel, but don't block if nothing is listening.
+	select {
+	case resetNotify <- true:
+	default:
+	}
+
+	return true
+}
+
+func (tmr *dummyClockTimer) Stop() bool {
+	return true
+}
+
 var _ = Describe("a basic timer", func() {
 	var (
-		theOutput   output.Output
-		mockNow     time.Time
-		nowCount    int
-		theTimer    Timer
-		afterParam  time.Duration
-		afterCh     chan time.Time
-		afterNotify chan bool
+		theOutput output.Output
+		mockNow   time.Time
+		nowCount  int
+		theTimer  Timer
 	)
 
 	BeforeEach(func() {
+		clockTimerCh = make(chan time.Time, 1)
+		resetNotify = make(chan bool, 1)
+
+		newClockTimer = func(d time.Duration) clockTimer {
+			return &dummyClockTimer{}
+		}
+
 		theOutput = output.Virtual("out")
 		theTimer = New(theOutput)
 
@@ -39,20 +71,6 @@ var _ = Describe("a basic timer", func() {
 		time_Now = func() time.Time {
 			nowCount++
 			return mockNow
-		}
-
-		afterNotify = make(chan bool, 1)
-		time_After = func(d time.Duration) <-chan time.Time {
-			afterParam = d
-			afterCh = make(chan time.Time, 1)
-
-			// Notify the channel, but don't block if nothing is listening.
-			select {
-			case afterNotify <- true:
-			default:
-			}
-
-			return afterCh
 		}
 	})
 
@@ -73,7 +91,7 @@ var _ = Describe("a basic timer", func() {
 		It("should do nothing when attempting to start a running timer", func() {
 			theTimer.Start()
 			theTimer.Start()
-			<-afterNotify
+			<-resetNotify
 
 			Expect(nowCount).To(Equal(1))
 		})
@@ -102,13 +120,13 @@ var _ = Describe("a basic timer", func() {
 					mockNow = todayAt(6, 45, 0)
 
 					theTimer.Start()
-					<-afterNotify
+					<-resetNotify
 					Expect(theOutput.Active()).To(BeTrue())
 					theTimer.Stop()
 
 					mockNow = todayAt(12, 00, 0)
 					theTimer.Start()
-					<-afterNotify
+					<-resetNotify
 					Expect(theOutput.Active()).To(BeFalse())
 				})
 
@@ -116,14 +134,14 @@ var _ = Describe("a basic timer", func() {
 					mockNow = todayAt(4, 45, 0)
 
 					theTimer.Start()
-					<-afterNotify
+					<-resetNotify
 					Expect(theOutput.Active()).To(BeFalse())
 				})
 			})
 
 			It("should do nothing with no entries", func() {
 				theTimer.Start()
-				<-afterNotify
+				<-resetNotify
 				// expect it not to blow up
 			})
 		})
@@ -133,15 +151,15 @@ var _ = Describe("a basic timer", func() {
 		mockNow = todayAt(6, 20, 0)
 
 		theTimer.Start()
-		<-afterNotify
+		<-resetNotify
 
-		Expect(afterParam.String()).To(Equal("24h0m0s"))
+		Expect(resetParam.String()).To(Equal("24h0m0s"))
 
 		mockNow = mockNow.AddDate(0, 0, 1)
-		afterCh <- mockNow
-		<-afterNotify
+		clockTimerCh <- mockNow
+		<-resetNotify
 
-		Expect(afterParam.String()).To(Equal("24h0m0s"))
+		Expect(resetParam.String()).To(Equal("24h0m0s"))
 	})
 
 	Describe("firing events as scheduled", func() {
@@ -157,28 +175,28 @@ var _ = Describe("a basic timer", func() {
 			mockNow = todayAt(6, 20, 0)
 
 			theTimer.Start()
-			<-afterNotify
+			<-resetNotify
 			Expect(theOutput.Active()).To(BeFalse())
 
-			Expect(afterParam.String()).To(Equal("10m0s"))
+			Expect(resetParam.String()).To(Equal("10m0s"))
 
 			mockNow = todayAt(6, 30, 0)
-			afterCh <- mockNow
-			<-afterNotify
+			clockTimerCh <- mockNow
+			<-resetNotify
 			Expect(theOutput.Active()).To(BeTrue())
 
-			Expect(afterParam.String()).To(Equal("1h15m0s"))
+			Expect(resetParam.String()).To(Equal("1h15m0s"))
 
 			mockNow = todayAt(7, 45, 0)
-			afterCh <- mockNow
-			<-afterNotify
+			clockTimerCh <- mockNow
+			<-resetNotify
 			Expect(theOutput.Active()).To(BeFalse())
 
-			Expect(afterParam.String()).To(Equal("9h48m0s"))
+			Expect(resetParam.String()).To(Equal("9h48m0s"))
 
 			mockNow = todayAt(17, 33, 0)
-			afterCh <- mockNow
-			<-afterNotify
+			clockTimerCh <- mockNow
+			<-resetNotify
 			Expect(theOutput.Active()).To(BeTrue())
 		})
 
@@ -186,21 +204,21 @@ var _ = Describe("a basic timer", func() {
 			mockNow = todayAt(20, 04, 23)
 
 			theTimer.Start()
-			<-afterNotify
+			<-resetNotify
 			Expect(theOutput.Active()).To(BeTrue())
 
-			Expect(afterParam.String()).To(Equal("1h7m37s"))
+			Expect(resetParam.String()).To(Equal("1h7m37s"))
 
 			mockNow = todayAt(21, 12, 0)
-			afterCh <- mockNow
-			<-afterNotify
+			clockTimerCh <- mockNow
+			<-resetNotify
 			Expect(theOutput.Active()).To(BeFalse())
 
-			Expect(afterParam.String()).To(Equal("9h18m0s"))
+			Expect(resetParam.String()).To(Equal("9h18m0s"))
 
 			mockNow = todayAt(6, 30, 0)
-			afterCh <- mockNow
-			<-afterNotify
+			clockTimerCh <- mockNow
+			<-resetNotify
 			Expect(theOutput.Active()).To(BeTrue())
 		})
 
@@ -211,58 +229,58 @@ var _ = Describe("a basic timer", func() {
 			mockNow = todayAt(7, 30, 0)
 
 			theTimer.Start()
-			<-afterNotify
+			<-resetNotify
 			Expect(theOutput.Active()).To(BeTrue())
 
-			Expect(afterParam.String()).To(Equal("15m0s"))
+			Expect(resetParam.String()).To(Equal("15m0s"))
 
 			mockNow = todayAt(7, 45, 0)
-			afterCh <- mockNow
-			<-afterNotify
+			clockTimerCh <- mockNow
+			<-resetNotify
 			Expect(theOutput.Active()).To(BeFalse())
 
-			Expect(afterParam.String()).To(Equal("3h45m0s"))
+			Expect(resetParam.String()).To(Equal("3h45m0s"))
 
 			mockNow = todayAt(11, 30, 0)
-			afterCh <- mockNow
-			<-afterNotify
+			clockTimerCh <- mockNow
+			<-resetNotify
 			Expect(theOutput.Active()).To(BeTrue())
 
-			Expect(afterParam.String()).To(Equal("1h30m0s"))
+			Expect(resetParam.String()).To(Equal("1h30m0s"))
 
 			mockNow = todayAt(13, 0, 0)
-			afterCh <- mockNow
-			<-afterNotify
+			clockTimerCh <- mockNow
+			<-resetNotify
 			Expect(theOutput.Active()).To(BeFalse())
 
-			Expect(afterParam.String()).To(Equal("4h33m0s"))
+			Expect(resetParam.String()).To(Equal("4h33m0s"))
 		})
 
 		It("should handle events added after the timer has been started", func() {
 			mockNow = todayAt(7, 30, 0)
 
 			theTimer.Start()
-			<-afterNotify
+			<-resetNotify
 			Expect(theOutput.Active()).To(BeTrue())
 
-			Expect(afterParam.String()).To(Equal("15m0s"))
+			Expect(resetParam.String()).To(Equal("15m0s"))
 
 			mockNow = todayAt(7, 45, 0)
-			afterCh <- mockNow
-			<-afterNotify
+			clockTimerCh <- mockNow
+			<-resetNotify
 			Expect(theOutput.Active()).To(BeFalse())
 
-			Expect(afterParam.String()).To(Equal("9h48m0s"))
+			Expect(resetParam.String()).To(Equal("9h48m0s"))
 
 			mockNow = todayAt(9, 30, 0)
 			theTimer.AddEvent(Event{Hour: 11, Min: 30, Action: TurnOn})
-			<-afterNotify
+			<-resetNotify
 
-			Expect(afterParam.String()).To(Equal("2h0m0s"))
+			Expect(resetParam.String()).To(Equal("2h0m0s"))
 
 			mockNow = todayAt(11, 30, 0)
-			afterCh <- mockNow
-			<-afterNotify
+			clockTimerCh <- mockNow
+			<-resetNotify
 			Expect(theOutput.Active()).To(BeTrue())
 		})
 	})

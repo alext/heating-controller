@@ -10,10 +10,7 @@ import (
 )
 
 // variable indirection to enable testing
-var (
-	time_Now   = time.Now
-	time_After = time.After
-)
+var time_Now = time.Now
 
 type Action int
 
@@ -102,19 +99,31 @@ func (t *timer) NextEvent() *Event {
 
 func (t *timer) run() {
 	t.setInitialState()
+	var event *Event
+	var at time.Time
+	tmr := newClockTimer(100 * time.Hour) // arbitrary duration that will be reset in the loop
 	for {
-		now := time_Now().Local()
-		at, event := t.next(now)
-		logger.Debugf("[Timer:%s] Next entry at %v - %v", t.out.Id(), at, event)
+		if event == nil {
+			now := time_Now().Local()
+			at, event = t.next(now)
+			tmr.Reset(at.Sub(now))
+			logger.Debugf("[Timer:%s] Next entry at %v - %v", t.out.Id(), at, event)
+		}
 		select {
-		case now = <-time_After(at.Sub(now)):
+		case <-tmr.Channel():
 			if event != nil {
 				go event.do(t.out)
+				event = nil
 			}
-		case event = <-t.newEvent:
-			t.events = append(t.events, event)
+		case newEvent := <-t.newEvent:
+			t.events = append(t.events, newEvent)
 			sort.Sort(t.events)
+			if _, e := t.next(time_Now().Local()); e == newEvent {
+				// let the new event be picked up at the top of the loop
+				event = nil
+			}
 		case <-t.stop:
+			tmr.Stop()
 			return
 		}
 	}
