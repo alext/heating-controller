@@ -1,4 +1,4 @@
-package timer
+package scheduler
 
 import (
 	"fmt"
@@ -26,14 +26,14 @@ func (e *Event) after(hour, min int) bool {
 func (e *Event) do(out output.Output) {
 	var err error
 	if e.Action == TurnOn {
-		logger.Infof("[Timer:%s] Activating output", out.Id())
+		logger.Infof("[Scheduler:%s] Activating output", out.Id())
 		err = out.Activate()
 	} else {
-		logger.Infof("[Timer:%s] Deactivating output", out.Id())
+		logger.Infof("[Scheduler:%s] Deactivating output", out.Id())
 		err = out.Deactivate()
 	}
 	if err != nil {
-		logger.Warnf("[Timer:%s] Output error: %v", out.Id(), err)
+		logger.Warnf("[Scheduler:%s] Output error: %v", out.Id(), err)
 	}
 }
 

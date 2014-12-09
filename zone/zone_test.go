@@ -33,9 +33,9 @@ var _ = Describe("A heating zone", func() {
 			Expect(New("foo", out).ID).To(Equal("foo"))
 		})
 
-		It("should construct a timer", func() {
+		It("should construct a scheduler", func() {
 			z := New("foo", out)
-			Expect(z.Timer).NotTo(BeNil())
+			Expect(z.Scheduler).NotTo(BeNil())
 		})
 	})
 })

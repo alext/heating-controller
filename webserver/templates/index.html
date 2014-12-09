@@ -12,7 +12,7 @@
   <tr>
     <td>{{ .ID }}</td>
     <td>{{ if .Active }}active{{ else }}inactive{{end}}</td>
-    <td>{{ .Timer.NextEvent }}</td>
+    <td>{{ .Scheduler.NextEvent }}</td>
     <td>
       {{ if .Active }}
       <form action="/zones/{{ .ID }}/deactivate" method="post">

@@ -1,4 +1,4 @@
-package timer
+package scheduler
 
 import (
 	"sort"
@@ -26,7 +26,7 @@ const (
 	TurnOn
 )
 
-type Timer interface {
+type Scheduler interface {
 	Start()
 	Stop()
 	Running() bool
@@ -34,7 +34,7 @@ type Timer interface {
 	NextEvent() *Event
 }
 
-type timer struct {
+type scheduler struct {
 	out      output.Output
 	events   eventList
 	running  bool
@@ -43,8 +43,8 @@ type timer struct {
 	stop     chan bool
 }
 
-func New(out output.Output) Timer {
-	return &timer{
+func New(out output.Output) Scheduler {
+	return &scheduler{
 		out:      out,
 		events:   make(eventList, 0),
 		newEvent: make(chan *Event),
@@ -52,36 +52,36 @@ func New(out output.Output) Timer {
 	}
 }
 
-func (t *timer) Start() {
+func (t *scheduler) Start() {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 	if !t.running {
-		logger.Infof("[Timer:%s] Starting", t.out.Id())
+		logger.Infof("[Scheduler:%s] Starting", t.out.Id())
 		t.running = true
 		go t.run()
 	}
 }
 
-func (t *timer) Stop() {
+func (t *scheduler) Stop() {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 	if t.running {
-		logger.Infof("[Timer:%s] Stopping", t.out.Id())
+		logger.Infof("[Scheduler:%s] Stopping", t.out.Id())
 		t.running = false
 		t.stop <- true
 	}
 }
 
-func (t *timer) Running() bool {
+func (t *scheduler) Running() bool {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 	return t.running
 }
 
-func (t *timer) AddEvent(e Event) {
+func (t *scheduler) AddEvent(e Event) {
 	t.lock.Lock()
 	defer t.lock.Unlock()
-	logger.Debugf("[Timer:%s] Adding event: %v", t.out.Id(), e)
+	logger.Debugf("[Scheduler:%s] Adding event: %v", t.out.Id(), e)
 	if t.running {
 		t.newEvent <- &e
 		return
@@ -90,14 +90,14 @@ func (t *timer) AddEvent(e Event) {
 	sort.Sort(t.events)
 }
 
-func (t *timer) NextEvent() *Event {
+func (t *scheduler) NextEvent() *Event {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 	_, nextEvent := t.next(time_Now().Local())
 	return nextEvent
 }
 
-func (t *timer) run() {
+func (t *scheduler) run() {
 	t.setInitialState()
 	var event *Event
 	var at time.Time
@@ -107,7 +107,7 @@ func (t *timer) run() {
 			now := time_Now().Local()
 			at, event = t.next(now)
 			tmr.Reset(at.Sub(now))
-			logger.Debugf("[Timer:%s] Next entry at %v - %v", t.out.Id(), at, event)
+			logger.Debugf("[Scheduler:%s] Next entry at %v - %v", t.out.Id(), at, event)
 		}
 		select {
 		case <-tmr.Channel():
@@ -129,7 +129,7 @@ func (t *timer) run() {
 	}
 }
 
-func (t *timer) setInitialState() {
+func (t *scheduler) setInitialState() {
 	if len(t.events) < 1 {
 		return
 	}
@@ -147,7 +147,7 @@ func (t *timer) setInitialState() {
 	previous.do(t.out)
 }
 
-func (t *timer) next(now time.Time) (at time.Time, e *Event) {
+func (t *scheduler) next(now time.Time) (at time.Time, e *Event) {
 	if len(t.events) < 1 {
 		return now.AddDate(0, 0, 1), nil
 	}

@@ -10,7 +10,7 @@ import (
 
 	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/output"
-	"github.com/alext/heating-controller/timer"
+	"github.com/alext/heating-controller/scheduler"
 	"github.com/alext/heating-controller/webserver"
 	"github.com/alext/heating-controller/zone"
 )
@@ -89,11 +89,11 @@ func setupZones(zonesParam string, server ZoneAdder) error {
 		}
 		z := zone.New(id, out)
 		if z.ID == "ch" {
-			err := processCmdlineSchedule(*schedule, z.Timer)
+			err := processCmdlineSchedule(*schedule, z.Scheduler)
 			if err != nil {
 				return err
 			}
-			z.Timer.Start()
+			z.Scheduler.Start()
 		}
 		server.AddZone(z)
 	}
@@ -102,7 +102,7 @@ func setupZones(zonesParam string, server ZoneAdder) error {
 
 var schedulePart = regexp.MustCompile(`^(\d+):(\d+),(On|Off)$`)
 
-func processCmdlineSchedule(schedule string, t timer.Timer) error {
+func processCmdlineSchedule(schedule string, t scheduler.Scheduler) error {
 	for _, part := range strings.Split(schedule, ";") {
 		if part == "" {
 			continue
@@ -117,11 +117,11 @@ func processCmdlineSchedule(schedule string, t timer.Timer) error {
 		if hour < 0 || hour > 23 || min < 0 || min > 59 {
 			return fmt.Errorf("Invalid schedule entry %s", part)
 		}
-		e := timer.Event{Hour: hour, Min: min}
+		e := scheduler.Event{Hour: hour, Min: min}
 		if matches[3] == "On" {
-			e.Action = timer.TurnOn
+			e.Action = scheduler.TurnOn
 		} else {
-			e.Action = timer.TurnOff
+			e.Action = scheduler.TurnOff
 		}
 		t.AddEvent(e)
 	}

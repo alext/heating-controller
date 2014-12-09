@@ -1,4 +1,4 @@
-package timer
+package scheduler
 
 import (
 	"testing"
@@ -16,7 +16,7 @@ func TestOutput(t *testing.T) {
 
 	logger.Level = logger.WARN
 
-	RunSpecs(t, "Timer")
+	RunSpecs(t, "Scheduler")
 }
 
 var (
@@ -47,12 +47,12 @@ func (tmr *dummyClockTimer) Stop() bool {
 	return true
 }
 
-var _ = Describe("a basic timer", func() {
+var _ = Describe("a basic scheduler", func() {
 	var (
-		theOutput output.Output
-		mockNow   time.Time
-		nowCount  int
-		theTimer  Timer
+		theOutput    output.Output
+		mockNow      time.Time
+		nowCount     int
+		theScheduler Scheduler
 	)
 
 	BeforeEach(func() {
@@ -64,7 +64,7 @@ var _ = Describe("a basic timer", func() {
 		}
 
 		theOutput = output.Virtual("out")
-		theTimer = New(theOutput)
+		theScheduler = New(theOutput)
 
 		mockNow = time.Now()
 		nowCount = 0
@@ -75,57 +75,57 @@ var _ = Describe("a basic timer", func() {
 	})
 
 	AfterEach(func() {
-		theTimer.Stop()
+		theScheduler.Stop()
 	})
 
-	Describe("starting and stopping the timer", func() {
+	Describe("starting and stopping the scheduler", func() {
 		It("should not be running when newly created", func() {
-			Expect(theTimer.Running()).To(BeFalse())
+			Expect(theScheduler.Running()).To(BeFalse())
 		})
 
-		It("should start the timer", func() {
-			theTimer.Start()
-			Expect(theTimer.Running()).To(BeTrue())
+		It("should start the scheduler", func() {
+			theScheduler.Start()
+			Expect(theScheduler.Running()).To(BeTrue())
 		})
 
-		It("should do nothing when attempting to start a running timer", func() {
-			theTimer.Start()
-			theTimer.Start()
+		It("should do nothing when attempting to start a running scheduler", func() {
+			theScheduler.Start()
+			theScheduler.Start()
 			<-resetNotify
 
 			Expect(nowCount).To(Equal(1))
 		})
 
-		It("should stop the timer", func() {
-			theTimer.Start()
-			theTimer.Stop()
-			Expect(theTimer.Running()).To(BeFalse())
+		It("should stop the scheduler", func() {
+			theScheduler.Start()
+			theScheduler.Stop()
+			Expect(theScheduler.Running()).To(BeFalse())
 		})
 
-		It("should do nothing when attempting to stop a non-running timer", func(done Done) {
-			theTimer.Stop()
+		It("should do nothing when attempting to stop a non-running scheduler", func(done Done) {
+			theScheduler.Stop()
 			close(done)
 		}, 0.5)
 
 		Describe("setting the initial output state", func() {
 			Context("with some entries", func() {
 				BeforeEach(func() {
-					theTimer.AddEvent(Event{Hour: 6, Min: 30, Action: TurnOn})
-					theTimer.AddEvent(Event{Hour: 7, Min: 45, Action: TurnOff})
-					theTimer.AddEvent(Event{Hour: 17, Min: 33, Action: TurnOn})
-					theTimer.AddEvent(Event{Hour: 21, Min: 12, Action: TurnOff})
+					theScheduler.AddEvent(Event{Hour: 6, Min: 30, Action: TurnOn})
+					theScheduler.AddEvent(Event{Hour: 7, Min: 45, Action: TurnOff})
+					theScheduler.AddEvent(Event{Hour: 17, Min: 33, Action: TurnOn})
+					theScheduler.AddEvent(Event{Hour: 21, Min: 12, Action: TurnOff})
 				})
 
 				It("should apply the previous entry's state on starting", func() {
 					mockNow = todayAt(6, 45, 0)
 
-					theTimer.Start()
+					theScheduler.Start()
 					<-resetNotify
 					Expect(theOutput.Active()).To(BeTrue())
-					theTimer.Stop()
+					theScheduler.Stop()
 
 					mockNow = todayAt(12, 00, 0)
-					theTimer.Start()
+					theScheduler.Start()
 					<-resetNotify
 					Expect(theOutput.Active()).To(BeFalse())
 				})
@@ -133,14 +133,14 @@ var _ = Describe("a basic timer", func() {
 				It("should use the last entry from the previous day if necessary", func() {
 					mockNow = todayAt(4, 45, 0)
 
-					theTimer.Start()
+					theScheduler.Start()
 					<-resetNotify
 					Expect(theOutput.Active()).To(BeFalse())
 				})
 			})
 
 			It("should do nothing with no entries", func() {
-				theTimer.Start()
+				theScheduler.Start()
 				<-resetNotify
 				// expect it not to blow up
 			})
@@ -150,7 +150,7 @@ var _ = Describe("a basic timer", func() {
 	It("should continuously sleep for a day when started with no entries", func() {
 		mockNow = todayAt(6, 20, 0)
 
-		theTimer.Start()
+		theScheduler.Start()
 		<-resetNotify
 
 		Expect(resetParam.String()).To(Equal("24h0m0s"))
@@ -165,16 +165,16 @@ var _ = Describe("a basic timer", func() {
 	Describe("firing events as scheduled", func() {
 
 		BeforeEach(func() {
-			theTimer.AddEvent(Event{Hour: 6, Min: 30, Action: TurnOn})
-			theTimer.AddEvent(Event{Hour: 7, Min: 45, Action: TurnOff})
-			theTimer.AddEvent(Event{Hour: 17, Min: 33, Action: TurnOn})
-			theTimer.AddEvent(Event{Hour: 21, Min: 12, Action: TurnOff})
+			theScheduler.AddEvent(Event{Hour: 6, Min: 30, Action: TurnOn})
+			theScheduler.AddEvent(Event{Hour: 7, Min: 45, Action: TurnOff})
+			theScheduler.AddEvent(Event{Hour: 17, Min: 33, Action: TurnOn})
+			theScheduler.AddEvent(Event{Hour: 21, Min: 12, Action: TurnOff})
 		})
 
 		It("should fire the given events in order", func() {
 			mockNow = todayAt(6, 20, 0)
 
-			theTimer.Start()
+			theScheduler.Start()
 			<-resetNotify
 			Expect(theOutput.Active()).To(BeFalse())
 
@@ -203,7 +203,7 @@ var _ = Describe("a basic timer", func() {
 		It("should wrap around at the end of the day", func() {
 			mockNow = todayAt(20, 04, 23)
 
-			theTimer.Start()
+			theScheduler.Start()
 			<-resetNotify
 			Expect(theOutput.Active()).To(BeTrue())
 
@@ -223,12 +223,12 @@ var _ = Describe("a basic timer", func() {
 		})
 
 		It("should handle events added in a non-sequential order", func() {
-			theTimer.AddEvent(Event{Hour: 13, Min: 00, Action: TurnOff})
-			theTimer.AddEvent(Event{Hour: 11, Min: 30, Action: TurnOn})
+			theScheduler.AddEvent(Event{Hour: 13, Min: 00, Action: TurnOff})
+			theScheduler.AddEvent(Event{Hour: 11, Min: 30, Action: TurnOn})
 
 			mockNow = todayAt(7, 30, 0)
 
-			theTimer.Start()
+			theScheduler.Start()
 			<-resetNotify
 			Expect(theOutput.Active()).To(BeTrue())
 
@@ -256,10 +256,10 @@ var _ = Describe("a basic timer", func() {
 			Expect(resetParam.String()).To(Equal("4h33m0s"))
 		})
 
-		It("should handle events added after the timer has been started", func() {
+		It("should handle events added after the scheduler has been started", func() {
 			mockNow = todayAt(7, 30, 0)
 
-			theTimer.Start()
+			theScheduler.Start()
 			<-resetNotify
 			Expect(theOutput.Active()).To(BeTrue())
 
@@ -273,7 +273,7 @@ var _ = Describe("a basic timer", func() {
 			Expect(resetParam.String()).To(Equal("9h48m0s"))
 
 			mockNow = todayAt(9, 30, 0)
-			theTimer.AddEvent(Event{Hour: 11, Min: 30, Action: TurnOn})
+			theScheduler.AddEvent(Event{Hour: 11, Min: 30, Action: TurnOn})
 			<-resetNotify
 
 			Expect(resetParam.String()).To(Equal("2h0m0s"))
@@ -288,31 +288,31 @@ var _ = Describe("a basic timer", func() {
 	Describe("querying the next event", func() {
 
 		It("should return nil with no events", func() {
-			Expect(theTimer.NextEvent()).To(BeNil())
+			Expect(theScheduler.NextEvent()).To(BeNil())
 		})
 
 		Context("with some events", func() {
 			BeforeEach(func() {
-				theTimer.AddEvent(Event{Hour: 6, Min: 30, Action: TurnOn})
-				theTimer.AddEvent(Event{Hour: 17, Min: 33, Action: TurnOn})
-				theTimer.AddEvent(Event{Hour: 7, Min: 45, Action: TurnOff})
-				theTimer.AddEvent(Event{Hour: 21, Min: 12, Action: TurnOff})
+				theScheduler.AddEvent(Event{Hour: 6, Min: 30, Action: TurnOn})
+				theScheduler.AddEvent(Event{Hour: 17, Min: 33, Action: TurnOn})
+				theScheduler.AddEvent(Event{Hour: 7, Min: 45, Action: TurnOff})
+				theScheduler.AddEvent(Event{Hour: 21, Min: 12, Action: TurnOff})
 			})
 
 			It("should return the next event", func() {
 				mockNow = todayAt(6, 0, 0)
 
-				Expect(theTimer.NextEvent()).To(Equal(&Event{Hour: 6, Min: 30, Action: TurnOn}))
+				Expect(theScheduler.NextEvent()).To(Equal(&Event{Hour: 6, Min: 30, Action: TurnOn}))
 
 				mockNow = todayAt(7, 30, 0)
 
-				Expect(theTimer.NextEvent()).To(Equal(&Event{Hour: 7, Min: 45, Action: TurnOff}))
+				Expect(theScheduler.NextEvent()).To(Equal(&Event{Hour: 7, Min: 45, Action: TurnOff}))
 			})
 
 			It("should handle the wrap around at the end of the day", func() {
 				mockNow = todayAt(21, 30, 0)
 
-				Expect(theTimer.NextEvent()).To(Equal(&Event{Hour: 6, Min: 30, Action: TurnOn}))
+				Expect(theScheduler.NextEvent()).To(Equal(&Event{Hour: 6, Min: 30, Action: TurnOn}))
 			})
 		})
 	})

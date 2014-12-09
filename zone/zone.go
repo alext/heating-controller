@@ -2,20 +2,20 @@ package zone
 
 import (
 	"github.com/alext/heating-controller/output"
-	"github.com/alext/heating-controller/timer"
+	"github.com/alext/heating-controller/scheduler"
 )
 
 type Zone struct {
-	ID    string
-	Out   output.Output
-	Timer timer.Timer
+	ID        string
+	Out       output.Output
+	Scheduler scheduler.Scheduler
 }
 
 func New(id string, out output.Output) *Zone {
 	return &Zone{
-		ID:    id,
-		Out:   out,
-		Timer: timer.New(out),
+		ID:        id,
+		Out:       out,
+		Scheduler: scheduler.New(out),
 	}
 }
 
