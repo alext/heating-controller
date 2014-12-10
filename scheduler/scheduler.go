@@ -101,7 +101,7 @@ func (t *scheduler) run() {
 	t.setInitialState()
 	var event *Event
 	var at time.Time
-	tmr := newClockTimer(100 * time.Hour) // arbitrary duration that will be reset in the loop
+	tmr := newTimer(100 * time.Hour) // arbitrary duration that will be reset in the loop
 	for {
 		if event == nil {
 			now := time_Now().Local()

@@ -3,24 +3,24 @@ package scheduler
 import "time"
 
 // variable indirection to enable testing
-var newClockTimer = newRealClockTimer
+var newTimer = newRealTimer
 
 // Interface to specify a wrapper around time.Timer in order to alow the
 // substitution of another implementation in the tests.
-type clockTimer interface {
+type timer interface {
 	Reset(time.Duration) bool
 	Stop() bool
 	Channel() <-chan time.Time
 }
 
-type realClockTimer struct {
+type realTimer struct {
 	*time.Timer
 }
 
-func newRealClockTimer(d time.Duration) clockTimer {
-	return &realClockTimer{time.NewTimer(d)}
+func newRealTimer(d time.Duration) timer {
+	return realTimer{time.NewTimer(d)}
 }
 
-func (tmr *realClockTimer) Channel() <-chan time.Time {
+func (tmr realTimer) Channel() <-chan time.Time {
 	return tmr.Timer.C
 }
