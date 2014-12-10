@@ -52,110 +52,110 @@ func New(out output.Output) Scheduler {
 	}
 }
 
-func (t *scheduler) Start() {
-	t.lock.Lock()
-	defer t.lock.Unlock()
-	if !t.running {
-		logger.Infof("[Scheduler:%s] Starting", t.out.Id())
-		t.running = true
-		go t.run()
+func (s *scheduler) Start() {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	if !s.running {
+		logger.Infof("[Scheduler:%s] Starting", s.out.Id())
+		s.running = true
+		go s.run()
 	}
 }
 
-func (t *scheduler) Stop() {
-	t.lock.Lock()
-	defer t.lock.Unlock()
-	if t.running {
-		logger.Infof("[Scheduler:%s] Stopping", t.out.Id())
-		t.running = false
-		t.stop <- true
+func (s *scheduler) Stop() {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	if s.running {
+		logger.Infof("[Scheduler:%s] Stopping", s.out.Id())
+		s.running = false
+		s.stop <- true
 	}
 }
 
-func (t *scheduler) Running() bool {
-	t.lock.Lock()
-	defer t.lock.Unlock()
-	return t.running
+func (s *scheduler) Running() bool {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	return s.running
 }
 
-func (t *scheduler) AddEvent(e Event) {
-	t.lock.Lock()
-	defer t.lock.Unlock()
-	logger.Debugf("[Scheduler:%s] Adding event: %v", t.out.Id(), e)
-	if t.running {
-		t.newEvent <- &e
+func (s *scheduler) AddEvent(e Event) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	logger.Debugf("[Scheduler:%s] Adding event: %v", s.out.Id(), e)
+	if s.running {
+		s.newEvent <- &e
 		return
 	}
-	t.events = append(t.events, &e)
-	sort.Sort(t.events)
+	s.events = append(s.events, &e)
+	sort.Sort(s.events)
 }
 
-func (t *scheduler) NextEvent() *Event {
-	t.lock.Lock()
-	defer t.lock.Unlock()
-	_, nextEvent := t.next(time_Now().Local())
+func (s *scheduler) NextEvent() *Event {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	_, nextEvent := s.next(time_Now().Local())
 	return nextEvent
 }
 
-func (t *scheduler) run() {
-	t.setInitialState()
+func (s *scheduler) run() {
+	s.setInitialState()
 	var event *Event
 	var at time.Time
 	tmr := newTimer(100 * time.Hour) // arbitrary duration that will be reset in the loop
 	for {
 		if event == nil {
 			now := time_Now().Local()
-			at, event = t.next(now)
+			at, event = s.next(now)
 			tmr.Reset(at.Sub(now))
-			logger.Debugf("[Scheduler:%s] Next entry at %v - %v", t.out.Id(), at, event)
+			logger.Debugf("[Scheduler:%s] Next entry at %v - %v", s.out.Id(), at, event)
 		}
 		select {
 		case <-tmr.Channel():
 			if event != nil {
-				go event.do(t.out)
+				go event.do(s.out)
 				event = nil
 			}
-		case newEvent := <-t.newEvent:
-			t.events = append(t.events, newEvent)
-			sort.Sort(t.events)
-			if _, e := t.next(time_Now().Local()); e == newEvent {
+		case newEvent := <-s.newEvent:
+			s.events = append(s.events, newEvent)
+			sort.Sort(s.events)
+			if _, e := s.next(time_Now().Local()); e == newEvent {
 				// let the new event be picked up at the top of the loop
 				event = nil
 			}
-		case <-t.stop:
+		case <-s.stop:
 			tmr.Stop()
 			return
 		}
 	}
 }
 
-func (t *scheduler) setInitialState() {
-	if len(t.events) < 1 {
+func (s *scheduler) setInitialState() {
+	if len(s.events) < 1 {
 		return
 	}
 	hour, min, _ := time_Now().Local().Clock()
 	var previous *Event
-	for _, e := range t.events {
+	for _, e := range s.events {
 		if e.after(hour, min) {
 			break
 		}
 		previous = e
 	}
 	if previous == nil {
-		previous = t.events[len(t.events)-1]
+		previous = s.events[len(s.events)-1]
 	}
-	previous.do(t.out)
+	previous.do(s.out)
 }
 
-func (t *scheduler) next(now time.Time) (at time.Time, e *Event) {
-	if len(t.events) < 1 {
+func (s *scheduler) next(now time.Time) (at time.Time, e *Event) {
+	if len(s.events) < 1 {
 		return now.AddDate(0, 0, 1), nil
 	}
 	hour, min, _ := now.Clock()
-	for _, event := range t.events {
+	for _, event := range s.events {
 		if event.after(hour, min) {
 			return event.actionTime(now), event
 		}
 	}
-	return t.events[0].actionTime(now.AddDate(0, 0, 1)), t.events[0]
+	return s.events[0].actionTime(now.AddDate(0, 0, 1)), s.events[0]
 }
