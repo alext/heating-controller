@@ -34,21 +34,31 @@ type Scheduler interface {
 	NextEvent() *Event
 }
 
+type commandType int
+
+const (
+	stopCommand commandType = iota
+	addEventCommand
+)
+
+type command struct {
+	cmdType commandType
+	e       *Event
+}
+
 type scheduler struct {
-	out      output.Output
-	events   eventList
-	running  bool
-	lock     sync.Mutex
-	newEvent chan *Event
-	stop     chan bool
+	out       output.Output
+	events    eventList
+	running   bool
+	lock      sync.Mutex
+	commandCh chan command
 }
 
 func New(out output.Output) Scheduler {
 	return &scheduler{
-		out:      out,
-		events:   make(eventList, 0),
-		newEvent: make(chan *Event),
-		stop:     make(chan bool),
+		out:       out,
+		events:    make(eventList, 0),
+		commandCh: make(chan command),
 	}
 }
 
@@ -68,7 +78,7 @@ func (s *scheduler) Stop() {
 	if s.running {
 		logger.Infof("[Scheduler:%s] Stopping", s.out.Id())
 		s.running = false
-		s.stop <- true
+		s.commandCh <- command{cmdType: stopCommand}
 	}
 }
 
@@ -83,7 +93,7 @@ func (s *scheduler) AddEvent(e Event) {
 	defer s.lock.Unlock()
 	logger.Debugf("[Scheduler:%s] Adding event: %v", s.out.Id(), e)
 	if s.running {
-		s.newEvent <- &e
+		s.commandCh <- command{cmdType: addEventCommand, e: &e}
 		return
 	}
 	s.events = append(s.events, &e)
@@ -115,16 +125,19 @@ func (s *scheduler) run() {
 				go event.do(s.out)
 				event = nil
 			}
-		case newEvent := <-s.newEvent:
-			s.events = append(s.events, newEvent)
-			sort.Sort(s.events)
-			if _, e := s.next(time_Now().Local()); e == newEvent {
-				// let the new event be picked up at the top of the loop
-				event = nil
+		case cmd := <-s.commandCh:
+			switch cmd.cmdType {
+			case stopCommand:
+				tmr.Stop()
+				return
+			case addEventCommand:
+				s.events = append(s.events, cmd.e)
+				sort.Sort(s.events)
+				if _, e := s.next(time_Now().Local()); e == cmd.e {
+					// let the new event be picked up at the top of the loop
+					event = nil
+				}
 			}
-		case <-s.stop:
-			tmr.Stop()
-			return
 		}
 	}
 }
