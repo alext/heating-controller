@@ -316,6 +316,31 @@ var _ = Describe("a basic scheduler", func() {
 			})
 		})
 	})
+
+	Describe("boost function", func() {
+
+		Context("a scheduler with no events", func() {
+			It("should activate the output for the specified duraton", func() {
+				mockNow = todayAt(6, 0, 0)
+				theScheduler.Start()
+
+				<-resetNotify
+
+				mockNow = todayAt(7, 30, 0)
+				theScheduler.Boost(45 * time.Minute)
+
+				<-resetNotify
+				Expect(theOutput.Active()).To(BeTrue())
+				Expect(resetParam.String()).To(Equal("45m0s"))
+
+				mockNow = todayAt(8, 15, 0)
+				timerCh <- mockNow
+				<-resetNotify
+				Expect(theOutput.Active()).To(BeFalse())
+				Expect(resetParam.String()).To(Equal("24h0m0s"))
+			})
+		})
+	})
 })
 
 func todayAt(hour, minute, second int) time.Time {

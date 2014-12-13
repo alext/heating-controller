@@ -31,6 +31,7 @@ type Scheduler interface {
 	Stop()
 	Running() bool
 	AddEvent(Event)
+	Boost(time.Duration)
 	NextEvent() *Event
 }
 
@@ -39,6 +40,7 @@ type commandType int
 const (
 	stopCommand commandType = iota
 	addEventCommand
+	boostCommand
 )
 
 type command struct {
@@ -100,6 +102,19 @@ func (s *scheduler) AddEvent(e Event) {
 	sort.Sort(s.events)
 }
 
+func (s *scheduler) Boost(d time.Duration) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	if s.running {
+		endTime := time_Now().Local().Add(d)
+		s.commandCh <- command{cmdType: boostCommand, e: &Event{
+			Hour:   endTime.Hour(),
+			Min:    endTime.Minute(),
+			Action: TurnOff,
+		}}
+	}
+}
+
 func (s *scheduler) NextEvent() *Event {
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -137,6 +152,12 @@ func (s *scheduler) run() {
 					// let the new event be picked up at the top of the loop
 					event = nil
 				}
+			case boostCommand:
+				go s.out.Activate()
+				event = cmd.e
+				now := time_Now().Local()
+				at = event.nextOccurance(now)
+				tmr.Reset(at.Sub(now))
 			}
 		}
 	}
@@ -167,8 +188,8 @@ func (s *scheduler) next(now time.Time) (at time.Time, e *Event) {
 	hour, min, _ := now.Clock()
 	for _, event := range s.events {
 		if event.after(hour, min) {
-			return event.actionTime(now), event
+			return event.nextOccurance(now), event
 		}
 	}
-	return s.events[0].actionTime(now.AddDate(0, 0, 1)), s.events[0]
+	return s.events[0].nextOccurance(now), s.events[0]
 }

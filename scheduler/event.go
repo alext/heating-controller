@@ -14,9 +14,13 @@ type Event struct {
 	Action Action
 }
 
-func (e *Event) actionTime(actionDate time.Time) time.Time {
-	year, month, day := actionDate.Date()
-	return time.Date(year, month, day, e.Hour, e.Min, 0, 0, time.Local)
+func (e *Event) nextOccurance(current time.Time) time.Time {
+	next := time.Date(current.Year(), current.Month(), current.Day(), e.Hour, e.Min, 0, 0, time.Local)
+	if next.Before(current) {
+		current = current.AddDate(0, 0, 1)
+		next = time.Date(current.Year(), current.Month(), current.Day(), e.Hour, e.Min, 0, 0, time.Local)
+	}
+	return next
 }
 
 func (e *Event) after(hour, min int) bool {
