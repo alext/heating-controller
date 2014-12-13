@@ -13,7 +13,7 @@ import (
 	"github.com/alext/heating-controller/zone"
 )
 
-var _ = Describe("Endpoints for a zone", func() {
+var _ = Describe("zones controller", func() {
 	var (
 		mockCtrl *gomock.Controller
 		server   *webserver.WebServer
@@ -26,9 +26,6 @@ var _ = Describe("Endpoints for a zone", func() {
 
 	AfterEach(func() {
 		mockCtrl.Finish()
-	})
-
-	Describe("viewing details for a zone", func() {
 	})
 
 	Describe("changing an output state", func() {
