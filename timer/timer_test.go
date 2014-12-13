@@ -282,6 +282,7 @@ var _ = Describe("a basic timer", func() {
 			})
 
 			It("should return the next event", func() {
+				mockNow = todayAt(6, 0, 0)
 
 				Expect(theTimer.NextEvent()).To(Equal(&Event{Hour: 6, Min: 30, Action: TurnOn}))
 
