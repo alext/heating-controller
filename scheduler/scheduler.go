@@ -117,7 +117,7 @@ func (s *scheduler) run() {
 			now := time_Now().Local()
 			at, event = s.next(now)
 			tmr.Reset(at.Sub(now))
-			logger.Debugf("[Scheduler:%s] Next entry at %v - %v", s.out.Id(), at, event)
+			logger.Debugf("[Scheduler:%s] Next event at %v - %v", s.out.Id(), at, event)
 		}
 		select {
 		case <-tmr.Channel():
