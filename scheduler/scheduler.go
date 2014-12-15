@@ -154,10 +154,13 @@ func (s *scheduler) run() {
 				}
 			case boostCommand:
 				go s.out.Activate()
-				event = cmd.e
 				now := time_Now().Local()
-				at = event.nextOccurance(now)
-				tmr.Reset(at.Sub(now))
+				boostEnd := cmd.e.nextOccurance(now)
+				if boostEnd.Before(at) {
+					event = cmd.e
+					at = boostEnd
+					tmr.Reset(at.Sub(now))
+				}
 			}
 		}
 	}
