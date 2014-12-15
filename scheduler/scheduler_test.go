@@ -386,6 +386,26 @@ var _ = Describe("a basic scheduler", func() {
 				Expect(theOutput.Active()).To(BeTrue())
 				Expect(resetParam.String()).To(Equal("3h39m0s"))
 			})
+
+			It("should extend beyond next TurnOff event", func() {
+				mockNow = todayAt(7, 25, 0)
+				theScheduler.Start()
+
+				<-waitNotify
+
+				mockNow = todayAt(7, 30, 0)
+				theScheduler.Boost(30 * time.Minute)
+
+				<-waitNotify
+				Expect(theOutput.Active()).To(BeTrue())
+				Expect(resetParam.String()).To(Equal("30m0s"))
+
+				mockNow = todayAt(8, 0, 0)
+				timerCh <- mockNow
+				<-waitNotify
+				Expect(theOutput.Active()).To(BeFalse())
+				Expect(resetParam.String()).To(Equal("9h33m0s"))
+			})
 		})
 	})
 })

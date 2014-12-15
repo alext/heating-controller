@@ -156,7 +156,7 @@ func (s *scheduler) run() {
 				go s.out.Activate()
 				now := time_Now().Local()
 				boostEnd := cmd.e.nextOccurance(now)
-				if boostEnd.Before(at) {
+				if event == nil || event.Action == TurnOff || boostEnd.Before(at) {
 					event = cmd.e
 					at = boostEnd
 					tmr.Reset(at.Sub(now))
