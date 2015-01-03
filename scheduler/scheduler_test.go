@@ -351,12 +351,14 @@ var _ = Describe("a basic scheduler", func() {
 				<-waitNotify
 				Expect(theOutput.Active()).To(BeTrue())
 				Expect(resetParam.String()).To(Equal("45m0s"))
+				Expect(theScheduler.Boosted()).To(BeTrue())
 
 				mockNow = todayAt(8, 15, 0)
 				timerCh <- mockNow
 				<-waitNotify
 				Expect(theOutput.Active()).To(BeFalse())
 				Expect(resetParam.String()).To(Equal("24h0m0s"))
+				Expect(theScheduler.Boosted()).To(BeFalse())
 			})
 		})
 
@@ -380,12 +382,14 @@ var _ = Describe("a basic scheduler", func() {
 				<-waitNotify
 				Expect(theOutput.Active()).To(BeTrue())
 				Expect(resetParam.String()).To(Equal("40m0s"))
+				Expect(theScheduler.Boosted()).To(BeTrue())
 
 				mockNow = todayAt(15, 10, 0)
 				timerCh <- mockNow
 				<-waitNotify
 				Expect(theOutput.Active()).To(BeFalse())
 				Expect(resetParam.String()).To(Equal("2h23m0s"))
+				Expect(theScheduler.Boosted()).To(BeFalse())
 			})
 
 			It("should overlap an upcoming TurnOn event", func() {
@@ -399,12 +403,14 @@ var _ = Describe("a basic scheduler", func() {
 
 				<-waitNotify
 				Expect(theOutput.Active()).To(BeTrue())
+				Expect(theScheduler.Boosted()).To(BeTrue())
 
 				mockNow = todayAt(17, 33, 0)
 				timerCh <- mockNow
 				<-waitNotify
 				Expect(theOutput.Active()).To(BeTrue())
 				Expect(resetParam.String()).To(Equal("3h39m0s"))
+				Expect(theScheduler.Boosted()).To(BeFalse())
 			})
 
 			It("should extend beyond next TurnOff event", func() {
@@ -419,12 +425,14 @@ var _ = Describe("a basic scheduler", func() {
 				<-waitNotify
 				Expect(theOutput.Active()).To(BeTrue())
 				Expect(resetParam.String()).To(Equal("30m0s"))
+				Expect(theScheduler.Boosted()).To(BeTrue())
 
 				mockNow = todayAt(8, 0, 0)
 				timerCh <- mockNow
 				<-waitNotify
 				Expect(theOutput.Active()).To(BeFalse())
 				Expect(resetParam.String()).To(Equal("9h33m0s"))
+				Expect(theScheduler.Boosted()).To(BeFalse())
 			})
 		})
 	})

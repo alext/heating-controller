@@ -32,6 +32,7 @@ type Scheduler interface {
 	Running() bool
 	AddEvent(Event)
 	Boost(time.Duration)
+	Boosted() bool
 	NextEvent() *Event
 }
 
@@ -53,6 +54,7 @@ type scheduler struct {
 	out       output.Output
 	events    eventList
 	running   bool
+	boosted   bool
 	lock      sync.Mutex
 	commandCh chan command
 }
@@ -103,6 +105,10 @@ func (s *scheduler) AddEvent(e Event) {
 	sort.Sort(s.events)
 }
 
+func (s *scheduler) Boosted() bool {
+	return s.boosted
+}
+
 func (s *scheduler) Boost(d time.Duration) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -138,6 +144,7 @@ func (s *scheduler) run() {
 			now := time_Now().Local()
 			at, event = s.next(now)
 			tmr.Reset(at.Sub(now))
+			s.boosted = false
 			logger.Debugf("[Scheduler:%s] Next event at %v - %v", s.out.Id(), at, event)
 		}
 		select {
@@ -163,6 +170,7 @@ func (s *scheduler) run() {
 				s.commandCh <- cmd
 			case boostCommand:
 				go s.out.Activate()
+				s.boosted = true
 				now := time_Now().Local()
 				boostEnd := cmd.e.nextOccuranceAfter(now)
 				if event == nil || event.Action == TurnOff || boostEnd.Before(at) {

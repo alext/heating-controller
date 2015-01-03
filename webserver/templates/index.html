@@ -15,6 +15,9 @@
     <td>{{ if .Active }}active{{ else }}inactive{{end}}</td>
     <td>{{ .Scheduler.NextEvent }}</td>
     <td>
+      {{ if .Scheduler.Boosted }}
+      Boosted
+      {{ else }}
       <form action="/zones/{{ .ID }}/boost" method="post">
         <input type="hidden" name="_method" value="PUT">
         <select name="duration">
@@ -25,6 +28,7 @@
         </select>
         <input type="submit" value="Boost">
       </form>
+      {{ end }}
     </td>
     <td>
       {{ if .Active }}
@@ -37,7 +41,7 @@
         <input type="hidden" name="_method" value="PUT">
         <input type="submit" value="Activate">
       </form>
-      {{end}}
+      {{ end }}
     </td>
   </tr>
   {{ end }}

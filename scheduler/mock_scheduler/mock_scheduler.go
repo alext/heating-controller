@@ -4,10 +4,9 @@
 package mock_scheduler
 
 import (
-	time "time"
-
-	gomock "code.google.com/p/gomock/gomock"
 	scheduler "github.com/alext/heating-controller/scheduler"
+	time "time"
+	gomock "code.google.com/p/gomock/gomock"
 )
 
 // Mock of Scheduler interface
@@ -45,6 +44,16 @@ func (_m *MockScheduler) Boost(_param0 time.Duration) {
 
 func (_mr *_MockSchedulerRecorder) Boost(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "Boost", arg0)
+}
+
+func (_m *MockScheduler) Boosted() bool {
+	ret := _m.ctrl.Call(_m, "Boosted")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+func (_mr *_MockSchedulerRecorder) Boosted() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Boosted")
 }
 
 func (_m *MockScheduler) NextEvent() *scheduler.Event {

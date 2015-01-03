@@ -75,8 +75,8 @@ var _ = Describe("boosting a zone", func() {
 			expected := time.Now().Local().Add(30 * time.Minute)
 			Expect(eventTime).To(BeTemporally("~", expected, 65*time.Second)) // allow for minute tickover.
 
-			//cell = boostCell(page, 2)
-			//Expect(cell).To(MatchText("Boosted"))
+			cell = boostCell(page, 2)
+			Expect(cell).To(MatchText("Boosted"))
 		})
 	})
 
