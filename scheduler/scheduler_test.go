@@ -313,6 +313,26 @@ var _ = Describe("a basic scheduler", func() {
 
 				Expect(theScheduler.NextEvent()).To(Equal(&Event{Hour: 6, Min: 30, Action: TurnOn}))
 			})
+
+			Context("with a running timer", func() {
+				BeforeEach(func() {
+					mockNow = todayAt(14, 0, 0)
+					theScheduler.Start()
+					<-waitNotify
+				})
+
+				It("should return the next event", func() {
+
+					Expect(theScheduler.NextEvent()).To(Equal(&Event{Hour: 17, Min: 33, Action: TurnOn}))
+				})
+
+				It("should return the temporary boost end event when boosted", func() {
+					theScheduler.Boost(30 * time.Minute)
+					<-waitNotify
+
+					Expect(theScheduler.NextEvent()).To(Equal(&Event{Hour: 14, Min: 30, Action: TurnOff}))
+				})
+			})
 		})
 	})
 

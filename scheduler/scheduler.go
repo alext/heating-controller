@@ -35,11 +35,12 @@ type Scheduler interface {
 	NextEvent() *Event
 }
 
-type commandType int
+type commandType uint8
 
 const (
 	stopCommand commandType = iota
 	addEventCommand
+	nextEventCommand
 	boostCommand
 )
 
@@ -118,6 +119,11 @@ func (s *scheduler) Boost(d time.Duration) {
 func (s *scheduler) NextEvent() *Event {
 	s.lock.Lock()
 	defer s.lock.Unlock()
+	if s.running {
+		s.commandCh <- command{cmdType: nextEventCommand}
+		cmd := <-s.commandCh
+		return cmd.e
+	}
 	_, nextEvent := s.next(time_Now().Local())
 	return nextEvent
 }
@@ -152,6 +158,9 @@ func (s *scheduler) run() {
 					// let the new event be picked up at the top of the loop
 					event = nil
 				}
+			case nextEventCommand:
+				cmd.e = event
+				s.commandCh <- cmd
 			case boostCommand:
 				go s.out.Activate()
 				now := time_Now().Local()
