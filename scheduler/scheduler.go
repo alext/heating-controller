@@ -177,6 +177,9 @@ func (s *scheduler) run() {
 					event = cmd.e
 					at = boostEnd
 					tmr.Reset(at.Sub(now))
+					logger.Debugf("[Scheduler:%s] Boosting until %v", s.out.Id(), at)
+				} else {
+					logger.Debugf("[Scheduler:%s] Boosting until next event", s.out.Id())
 				}
 			}
 		}
