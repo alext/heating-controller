@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"time"
 
 	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/zone"
@@ -28,6 +29,16 @@ func (srv *WebServer) zonesIndex(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	w.Write(b.Bytes())
+}
+
+func (srv *WebServer) zoneBoost(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
+	d, err := time.ParseDuration(req.FormValue("duration"))
+	if err == nil {
+		z.Scheduler.Boost(d)
+	} else {
+		// TODO: error handling
+	}
+	http.Redirect(w, req, "/", http.StatusFound)
 }
 
 func (srv *WebServer) zoneActivate(w http.ResponseWriter, req *http.Request, z *zone.Zone) {

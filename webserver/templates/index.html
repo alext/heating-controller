@@ -6,6 +6,7 @@
     <th>Zone</th>
     <th>State</th>
     <th>Next Event</th>
+    <th>Boost</th>
     <th>&nbsp;</th>
   </tr>
   {{ range . }}
@@ -13,6 +14,18 @@
     <td>{{ .ID }}</td>
     <td>{{ if .Active }}active{{ else }}inactive{{end}}</td>
     <td>{{ .Scheduler.NextEvent }}</td>
+    <td>
+      <form action="/zones/{{ .ID }}/boost" method="post">
+        <input type="hidden" name="_method" value="PUT">
+        <select name="duration">
+          <option value="15m">15 mins</option>
+          <option value="30m">30 mins</option>
+          <option value="1h" selected>1 hour</option>
+          <option value="2h">2 hours</option>
+        </select>
+        <input type="submit" value="Boost">
+      </form>
+    </td>
     <td>
       {{ if .Active }}
       <form action="/zones/{{ .ID }}/deactivate" method="post">

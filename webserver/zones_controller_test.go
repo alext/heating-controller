@@ -102,4 +102,28 @@ var _ = Describe("zones controller", func() {
 		})
 	})
 
+	Describe("boosting", func() {
+		var (
+			output1 output.Output
+			zone1   *zone.Zone
+		)
+
+		BeforeEach(func() {
+			output1 = output.Virtual("one")
+			zone1 = zone.New("one", output1)
+			server.AddZone(zone1)
+		})
+
+		Describe("setting the boost", func() {
+			It("should boost the zone's scheduler")
+
+			It("should redirect to the index", func() {
+				w := doFakePutRequest(server, "/zones/one/boost")
+
+				Expect(w.Code).To(Equal(302))
+				Expect(w.Header().Get("Location")).To(Equal("/"))
+			})
+		})
+	})
+
 })
