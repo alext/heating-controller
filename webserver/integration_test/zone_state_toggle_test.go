@@ -50,15 +50,15 @@ var _ = Describe("toggling a zone's state", func() {
 		It("activates the output and redirects back to the index", func() {
 			Expect(page.Navigate(testServer.URL)).To(Succeed())
 
-			button := page.All("table tr").At(1).Find("form input[type=submit]")
-			Expect(button).To(HaveAttribute("value", "Activate"))
+			button := page.All("table tr").At(1).Find("form input[value=Activate]")
+			Expect(button).To(BeFound())
 
 			Expect(button.Click()).To(Succeed())
 
 			Expect(page).To(HaveURL(testServer.URL + "/"))
 
-			button = page.All("table tr").At(1).Find("form input[type=submit]")
-			Expect(button).To(HaveAttribute("value", "Deactivate"))
+			button = page.All("table tr").At(1).Find("form input[value=Deactivate]")
+			Expect(button).To(BeFound())
 
 			Expect(output1.Active()).To(Equal(true))
 		})
@@ -68,15 +68,15 @@ var _ = Describe("toggling a zone's state", func() {
 
 			Expect(page.Navigate(testServer.URL)).To(Succeed())
 
-			button := page.All("table tr").At(1).Find("form input[type=submit]")
-			Expect(button).To(HaveAttribute("value", "Deactivate"))
+			button := page.All("table tr").At(1).Find("form input[value=Deactivate]")
+			Expect(button).To(BeFound())
 
 			Expect(button.Click()).To(Succeed())
 
 			Expect(page).To(HaveURL(testServer.URL + "/"))
 
-			button = page.All("table tr").At(1).Find("form input[type=submit]")
-			Expect(button).To(HaveAttribute("value", "Activate"))
+			button = page.All("table tr").At(1).Find("form input[value=Activate]")
+			Expect(button).To(BeFound())
 
 			Expect(output1.Active()).To(Equal(false))
 		})
