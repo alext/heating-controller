@@ -164,7 +164,7 @@ func (s *scheduler) run() {
 			case boostCommand:
 				go s.out.Activate()
 				now := time_Now().Local()
-				boostEnd := cmd.e.nextOccurance(now)
+				boostEnd := cmd.e.nextOccuranceAfter(now)
 				if event == nil || event.Action == TurnOff || boostEnd.Before(at) {
 					event = cmd.e
 					at = boostEnd
@@ -200,8 +200,8 @@ func (s *scheduler) next(now time.Time) (at time.Time, e *Event) {
 	hour, min, _ := now.Clock()
 	for _, event := range s.events {
 		if event.after(hour, min) {
-			return event.nextOccurance(now), event
+			return event.nextOccuranceAfter(now), event
 		}
 	}
-	return s.events[0].nextOccurance(now), s.events[0]
+	return s.events[0].nextOccuranceAfter(now), s.events[0]
 }

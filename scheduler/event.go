@@ -14,7 +14,11 @@ type Event struct {
 	Action Action
 }
 
-func (e *Event) nextOccurance(current time.Time) time.Time {
+func (e *Event) NextOccurance() time.Time {
+	return e.nextOccuranceAfter(time_Now().Local())
+}
+
+func (e *Event) nextOccuranceAfter(current time.Time) time.Time {
 	next := time.Date(current.Year(), current.Month(), current.Day(), e.Hour, e.Min, 0, 0, time.Local)
 	if next.Before(current) {
 		current = current.AddDate(0, 0, 1)
