@@ -32,13 +32,14 @@ func (srv *WebServer) zonesIndex(w http.ResponseWriter, req *http.Request) {
 }
 
 func (srv *WebServer) zoneBoost(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
-	d, err := time.ParseDuration(req.FormValue("duration"))
+	durationString := req.FormValue("duration")
+	d, err := time.ParseDuration(durationString)
 	if err == nil {
 		z.Scheduler.Boost(d)
+		http.Redirect(w, req, "/", http.StatusFound)
 	} else {
-		// TODO: error handling
+		http.Error(w, fmt.Sprintf("Invalid boost duration '%s'", durationString), http.StatusBadRequest)
 	}
-	http.Redirect(w, req, "/", http.StatusFound)
 }
 
 func (srv *WebServer) zoneActivate(w http.ResponseWriter, req *http.Request, z *zone.Zone) {

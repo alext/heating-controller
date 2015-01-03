@@ -133,6 +133,17 @@ var _ = Describe("zones controller", func() {
 				Expect(w.Code).To(Equal(302))
 				Expect(w.Header().Get("Location")).To(Equal("/"))
 			})
+
+			It("should return an error with an invalid duration", func() {
+				w := doFakePutRequestWithValues(server, "/zones/one/boost", url.Values{"duration": {"wibble"}})
+				Expect(w.Code).To(Equal(400))
+				Expect(w.Body.String()).To(Equal("Invalid boost duration 'wibble'\n"))
+
+				w = doFakePutRequestWithValues(server, "/zones/one/boost", url.Values{"duration": {""}})
+				Expect(w.Code).To(Equal(400))
+				Expect(w.Body.String()).To(Equal("Invalid boost duration ''\n"))
+			})
+
 		})
 	})
 
