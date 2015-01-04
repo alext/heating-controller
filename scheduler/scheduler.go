@@ -192,6 +192,7 @@ func (s *scheduler) run() {
 					logger.Debugf("[Scheduler:%s] Boosting until next event", s.out.Id())
 				}
 			case cancelBoostCommand:
+				logger.Debugf("[Scheduler:%s] Cancelling boost", s.out.Id())
 				s.setCurrentState()
 				event = nil
 			}
