@@ -42,6 +42,11 @@ func (srv *WebServer) zoneBoost(w http.ResponseWriter, req *http.Request, z *zon
 	}
 }
 
+func (srv *WebServer) zoneCancelBoost(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
+	z.Scheduler.CancelBoost()
+	http.Redirect(w, req, "/", http.StatusFound)
+}
+
 func (srv *WebServer) zoneActivate(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
 	err := z.Out.Activate()
 	if err != nil {

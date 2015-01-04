@@ -81,6 +81,48 @@ var _ = Describe("boosting a zone", func() {
 	})
 
 	Describe("cancelling a boost", func() {
+		var (
+			output1 output.Output
+			zone1   *zone.Zone
+		)
+
+		BeforeEach(func() {
+			output1 = output.Virtual("one")
+			zone1 = zone.New("one", output1)
+			server.AddZone(zone1)
+			zone1.Scheduler.Start()
+			zone1.Scheduler.Boost(23 * time.Minute)
+		})
+
+		AfterEach(func() {
+			zone1.Scheduler.Stop()
+		})
+
+		It("cancels the boost and redirects back to the index", func() {
+			Expect(page.Navigate(testServer.URL)).To(Succeed())
+
+			cell := boostCell(page, 2)
+			Expect(cell).To(MatchText("Boosted"))
+			button := cell.Find("input[value=\"Cancel boost\"]")
+			Expect(button).To(BeFound())
+			button.Click()
+
+			Expect(page).To(HaveURL(testServer.URL + "/"))
+
+			Expect(zone1.Active()).To(Equal(false))
+
+			nextEvent := zone1.Scheduler.NextEvent()
+			Expect(nextEvent).To(BeNil())
+
+			//Expect(nextEvent.Action).To(Equal(scheduler.TurnOff))
+
+			//eventTime := nextEvent.NextOccurance()
+			//expected := time.Now().Local().Add(30 * time.Minute)
+			//Expect(eventTime).To(BeTemporally("~", expected, 65*time.Second)) // allow for minute tickover.
+
+			cell = boostCell(page, 2)
+			Expect(cell.Find("input[value=Boost]")).To(BeFound())
+		})
 	})
 })
 

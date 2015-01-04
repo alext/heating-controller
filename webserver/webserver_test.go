@@ -28,13 +28,17 @@ func doPutRequest(server http.Handler, path string) (w *httptest.ResponseRecorde
 	return doRequest(server, "PUT", path)
 }
 
+// POST request pretending to be a PUT request because browsers...
 func doFakePutRequest(server http.Handler, path string) (w *httptest.ResponseRecorder) {
-	return doFakePutRequestWithValues(server, path, url.Values{})
+	return doFakeRequestWithValues(server, "PUT", path, url.Values{})
 }
 
-// POST request pretending to be a PUT request because browsers...
-func doFakePutRequestWithValues(server http.Handler, path string, values url.Values) (w *httptest.ResponseRecorder) {
-	values.Set("_method", "PUT")
+func doFakeDeleteRequest(server http.Handler, path string) (w *httptest.ResponseRecorder) {
+	return doFakeRequestWithValues(server, "DELETE", path, url.Values{})
+}
+
+func doFakeRequestWithValues(server http.Handler, verb, path string, values url.Values) (w *httptest.ResponseRecorder) {
+	values.Set("_method", verb)
 	body := strings.NewReader(values.Encode())
 	req, _ := http.NewRequest("POST", "http://example.com"+path, body)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")

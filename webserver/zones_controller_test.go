@@ -124,26 +124,43 @@ var _ = Describe("zones controller", func() {
 
 				mockScheduler.EXPECT().Boost(42 * time.Minute)
 
-				doFakePutRequestWithValues(server, "/zones/one/boost", url.Values{"duration": {"42m"}})
+				doFakeRequestWithValues(server, "PUT", "/zones/one/boost", url.Values{"duration": {"42m"}})
 			})
 
 			It("should redirect to the index", func() {
-				w := doFakePutRequestWithValues(server, "/zones/one/boost", url.Values{"duration": {"42m"}})
+				w := doFakeRequestWithValues(server, "PUT", "/zones/one/boost", url.Values{"duration": {"42m"}})
 
 				Expect(w.Code).To(Equal(302))
 				Expect(w.Header().Get("Location")).To(Equal("/"))
 			})
 
 			It("should return an error with an invalid duration", func() {
-				w := doFakePutRequestWithValues(server, "/zones/one/boost", url.Values{"duration": {"wibble"}})
+				w := doFakeRequestWithValues(server, "PUT", "/zones/one/boost", url.Values{"duration": {"wibble"}})
 				Expect(w.Code).To(Equal(400))
 				Expect(w.Body.String()).To(Equal("Invalid boost duration 'wibble'\n"))
 
-				w = doFakePutRequestWithValues(server, "/zones/one/boost", url.Values{"duration": {""}})
+				w = doFakeRequestWithValues(server, "PUT", "/zones/one/boost", url.Values{"duration": {""}})
 				Expect(w.Code).To(Equal(400))
 				Expect(w.Body.String()).To(Equal("Invalid boost duration ''\n"))
 			})
+		})
 
+		Describe("cancelling the boost", func() {
+			It("should boost the zone's scheduler", func() {
+				mockScheduler := mock_scheduler.NewMockScheduler(mockCtrl)
+				zone1.Scheduler = mockScheduler
+
+				mockScheduler.EXPECT().CancelBoost()
+
+				doFakeDeleteRequest(server, "/zones/one/boost")
+			})
+
+			It("should redirect to the index", func() {
+				w := doFakeDeleteRequest(server, "/zones/one/boost")
+
+				Expect(w.Code).To(Equal(302))
+				Expect(w.Header().Get("Location")).To(Equal("/"))
+			})
 		})
 	})
 
