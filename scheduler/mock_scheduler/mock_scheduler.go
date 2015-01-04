@@ -56,6 +56,14 @@ func (_mr *_MockSchedulerRecorder) Boosted() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "Boosted")
 }
 
+func (_m *MockScheduler) CancelBoost() {
+	_m.ctrl.Call(_m, "CancelBoost")
+}
+
+func (_mr *_MockSchedulerRecorder) CancelBoost() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "CancelBoost")
+}
+
 func (_m *MockScheduler) NextEvent() *scheduler.Event {
 	ret := _m.ctrl.Call(_m, "NextEvent")
 	ret0, _ := ret[0].(*scheduler.Event)

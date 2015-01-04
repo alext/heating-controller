@@ -31,8 +31,9 @@ type Scheduler interface {
 	Stop()
 	Running() bool
 	AddEvent(Event)
-	Boost(time.Duration)
 	Boosted() bool
+	Boost(time.Duration)
+	CancelBoost()
 	NextEvent() *Event
 }
 
@@ -43,6 +44,7 @@ const (
 	addEventCommand
 	nextEventCommand
 	boostCommand
+	cancelBoostCommand
 )
 
 type command struct {
@@ -122,6 +124,14 @@ func (s *scheduler) Boost(d time.Duration) {
 	}
 }
 
+func (s *scheduler) CancelBoost() {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	if s.running {
+		s.commandCh <- command{cmdType: cancelBoostCommand}
+	}
+}
+
 func (s *scheduler) NextEvent() *Event {
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -135,7 +145,7 @@ func (s *scheduler) NextEvent() *Event {
 }
 
 func (s *scheduler) run() {
-	s.setInitialState()
+	s.setCurrentState()
 	var event *Event
 	var at time.Time
 	tmr := newTimer(100 * time.Hour) // arbitrary duration that will be reset in the loop
@@ -181,13 +191,17 @@ func (s *scheduler) run() {
 				} else {
 					logger.Debugf("[Scheduler:%s] Boosting until next event", s.out.Id())
 				}
+			case cancelBoostCommand:
+				s.setCurrentState()
+				event = nil
 			}
 		}
 	}
 }
 
-func (s *scheduler) setInitialState() {
+func (s *scheduler) setCurrentState() {
 	if len(s.events) < 1 {
+		s.out.Deactivate()
 		return
 	}
 	hour, min, _ := time_Now().Local().Clock()

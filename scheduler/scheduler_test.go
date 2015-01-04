@@ -56,7 +56,7 @@ var _ = Describe("a basic scheduler", func() {
 
 	BeforeEach(func() {
 		timerCh = make(chan time.Time, 1)
-		waitNotify = make(chan bool)
+		waitNotify = make(chan bool, 1)
 
 		newTimer = func(d time.Duration) timer {
 			return dummyTimer{}
@@ -339,11 +339,13 @@ var _ = Describe("a basic scheduler", func() {
 	Describe("boost function", func() {
 
 		Context("a scheduler with no events", func() {
-			It("should activate the output for the specified duraton", func() {
+			BeforeEach(func() {
 				mockNow = todayAt(6, 0, 0)
 				theScheduler.Start()
-
 				<-waitNotify
+			})
+
+			It("should activate the output for the specified duraton", func() {
 
 				mockNow = todayAt(7, 30, 0)
 				theScheduler.Boost(45 * time.Minute)
@@ -359,6 +361,19 @@ var _ = Describe("a basic scheduler", func() {
 				Expect(theOutput.Active()).To(BeFalse())
 				Expect(resetParam.String()).To(Equal("24h0m0s"))
 				Expect(theScheduler.Boosted()).To(BeFalse())
+			})
+
+			It("should allow cancelling the boost", func() {
+				theScheduler.Boost(45 * time.Minute)
+				<-waitNotify
+
+				mockNow = todayAt(6, 26, 0)
+				theScheduler.CancelBoost()
+				<-waitNotify
+
+				Expect(theOutput.Active()).To(BeFalse())
+				Expect(theScheduler.Boosted()).To(BeFalse())
+				Expect(resetParam.String()).To(Equal("24h0m0s"))
 			})
 		})
 
@@ -392,47 +407,99 @@ var _ = Describe("a basic scheduler", func() {
 				Expect(theScheduler.Boosted()).To(BeFalse())
 			})
 
-			It("should overlap an upcoming TurnOn event", func() {
-				mockNow = todayAt(16, 0, 0)
+			It("should allow cancelling the boost", func() {
+				mockNow = todayAt(14, 0, 0)
 				theScheduler.Start()
-
 				<-waitNotify
 
-				mockNow = todayAt(17, 00, 0)
+				mockNow = todayAt(14, 30, 0)
 				theScheduler.Boost(40 * time.Minute)
-
 				<-waitNotify
-				Expect(theOutput.Active()).To(BeTrue())
-				Expect(theScheduler.Boosted()).To(BeTrue())
 
-				mockNow = todayAt(17, 33, 0)
-				timerCh <- mockNow
+				mockNow = todayAt(14, 55, 0)
+				theScheduler.CancelBoost()
 				<-waitNotify
-				Expect(theOutput.Active()).To(BeTrue())
-				Expect(resetParam.String()).To(Equal("3h39m0s"))
+
+				Expect(theOutput.Active()).To(BeFalse())
 				Expect(theScheduler.Boosted()).To(BeFalse())
+				Expect(resetParam.String()).To(Equal("2h38m0s"))
 			})
 
-			It("should extend beyond next TurnOff event", func() {
-				mockNow = todayAt(7, 25, 0)
-				theScheduler.Start()
+			Context("overlapping an upcoming TurnOn event", func() {
+				BeforeEach(func() {
+					mockNow = todayAt(16, 0, 0)
+					theScheduler.Start()
+					<-waitNotify
+				})
 
-				<-waitNotify
+				It("should overlap an upcoming TurnOn event", func() {
+					mockNow = todayAt(17, 00, 0)
+					theScheduler.Boost(40 * time.Minute)
 
-				mockNow = todayAt(7, 30, 0)
-				theScheduler.Boost(30 * time.Minute)
+					<-waitNotify
+					Expect(theOutput.Active()).To(BeTrue())
+					Expect(theScheduler.Boosted()).To(BeTrue())
 
-				<-waitNotify
-				Expect(theOutput.Active()).To(BeTrue())
-				Expect(resetParam.String()).To(Equal("30m0s"))
-				Expect(theScheduler.Boosted()).To(BeTrue())
+					mockNow = todayAt(17, 33, 0)
+					timerCh <- mockNow
+					<-waitNotify
+					Expect(theOutput.Active()).To(BeTrue())
+					Expect(resetParam.String()).To(Equal("3h39m0s"))
+					Expect(theScheduler.Boosted()).To(BeFalse())
+				})
 
-				mockNow = todayAt(8, 0, 0)
-				timerCh <- mockNow
-				<-waitNotify
-				Expect(theOutput.Active()).To(BeFalse())
-				Expect(resetParam.String()).To(Equal("9h33m0s"))
-				Expect(theScheduler.Boosted()).To(BeFalse())
+				It("cancelling the boost should retain the state of the overlapped event", func() {
+					mockNow = todayAt(17, 00, 0)
+					theScheduler.Boost(40 * time.Minute)
+					<-waitNotify
+
+					mockNow = todayAt(17, 35, 0)
+					theScheduler.CancelBoost()
+					<-waitNotify
+
+					Expect(theOutput.Active()).To(BeTrue())
+					Expect(theScheduler.Boosted()).To(BeFalse())
+					Expect(resetParam.String()).To(Equal("3h37m0s"))
+				})
+			})
+
+			Context("extending beyond the next TurnOff event", func() {
+				BeforeEach(func() {
+					mockNow = todayAt(7, 25, 0)
+					theScheduler.Start()
+					<-waitNotify
+				})
+
+				It("should extend beyond next TurnOff event", func() {
+					mockNow = todayAt(7, 30, 0)
+					theScheduler.Boost(30 * time.Minute)
+
+					<-waitNotify
+					Expect(theOutput.Active()).To(BeTrue())
+					Expect(resetParam.String()).To(Equal("30m0s"))
+					Expect(theScheduler.Boosted()).To(BeTrue())
+
+					mockNow = todayAt(8, 0, 0)
+					timerCh <- mockNow
+					<-waitNotify
+					Expect(theOutput.Active()).To(BeFalse())
+					Expect(resetParam.String()).To(Equal("9h33m0s"))
+					Expect(theScheduler.Boosted()).To(BeFalse())
+				})
+
+				It("cancelling the boost should retain the event state", func() {
+					mockNow = todayAt(7, 30, 0)
+					theScheduler.Boost(30 * time.Minute)
+					<-waitNotify
+
+					mockNow = todayAt(7, 40, 0)
+					theScheduler.CancelBoost()
+					<-waitNotify
+
+					Expect(theOutput.Active()).To(BeTrue())
+					Expect(theScheduler.Boosted()).To(BeFalse())
+					Expect(resetParam.String()).To(Equal("5m0s"))
+				})
 			})
 		})
 	})
