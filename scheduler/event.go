@@ -14,11 +14,11 @@ type Event struct {
 	Action Action
 }
 
-func (e *Event) NextOccurance() time.Time {
+func (e Event) NextOccurance() time.Time {
 	return e.nextOccuranceAfter(time_Now().Local())
 }
 
-func (e *Event) nextOccuranceAfter(current time.Time) time.Time {
+func (e Event) nextOccuranceAfter(current time.Time) time.Time {
 	next := time.Date(current.Year(), current.Month(), current.Day(), e.Hour, e.Min, 0, 0, time.Local)
 	if next.Before(current) {
 		current = current.AddDate(0, 0, 1)
@@ -27,11 +27,11 @@ func (e *Event) nextOccuranceAfter(current time.Time) time.Time {
 	return next
 }
 
-func (e *Event) after(hour, min int) bool {
+func (e Event) after(hour, min int) bool {
 	return e.Hour > hour || (e.Hour == hour && e.Min > min)
 }
 
-func (e *Event) do(out output.Output) {
+func (e Event) do(out output.Output) {
 	var err error
 	if e.Action == TurnOn {
 		logger.Infof("[Scheduler:%s] Activating output", out.Id())
@@ -45,7 +45,7 @@ func (e *Event) do(out output.Output) {
 	}
 }
 
-func (e *Event) String() string {
+func (e Event) String() string {
 	return fmt.Sprintf("%d:%d %s", e.Hour, e.Min, e.Action)
 }
 
