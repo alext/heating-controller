@@ -103,8 +103,7 @@ func (s *scheduler) AddEvent(e Event) {
 		s.commandCh <- command{cmdType: addEventCommand, e: &e}
 		return
 	}
-	s.events = append(s.events, &e)
-	sort.Sort(s.events)
+	s.addEvent(&e)
 }
 
 func (s *scheduler) Boosted() bool {
@@ -169,8 +168,7 @@ func (s *scheduler) run() {
 				tmr.Stop()
 				return
 			case addEventCommand:
-				s.events = append(s.events, cmd.e)
-				sort.Sort(s.events)
+				s.addEvent(cmd.e)
 				if _, e := s.next(time_Now().Local()); e == cmd.e {
 					// let the new event be picked up at the top of the loop
 					event = nil
@@ -198,6 +196,11 @@ func (s *scheduler) run() {
 			}
 		}
 	}
+}
+
+func (s *scheduler) addEvent(e *Event) {
+	s.events = append(s.events, e)
+	sort.Sort(s.events)
 }
 
 func (s *scheduler) setCurrentState() {
