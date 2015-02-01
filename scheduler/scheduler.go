@@ -31,6 +31,7 @@ type Scheduler interface {
 	Stop()
 	Running() bool
 	AddEvent(Event)
+	RemoveEvent(Event)
 	Boosted() bool
 	Boost(time.Duration)
 	CancelBoost()
@@ -43,6 +44,7 @@ type commandType uint8
 const (
 	stopCommand commandType = iota
 	addEventCommand
+	removeEventCommand
 	nextEventCommand
 	readEventsCommand
 	boostCommand
@@ -106,6 +108,16 @@ func (s *scheduler) AddEvent(e Event) {
 		return
 	}
 	s.addEvent(&e)
+}
+
+func (s *scheduler) RemoveEvent(e Event) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	if s.running {
+		s.commandCh <- command{cmdType: removeEventCommand, e: &e}
+		return
+	}
+	s.removeEvent(&e)
 }
 
 func (s *scheduler) Boosted() bool {
@@ -196,6 +208,12 @@ func (s *scheduler) run() {
 					// let the new event be picked up at the top of the loop
 					event = nil
 				}
+			case removeEventCommand:
+				s.removeEvent(cmd.e)
+				if *cmd.e == *event {
+					// let the new event be picked up at the top of the loop
+					event = nil
+				}
 			case nextEventCommand:
 				cmd.e = event
 				s.commandCh <- cmd
@@ -229,6 +247,16 @@ func (s *scheduler) run() {
 func (s *scheduler) addEvent(e *Event) {
 	s.events = append(s.events, e)
 	sort.Sort(s.events)
+}
+
+func (s *scheduler) removeEvent(event *Event) {
+	newEvents := make(eventList, 0)
+	for _, e := range s.events {
+		if *e != *event {
+			newEvents = append(newEvents, e)
+		}
+	}
+	s.events = newEvents
 }
 
 func (s *scheduler) setCurrentState() {

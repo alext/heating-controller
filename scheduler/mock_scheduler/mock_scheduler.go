@@ -84,6 +84,14 @@ func (_mr *_MockSchedulerRecorder) ReadEvents() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "ReadEvents")
 }
 
+func (_m *MockScheduler) RemoveEvent(_param0 scheduler.Event) {
+	_m.ctrl.Call(_m, "RemoveEvent", _param0)
+}
+
+func (_mr *_MockSchedulerRecorder) RemoveEvent(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemoveEvent", arg0)
+}
+
 func (_m *MockScheduler) Running() bool {
 	ret := _m.ctrl.Call(_m, "Running")
 	ret0, _ := ret[0].(bool)
