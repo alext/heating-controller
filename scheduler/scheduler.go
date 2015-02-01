@@ -35,6 +35,7 @@ type Scheduler interface {
 	Boost(time.Duration)
 	CancelBoost()
 	NextEvent() *Event
+	ReadEvents() []Event
 }
 
 type commandType uint8
@@ -43,6 +44,7 @@ const (
 	stopCommand commandType = iota
 	addEventCommand
 	nextEventCommand
+	readEventsCommand
 	boostCommand
 	cancelBoostCommand
 )
@@ -143,6 +145,27 @@ func (s *scheduler) NextEvent() *Event {
 	return nextEvent
 }
 
+func (s *scheduler) ReadEvents() []Event {
+	result := make([]Event, 0)
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	if s.running {
+		s.commandCh <- command{cmdType: readEventsCommand}
+		for cmd := range s.commandCh {
+			if cmd.e == nil {
+				break
+			}
+			result = append(result, *cmd.e)
+		}
+	} else {
+		for _, e := range s.events {
+			result = append(result, *e)
+		}
+	}
+	return result
+}
+
 func (s *scheduler) run() {
 	s.setCurrentState()
 	var event *Event
@@ -176,6 +199,11 @@ func (s *scheduler) run() {
 			case nextEventCommand:
 				cmd.e = event
 				s.commandCh <- cmd
+			case readEventsCommand:
+				for _, e := range s.events {
+					s.commandCh <- command{e: e}
+				}
+				s.commandCh <- command{}
 			case boostCommand:
 				go s.out.Activate()
 				s.boosted = true

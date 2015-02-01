@@ -336,6 +336,49 @@ var _ = Describe("a basic scheduler", func() {
 		})
 	})
 
+	Describe("readling the current schedule", func() {
+
+		It("should return an empty list for a stopped scheduler with no events", func() {
+			Expect(theScheduler.ReadEvents()).To(BeEmpty())
+		})
+
+		It("should return an empty list for a running scheduler with no events", func() {
+			theScheduler.Start()
+			<-waitNotify
+
+			Expect(theScheduler.ReadEvents()).To(BeEmpty())
+		})
+
+		Context("with some events", func() {
+			BeforeEach(func() {
+				theScheduler.AddEvent(Event{Hour: 6, Min: 30, Action: TurnOn})
+				theScheduler.AddEvent(Event{Hour: 7, Min: 45, Action: TurnOff})
+				theScheduler.AddEvent(Event{Hour: 17, Min: 33, Action: TurnOn})
+				theScheduler.AddEvent(Event{Hour: 21, Min: 12, Action: TurnOff})
+			})
+
+			It("should return the current event list", func() {
+				events := theScheduler.ReadEvents()
+
+				Expect(events).To(HaveLen(4))
+				Expect(events[0]).To(Equal(Event{Hour: 6, Min: 30, Action: TurnOn}))
+				Expect(events[3]).To(Equal(Event{Hour: 21, Min: 12, Action: TurnOff}))
+			})
+
+			It("should return the current event list from a running scheduler", func() {
+				theScheduler.Start()
+				<-waitNotify
+
+				events := theScheduler.ReadEvents()
+
+				Expect(events).To(HaveLen(4))
+				Expect(events[0]).To(Equal(Event{Hour: 6, Min: 30, Action: TurnOn}))
+				Expect(events[3]).To(Equal(Event{Hour: 21, Min: 12, Action: TurnOff}))
+			})
+		})
+
+	})
+
 	Describe("boost function", func() {
 
 		Context("a scheduler with no events", func() {
