@@ -46,7 +46,7 @@ func (e Event) do(out output.Output) {
 }
 
 func (e Event) String() string {
-	return fmt.Sprintf("%d:%d %s", e.Hour, e.Min, e.Action)
+	return fmt.Sprintf("%d:%02d %s", e.Hour, e.Min, e.Action)
 }
 
 type eventList []*Event

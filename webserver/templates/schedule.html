@@ -1,0 +1,17 @@
+{{ define "content" }}
+<h1>{{ .ID }} schedule</h1>
+
+<p><a href="/">back</a></p>
+
+<table>
+  <tr>
+    <th>Event</th>
+  </tr>
+  {{ range .Scheduler.ReadEvents }}
+  <tr>
+    <td>{{ .String }}</td>
+  </tr>
+  {{ end }}
+</table>
+
+{{ end }}
