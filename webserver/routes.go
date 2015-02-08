@@ -16,6 +16,7 @@ func (srv *WebServer) buildRouter() http.Handler {
 	r.Methods("DELETE").Path("/zones/{zone_id}/boost").HandlerFunc(srv.withZone(srv.zoneCancelBoost))
 
 	r.Methods("GET").Path("/zones/{zone_id}/schedule").HandlerFunc(srv.withZone(srv.scheduleEdit))
+	r.Methods("POST").Path("/zones/{zone_id}/schedule").HandlerFunc(srv.withZone(srv.scheduleAddEvent))
 
 	r.Methods("PUT").Path("/zones/{zone_id}/activate").HandlerFunc(srv.withZone(srv.zoneActivate))
 	r.Methods("PUT").Path("/zones/{zone_id}/deactivate").HandlerFunc(srv.withZone(srv.zoneDeactivate))

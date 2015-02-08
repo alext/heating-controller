@@ -12,6 +12,19 @@
     <td>{{ .String }}</td>
   </tr>
   {{ end }}
+  <tr>
+    <td>
+      <form action="/zones/{{ .ID }}/schedule" method="post">
+        <input type="text" name="hour">
+        <input type="text" name="min">
+        <select name="action">
+          <option value="on">On</option>
+          <option value="off">Off</option>
+        </select>
+        <input type="submit" value="Add Event">
+      </form>
+    </td>
+  </tr>
 </table>
 
 {{ end }}
