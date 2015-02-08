@@ -1,6 +1,7 @@
 package scheduler
 
 import (
+	"errors"
 	"sort"
 	"sync"
 	"time"
@@ -11,6 +12,8 @@ import (
 
 // variable indirection to enable testing
 var time_Now = time.Now
+
+var ErrInvalidEvent = errors.New("invalid event")
 
 type Action int
 
@@ -30,7 +33,7 @@ type Scheduler interface {
 	Start()
 	Stop()
 	Running() bool
-	AddEvent(Event)
+	AddEvent(Event) error
 	RemoveEvent(Event)
 	Boosted() bool
 	Boost(time.Duration)
@@ -99,15 +102,19 @@ func (s *scheduler) Running() bool {
 	return s.running
 }
 
-func (s *scheduler) AddEvent(e Event) {
+func (s *scheduler) AddEvent(e Event) error {
+	if !e.Valid() {
+		return ErrInvalidEvent
+	}
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	logger.Debugf("[Scheduler:%s] Adding event: %v", s.out.Id(), e)
 	if s.running {
 		s.commandCh <- command{cmdType: addEventCommand, e: &e}
-		return
+		return nil
 	}
 	s.addEvent(&e)
+	return nil
 }
 
 func (s *scheduler) RemoveEvent(e Event) {

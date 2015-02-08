@@ -27,12 +27,25 @@ func (srv *WebServer) scheduleEdit(w http.ResponseWriter, req *http.Request, z *
 }
 
 func (srv *WebServer) scheduleAddEvent(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
+	var err error
 	e := scheduler.Event{}
-	e.Hour, _ = strconv.Atoi(req.FormValue("hour"))
-	e.Min, _ = strconv.Atoi(req.FormValue("min"))
+	e.Hour, err = strconv.Atoi(req.FormValue("hour"))
+	if err != nil {
+		http.Error(w, "hour must be a number: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	e.Min, err = strconv.Atoi(req.FormValue("min"))
+	if err != nil {
+		http.Error(w, "minute must be a number: "+err.Error(), http.StatusBadRequest)
+		return
+	}
 	if req.FormValue("action") == "on" {
 		e.Action = scheduler.TurnOn
 	}
-	z.Scheduler.AddEvent(e)
+	err = z.Scheduler.AddEvent(e)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 	srv.scheduleEdit(w, req, z)
 }

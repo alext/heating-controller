@@ -30,8 +30,10 @@ func (_m *MockScheduler) EXPECT() *_MockSchedulerRecorder {
 	return _m.recorder
 }
 
-func (_m *MockScheduler) AddEvent(_param0 scheduler.Event) {
-	_m.ctrl.Call(_m, "AddEvent", _param0)
+func (_m *MockScheduler) AddEvent(_param0 scheduler.Event) error {
+	ret := _m.ctrl.Call(_m, "AddEvent", _param0)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 func (_mr *_MockSchedulerRecorder) AddEvent(arg0 interface{}) *gomock.Call {

@@ -20,38 +20,44 @@ func TestWebServer(t *testing.T) {
 	RunSpecs(t, "Web Server Suite")
 }
 
-func doGetRequest(server http.Handler, path string) (w *httptest.ResponseRecorder) {
+func doGetRequest(server http.Handler, path string) *httptest.ResponseRecorder {
 	return doRequest(server, "GET", path)
 }
 
-func doPutRequest(server http.Handler, path string) (w *httptest.ResponseRecorder) {
+func doPutRequest(server http.Handler, path string) *httptest.ResponseRecorder {
 	return doRequest(server, "PUT", path)
 }
 
 // POST request pretending to be a PUT request because browsers...
-func doFakePutRequest(server http.Handler, path string) (w *httptest.ResponseRecorder) {
+func doFakePutRequest(server http.Handler, path string) *httptest.ResponseRecorder {
 	return doFakeRequestWithValues(server, "PUT", path, url.Values{})
 }
 
-func doFakeDeleteRequest(server http.Handler, path string) (w *httptest.ResponseRecorder) {
+func doFakeDeleteRequest(server http.Handler, path string) *httptest.ResponseRecorder {
 	return doFakeRequestWithValues(server, "DELETE", path, url.Values{})
 }
 
-func doFakeRequestWithValues(server http.Handler, verb, path string, values url.Values) (w *httptest.ResponseRecorder) {
+func doFakeRequestWithValues(server http.Handler, verb, path string, values url.Values) *httptest.ResponseRecorder {
 	values.Set("_method", verb)
-	body := strings.NewReader(values.Encode())
-	req, _ := http.NewRequest("POST", "http://example.com"+path, body)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	w = httptest.NewRecorder()
-	server.ServeHTTP(w, req)
-	return
+	return doRequestWithValues(server, "POST", path, values)
 }
 
-func doRequest(server http.Handler, method, path string) (w *httptest.ResponseRecorder) {
-	req, _ := http.NewRequest(method, "http://example.com"+path, nil)
-	w = httptest.NewRecorder()
+func doRequest(server http.Handler, method, path string) *httptest.ResponseRecorder {
+	return doRequestWithValues(server, method, path)
+}
+
+func doRequestWithValues(server http.Handler, method, path string, values ...url.Values) *httptest.ResponseRecorder {
+	var req *http.Request
+	if len(values) > 0 {
+		body := strings.NewReader(values[0].Encode())
+		req, _ = http.NewRequest(method, "http://example.com"+path, body)
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	} else {
+		req, _ = http.NewRequest(method, "http://example.com"+path, nil)
+	}
+	w := httptest.NewRecorder()
 	server.ServeHTTP(w, req)
-	return
+	return w
 }
 
 func decodeJsonResponse(w *httptest.ResponseRecorder) map[string]interface{} {

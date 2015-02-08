@@ -284,6 +284,12 @@ var _ = Describe("a basic scheduler", func() {
 		})
 	})
 
+	It("should return an error when adding an invalid event", func() {
+		err := theScheduler.AddEvent(Event{Min: -1})
+		Expect(err).To(MatchError(ErrInvalidEvent))
+		Expect(theScheduler.ReadEvents()).To(HaveLen(0))
+	})
+
 	Describe("querying the next event", func() {
 
 		It("should return nil with no events", func() {
