@@ -99,6 +99,21 @@ var _ = Describe("Editing the schedule for a zone", func() {
 				Expect(events).To(HaveLen(5))
 				Expect(events).To(ContainElement(scheduler.Event{Hour: 14, Min: 42, Action: scheduler.TurnOn}))
 			})
+
+			It("should allow removing an event", func() {
+				Expect(page.Navigate(testServer.URL + "/zones/one/schedule")).To(Succeed())
+
+				deleteButton := page.All("table tr").At(2).Find("input[value='Delete Event']")
+				Expect(deleteButton).To(BeFound())
+				Expect(deleteButton.Click()).To(Succeed())
+
+				Expect(page).To(HaveURL(testServer.URL + "/zones/one/schedule"))
+				Expect(page.Find("h1")).To(HaveText("one schedule"))
+
+				events := zone1.Scheduler.ReadEvents()
+				Expect(events).To(HaveLen(3))
+				Expect(events).NotTo(ContainElement(scheduler.Event{Hour: 8, Min: 30, Action: scheduler.TurnOff}))
+			})
 		})
 	})
 })

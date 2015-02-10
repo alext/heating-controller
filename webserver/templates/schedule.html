@@ -6,14 +6,21 @@
 <table>
   <tr>
     <th>Event</th>
+    <th>&nbsp;</th>
   </tr>
   {{ range .Scheduler.ReadEvents }}
   <tr>
     <td>{{ .String }}</td>
+    <td>
+      <form action="/zones/{{ $.ID }}/schedule/{{ .Hour }}-{{ .Min }}" method="post">
+        <input type="hidden" name="_method" value="DELETE">
+        <input type="submit" value="Delete Event">
+      </form>
+    </td>
   </tr>
   {{ end }}
   <tr>
-    <td>
+    <td colspan="2">
       <form action="/zones/{{ .ID }}/schedule" method="post">
         <input type="text" name="hour">
         <input type="text" name="min">

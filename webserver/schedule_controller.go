@@ -8,6 +8,7 @@ import (
 	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/scheduler"
 	"github.com/alext/heating-controller/zone"
+	"github.com/gorilla/mux"
 )
 
 func (srv *WebServer) scheduleEdit(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
@@ -48,4 +49,17 @@ func (srv *WebServer) scheduleAddEvent(w http.ResponseWriter, req *http.Request,
 		return
 	}
 	srv.scheduleEdit(w, req, z)
+}
+
+func (srv *WebServer) scheduleRemoveEvent(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
+	hour, _ := strconv.Atoi(mux.Vars(req)["hour"])
+	min, _ := strconv.Atoi(mux.Vars(req)["min"])
+	for _, e := range z.Scheduler.ReadEvents() {
+		if e.Hour == hour && e.Min == min {
+			z.Scheduler.RemoveEvent(e)
+			break
+		}
+	}
+
+	http.Redirect(w, req, "/zones/"+z.ID+"/schedule", 302)
 }
