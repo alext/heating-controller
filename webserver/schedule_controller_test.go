@@ -18,7 +18,7 @@ var _ = Describe("schedule controller", func() {
 	)
 
 	BeforeEach(func() {
-		server = webserver.New(8080, "")
+		server = webserver.New(8080)
 	})
 
 	Describe("adding an event", func() {

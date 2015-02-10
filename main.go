@@ -32,7 +32,7 @@ func main() {
 
 	setupLogging()
 
-	srv := webserver.New(*port, "webserver/templates")
+	srv := webserver.New(*port)
 	err := setupZones(*zones, srv)
 	if err != nil {
 		logger.Fatal("Error setting up outputs: ", err)

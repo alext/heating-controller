@@ -1,3 +1,6 @@
+package webserver
+
+const indexSrc = `
 {{ define "content" }}
 <h1>Zones</h1>
 {{ if len . }}
@@ -55,3 +58,4 @@
 <p>No zones</p>
 {{ end }}
 {{ end }}
+`

@@ -23,7 +23,7 @@ var _ = Describe("viewing the index", func() {
 	BeforeEach(func() {
 		var err error
 
-		server = webserver.New(8080, "../templates")
+		server = webserver.New(8080)
 		testServer = httptest.NewServer(server)
 
 		page, err = agoutiDriver.Page()

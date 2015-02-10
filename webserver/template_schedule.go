@@ -1,3 +1,6 @@
+package webserver
+
+const scheduleSrc = `
 {{ define "content" }}
 <h1>{{ .ID }} schedule</h1>
 
@@ -34,3 +37,4 @@
 </table>
 
 {{ end }}
+`

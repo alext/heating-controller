@@ -23,7 +23,7 @@ var _ = Describe("boosting a zone", func() {
 	)
 
 	BeforeEach(func() {
-		server = webserver.New(8080, "../templates")
+		server = webserver.New(8080)
 		testServer = httptest.NewServer(server)
 
 		var err error

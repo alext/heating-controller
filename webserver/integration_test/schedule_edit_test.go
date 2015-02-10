@@ -24,7 +24,7 @@ var _ = Describe("Editing the schedule for a zone", func() {
 	)
 
 	BeforeEach(func() {
-		server = webserver.New(8080, "../templates")
+		server = webserver.New(8080)
 
 		zone1 = zone.New("one", output.Virtual("one"))
 		zone2 = zone.New("two", output.Virtual("two"))

@@ -21,7 +21,7 @@ var _ = Describe("toggling a zone's state", func() {
 	)
 
 	BeforeEach(func() {
-		server = webserver.New(8080, "../templates")
+		server = webserver.New(8080)
 		testServer = httptest.NewServer(server)
 
 		var err error

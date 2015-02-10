@@ -2,6 +2,7 @@ package webserver
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
 
 	"github.com/alext/heating-controller/logger"
@@ -9,19 +10,19 @@ import (
 )
 
 type WebServer struct {
-	listenUrl     string
-	templatesPath string
-	mux           http.Handler
-	zones         map[string]*zone.Zone
+	listenUrl string
+	mux       http.Handler
+	zones     map[string]*zone.Zone
+	templates map[string]*template.Template
 }
 
-func New(port int, templatesPath string) (srv *WebServer) {
+func New(port int) (srv *WebServer) {
 	srv = &WebServer{
-		listenUrl:     fmt.Sprintf(":%d", port),
-		templatesPath: templatesPath,
-		zones:         make(map[string]*zone.Zone),
+		listenUrl: fmt.Sprintf(":%d", port),
+		zones:     make(map[string]*zone.Zone),
 	}
 	srv.mux = srv.buildRouter()
+	srv.templates = parseTemplates()
 	return
 }
 
