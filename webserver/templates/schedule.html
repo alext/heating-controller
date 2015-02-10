@@ -5,7 +5,7 @@
 
 <table>
   <tr>
-    <th>Event</th>
+    <th>Events</th>
     <th>&nbsp;</th>
   </tr>
   {{ range .Scheduler.ReadEvents }}
@@ -22,8 +22,7 @@
   <tr>
     <td colspan="2">
       <form action="/zones/{{ .ID }}/schedule" method="post">
-        <input type="text" name="hour">
-        <input type="text" name="min">
+        <input type="text" name="hour" maxlength="2" size="2" placeholder="hh">:<input type="text" name="min" maxlength="2" size="2" placeholder="mm">
         <select name="action">
           <option value="on">On</option>
           <option value="off">Off</option>
