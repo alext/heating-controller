@@ -3,9 +3,6 @@ package scheduler
 import (
 	"fmt"
 	"time"
-
-	"github.com/alext/heating-controller/logger"
-	"github.com/alext/heating-controller/output"
 )
 
 type Event struct {
@@ -33,20 +30,6 @@ func (e Event) nextOccuranceAfter(current time.Time) time.Time {
 
 func (e Event) after(hour, min int) bool {
 	return e.Hour > hour || (e.Hour == hour && e.Min > min)
-}
-
-func (e Event) do(out output.Output) {
-	var err error
-	if e.Action == TurnOn {
-		logger.Infof("[Scheduler:%s] Activating output", out.Id())
-		err = out.Activate()
-	} else {
-		logger.Infof("[Scheduler:%s] Deactivating output", out.Id())
-		err = out.Deactivate()
-	}
-	if err != nil {
-		logger.Warnf("[Scheduler:%s] Output error: %v", out.Id(), err)
-	}
 }
 
 func (e Event) String() string {

@@ -8,6 +8,7 @@ import (
 
 	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/output"
+	"github.com/alext/heating-controller/scheduler"
 )
 
 func TestZone(t *testing.T) {
@@ -36,6 +37,32 @@ var _ = Describe("A heating zone", func() {
 		It("should construct a scheduler", func() {
 			z := New("foo", out)
 			Expect(z.Scheduler).NotTo(BeNil())
+		})
+	})
+
+	Describe("handling scheduler demand", func() {
+		var (
+			out output.Output
+			z   *Zone
+		)
+
+		BeforeEach(func() {
+			out = output.Virtual("something")
+			z = New("someting", out)
+		})
+
+		It("should activate the output when demand is activated", func() {
+			z.schedulerDemand(scheduler.TurnOn)
+
+			Expect(out.Active()).To(BeTrue())
+		})
+
+		It("should deactivate the output when demand is deactivated", func() {
+			out.Deactivate()
+
+			z.schedulerDemand(scheduler.TurnOff)
+
+			Expect(out.Active()).To(BeFalse())
 		})
 	})
 })

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/alext/heating-controller/logger"
-	"github.com/alext/heating-controller/output"
 )
 
 // variable indirection to enable testing
@@ -15,7 +14,7 @@ var time_Now = time.Now
 
 var ErrInvalidEvent = errors.New("invalid event")
 
-type Action int
+type Action uint8
 
 func (a Action) String() string {
 	if a == TurnOn {
@@ -42,6 +41,8 @@ type Scheduler interface {
 	ReadEvents() []Event
 }
 
+type demandFunc func(Action)
+
 type commandType uint8
 
 const (
@@ -60,7 +61,8 @@ type command struct {
 }
 
 type scheduler struct {
-	out       output.Output
+	id        string
+	demand    demandFunc
 	events    eventList
 	running   bool
 	boosted   bool
@@ -68,9 +70,10 @@ type scheduler struct {
 	commandCh chan command
 }
 
-func New(out output.Output) Scheduler {
+func New(zoneID string, df demandFunc) Scheduler {
 	return &scheduler{
-		out:       out,
+		id:        zoneID,
+		demand:    df,
 		events:    make(eventList, 0),
 		commandCh: make(chan command),
 	}
@@ -80,7 +83,7 @@ func (s *scheduler) Start() {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	if !s.running {
-		logger.Infof("[Scheduler:%s] Starting", s.out.Id())
+		logger.Infof("[Scheduler:%s] Starting", s.id)
 		s.running = true
 		go s.run()
 	}
@@ -90,7 +93,7 @@ func (s *scheduler) Stop() {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	if s.running {
-		logger.Infof("[Scheduler:%s] Stopping", s.out.Id())
+		logger.Infof("[Scheduler:%s] Stopping", s.id)
 		s.running = false
 		s.commandCh <- command{cmdType: stopCommand}
 	}
@@ -108,7 +111,7 @@ func (s *scheduler) AddEvent(e Event) error {
 	}
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	logger.Debugf("[Scheduler:%s] Adding event: %v", s.out.Id(), e)
+	logger.Debugf("[Scheduler:%s] Adding event: %v", s.id, e)
 	if s.running {
 		s.commandCh <- command{cmdType: addEventCommand, e: &e}
 		return nil
@@ -196,12 +199,12 @@ func (s *scheduler) run() {
 			at, event = s.next(now)
 			tmr.Reset(at.Sub(now))
 			s.boosted = false
-			logger.Debugf("[Scheduler:%s] Next event at %v - %v", s.out.Id(), at, event)
+			logger.Debugf("[Scheduler:%s] Next event at %v - %v", s.id, at, event)
 		}
 		select {
 		case <-tmr.Channel():
 			if event != nil {
-				go event.do(s.out)
+				go s.demand(event.Action)
 				event = nil
 			}
 		case cmd := <-s.commandCh:
@@ -230,7 +233,7 @@ func (s *scheduler) run() {
 				}
 				s.commandCh <- command{}
 			case boostCommand:
-				go s.out.Activate()
+				go s.demand(TurnOn)
 				s.boosted = true
 				now := time_Now().Local()
 				boostEnd := cmd.e.nextOccuranceAfter(now)
@@ -238,12 +241,12 @@ func (s *scheduler) run() {
 					event = cmd.e
 					at = boostEnd
 					tmr.Reset(at.Sub(now))
-					logger.Debugf("[Scheduler:%s] Boosting until %v", s.out.Id(), at)
+					logger.Debugf("[Scheduler:%s] Boosting until %v", s.id, at)
 				} else {
-					logger.Debugf("[Scheduler:%s] Boosting until next event", s.out.Id())
+					logger.Debugf("[Scheduler:%s] Boosting until next event", s.id)
 				}
 			case cancelBoostCommand:
-				logger.Debugf("[Scheduler:%s] Cancelling boost", s.out.Id())
+				logger.Debugf("[Scheduler:%s] Cancelling boost", s.id)
 				s.setCurrentState()
 				event = nil
 			}
@@ -268,7 +271,7 @@ func (s *scheduler) removeEvent(event *Event) {
 
 func (s *scheduler) setCurrentState() {
 	if len(s.events) < 1 {
-		s.out.Deactivate()
+		s.demand(TurnOff)
 		return
 	}
 	hour, min, _ := time_Now().Local().Clock()
@@ -282,7 +285,7 @@ func (s *scheduler) setCurrentState() {
 	if previous == nil {
 		previous = s.events[len(s.events)-1]
 	}
-	previous.do(s.out)
+	s.demand(previous.Action)
 }
 
 func (s *scheduler) next(now time.Time) (at time.Time, e *Event) {
