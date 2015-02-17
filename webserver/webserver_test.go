@@ -10,13 +10,10 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	"github.com/alext/heating-controller/logger"
 )
 
 func TestWebServer(t *testing.T) {
 	RegisterFailHandler(Fail)
-	logger.SetDestination("/dev/null")
 	RunSpecs(t, "Web Server Suite")
 }
 
