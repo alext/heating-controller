@@ -6,9 +6,9 @@ import (
 )
 
 type Event struct {
-	Hour   int
-	Min    int
-	Action Action
+	Hour   int    `json:"hour"`
+	Min    int    `json:"min"`
+	Action Action `json:"action"`
 }
 
 func (e Event) NextOccurance() time.Time {

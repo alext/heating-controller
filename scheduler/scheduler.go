@@ -14,20 +14,6 @@ var time_Now = time.Now
 
 var ErrInvalidEvent = errors.New("invalid event")
 
-type Action uint8
-
-func (a Action) String() string {
-	if a == TurnOn {
-		return "On"
-	}
-	return "Off"
-}
-
-const (
-	TurnOff Action = iota
-	TurnOn
-)
-
 type Scheduler interface {
 	Start()
 	Stop()
