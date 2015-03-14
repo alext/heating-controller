@@ -5,7 +5,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/sclevine/agouti/core"
+	"github.com/sclevine/agouti"
 	. "github.com/sclevine/agouti/matchers"
 
 	"github.com/alext/heating-controller/output"
@@ -15,7 +15,7 @@ import (
 
 var _ = Describe("toggling a zone's state", func() {
 	var (
-		page       Page
+		page       *agouti.Page
 		server     *webserver.WebServer
 		testServer *httptest.Server
 	)
@@ -25,7 +25,7 @@ var _ = Describe("toggling a zone's state", func() {
 		testServer = httptest.NewServer(server)
 
 		var err error
-		page, err = agoutiDriver.Page()
+		page, err = agoutiDriver.NewPage()
 		Expect(err).NotTo(HaveOccurred())
 
 	})

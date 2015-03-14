@@ -6,7 +6,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/sclevine/agouti/core"
+	"github.com/sclevine/agouti"
 	. "github.com/sclevine/agouti/matchers"
 
 	"github.com/alext/heating-controller/output"
@@ -17,7 +17,7 @@ import (
 
 var _ = Describe("boosting a zone", func() {
 	var (
-		page       Page
+		page       *agouti.Page
 		server     *webserver.WebServer
 		testServer *httptest.Server
 	)
@@ -27,7 +27,7 @@ var _ = Describe("boosting a zone", func() {
 		testServer = httptest.NewServer(server)
 
 		var err error
-		page, err = agoutiDriver.Page()
+		page, err = agoutiDriver.NewPage()
 		Expect(err).NotTo(HaveOccurred())
 
 	})
@@ -126,7 +126,7 @@ var _ = Describe("boosting a zone", func() {
 	})
 })
 
-func boostCell(page Page, row int) Selection {
+func boostCell(page *agouti.Page, row int) *agouti.Selection {
 	cell := page.All("table tr").At(row - 1).All("td").At(3)
 	ExpectWithOffset(1, cell).To(BeFound())
 	return cell
