@@ -3,7 +3,6 @@ package zone
 import (
 	"encoding/json"
 	"os"
-	"syscall"
 
 	"github.com/alext/heating-controller/scheduler"
 )
@@ -18,10 +17,8 @@ func (z *Zone) Restore() error {
 	filename := DataDir + "/" + z.ID + ".json"
 	file, err := os.Open(filename)
 	if err != nil {
-		if perr, ok := err.(*os.PathError); ok {
-			if perr.Err == syscall.ENOENT {
-				return nil
-			}
+		if os.IsNotExist(err) {
+			return nil
 		}
 		return err
 	}
