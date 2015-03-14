@@ -1,23 +1,15 @@
-package persistence_test
+package zone
 
 import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
-	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/alext/heating-controller/persistence"
 	"github.com/alext/heating-controller/scheduler"
 )
-
-func TestOutput(t *testing.T) {
-	RegisterFailHandler(Fail)
-
-	RunSpecs(t, "Scheduler")
-}
 
 type EventHolder struct {
 	events []scheduler.Event
@@ -40,7 +32,7 @@ var _ = Describe("persisting scheduler events", func() {
 
 	BeforeEach(func() {
 		tempDataDir, _ = ioutil.TempDir("", "persistence_test")
-		persistence.DataDir = tempDataDir
+		DataDir = tempDataDir
 
 		eventHolder = &EventHolder{events: make([]scheduler.Event, 0, 0)}
 	})
@@ -51,7 +43,7 @@ var _ = Describe("persisting scheduler events", func() {
 	Describe("saving event list", func() {
 
 		It("should save an empty event list as JSON", func() {
-			Expect(persistence.SaveEvents("ch", eventHolder)).To(Succeed())
+			Expect(SaveEvents("ch", eventHolder)).To(Succeed())
 			data := readFile(tempDataDir + "/ch.json")
 			Expect(data).To(MatchJSON(`{"events":[]}`))
 		})
@@ -60,7 +52,7 @@ var _ = Describe("persisting scheduler events", func() {
 			eventHolder.AddEvent(scheduler.Event{Hour: 6, Min: 30, Action: scheduler.TurnOn})
 			eventHolder.AddEvent(scheduler.Event{Hour: 7, Min: 45, Action: scheduler.TurnOff})
 
-			Expect(persistence.SaveEvents("ch", eventHolder)).To(Succeed())
+			Expect(SaveEvents("ch", eventHolder)).To(Succeed())
 
 			data := readFile(tempDataDir + "/ch.json")
 			expected, _ := json.Marshal(map[string]interface{}{
@@ -76,7 +68,7 @@ var _ = Describe("persisting scheduler events", func() {
 	Describe("reading events", func() {
 		It("should load an empty event list", func() {
 			writeJSONToFile(tempDataDir+"/ch.json", map[string]interface{}{"events": []interface{}{}})
-			Expect(persistence.LoadEvents("ch", eventHolder)).To(Succeed())
+			Expect(LoadEvents("ch", eventHolder)).To(Succeed())
 
 			Expect(eventHolder.ReadEvents()).To(HaveLen(0))
 		})
@@ -89,7 +81,7 @@ var _ = Describe("persisting scheduler events", func() {
 				},
 			})
 
-			Expect(persistence.LoadEvents("ch", eventHolder)).To(Succeed())
+			Expect(LoadEvents("ch", eventHolder)).To(Succeed())
 
 			Expect(eventHolder.events).To(HaveLen(2))
 			Expect(eventHolder.events[0]).To(Equal(scheduler.Event{Hour: 6, Min: 30, Action: scheduler.TurnOn}))
@@ -97,7 +89,7 @@ var _ = Describe("persisting scheduler events", func() {
 		})
 
 		It("should treat a non-existent data file the same as a file with an empty event list", func() {
-			Expect(persistence.LoadEvents("ch", eventHolder)).To(Succeed())
+			Expect(LoadEvents("ch", eventHolder)).To(Succeed())
 
 			Expect(eventHolder.ReadEvents()).To(HaveLen(0))
 		})
@@ -113,12 +105,12 @@ var _ = Describe("scheduler implementing persistence interfaces", func() {
 
 	It("should implement the EventAdder interface", func() {
 		// Will fail to build if the interfaces don't match
-		var _ persistence.EventAdder = theScheduler
+		var _ EventAdder = theScheduler
 	})
 
 	It("should implement the EventReader interface", func() {
 		// Will fail to build if the interfaces don't match
-		var _ persistence.EventReader = theScheduler
+		var _ EventReader = theScheduler
 	})
 })
 
