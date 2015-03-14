@@ -10,19 +10,12 @@ import (
 
 var DataDir string
 
-type EventAdder interface {
-	AddEvent(scheduler.Event) error
-}
-type EventReader interface {
-	ReadEvents() []scheduler.Event
-}
-
 type zoneData struct {
 	Events []scheduler.Event `json:"events"`
 }
 
-func LoadEvents(id string, ea EventAdder) error {
-	filename := DataDir + "/" + id + ".json"
+func (z *Zone) Restore() error {
+	filename := DataDir + "/" + z.ID + ".json"
 	file, err := os.Open(filename)
 	if err != nil {
 		if perr, ok := err.(*os.PathError); ok {
@@ -41,7 +34,7 @@ func LoadEvents(id string, ea EventAdder) error {
 		return err
 	}
 	for _, e := range data.Events {
-		err = ea.AddEvent(e)
+		err = z.Scheduler.AddEvent(e)
 		if err != nil {
 			return err
 		}
@@ -49,15 +42,15 @@ func LoadEvents(id string, ea EventAdder) error {
 	return nil
 }
 
-func SaveEvents(id string, er EventReader) error {
-	filename := DataDir + "/" + id + ".json"
+func (z *Zone) Save() error {
+	filename := DataDir + "/" + z.ID + ".json"
 	file, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	data := zoneData{Events: er.ReadEvents()}
+	data := zoneData{Events: z.Scheduler.ReadEvents()}
 	b, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
 		return err
