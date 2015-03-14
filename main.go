@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -33,7 +34,7 @@ func main() {
 
 	setupLogging(*logDest, *logLevel)
 
-	zone.DataDir = *dataDir
+	setupDataDir(*dataDir)
 
 	srv := webserver.New(*port, "webserver/templates")
 	err := setupZones(*zones, srv)
@@ -60,6 +61,23 @@ func setupLogging(dest, level string) {
 		logger.Level = logger.WARN
 	default:
 		log.Fatalln("Unrecognised log level:", level)
+	}
+}
+
+func setupDataDir(dir string) {
+	zone.DataDir = dir
+	fi, err := os.Stat(dir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			err = os.Mkdir(dir, 0777)
+			if err == nil {
+				return
+			}
+		}
+		logger.Fatalf("Error using data dir '%s': %s", dir, err.Error())
+	}
+	if !fi.IsDir() {
+		logger.Fatalf("Error, data dir '%s' is not a directory", dir)
 	}
 }
 
