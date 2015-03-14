@@ -48,7 +48,12 @@ func (srv *WebServer) scheduleAddEvent(w http.ResponseWriter, req *http.Request,
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	srv.scheduleEdit(w, req, z)
+	err = z.Save()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, req, "/zones/"+z.ID+"/schedule", 302)
 }
 
 func (srv *WebServer) scheduleRemoveEvent(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
@@ -59,6 +64,12 @@ func (srv *WebServer) scheduleRemoveEvent(w http.ResponseWriter, req *http.Reque
 			z.Scheduler.RemoveEvent(e)
 			break
 		}
+	}
+
+	err := z.Save()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	http.Redirect(w, req, "/zones/"+z.ID+"/schedule", 302)
