@@ -30,7 +30,7 @@ type ZoneAdder interface {
 func main() {
 	flag.Parse()
 
-	setupLogging()
+	setupLogging(*logDest, *logLevel)
 
 	srv := webserver.New(*port, "webserver/templates")
 	err := setupZones(*zones, srv)
@@ -43,8 +43,8 @@ func main() {
 	}
 }
 
-func setupLogging() {
-	err := logger.SetDestination(*logDest)
+func setupLogging(dest, level string) {
+	err := logger.SetDestination(dest)
 	if err != nil {
 		log.Fatalln("Error opening log", err)
 	}
@@ -56,7 +56,7 @@ func setupLogging() {
 	case "WARN":
 		logger.Level = logger.WARN
 	default:
-		log.Fatalln("Unrecognised log level:", *logLevel)
+		log.Fatalln("Unrecognised log level:", level)
 	}
 }
 
