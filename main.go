@@ -16,6 +16,7 @@ import (
 )
 
 var (
+	dataDir  = flag.String("datadir", "./data", "The directory to save state information in")
 	port     = flag.Int("port", 8080, "The port to listen on")
 	logDest  = flag.String("log", "STDERR", "Where to log to - STDOUT, STDERR or a filename")
 	logLevel = flag.String("loglevel", "INFO", "Logging verbosity - DEBUG, INFO or WARN")
@@ -31,6 +32,8 @@ func main() {
 	flag.Parse()
 
 	setupLogging(*logDest, *logLevel)
+
+	zone.DataDir = *dataDir
 
 	srv := webserver.New(*port, "webserver/templates")
 	err := setupZones(*zones, srv)
@@ -88,13 +91,14 @@ func setupZones(zonesParam string, server ZoneAdder) error {
 			}
 		}
 		z := zone.New(id, out)
+		z.Restore()
 		if z.ID == "ch" {
 			err := processCmdlineSchedule(*schedule, z.Scheduler)
 			if err != nil {
 				return err
 			}
-			z.Scheduler.Start()
 		}
+		z.Scheduler.Start()
 		server.AddZone(z)
 	}
 	return nil
