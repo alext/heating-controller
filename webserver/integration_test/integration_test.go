@@ -13,10 +13,10 @@ import (
 	"github.com/alext/heating-controller/zone"
 )
 
-func TestWebServer(t *testing.T) {
+func TestIntegration(t *testing.T) {
 	RegisterFailHandler(Fail)
 	logger.SetDestination("/dev/null")
-	RunSpecs(t, "Web Server Suite")
+	RunSpecs(t, "Integration tests")
 }
 
 var agoutiDriver WebDriver

@@ -10,7 +10,7 @@ import (
 	"github.com/alext/heating-controller/logger"
 )
 
-func TestOutput(t *testing.T) {
+func TestScheduler(t *testing.T) {
 	RegisterFailHandler(Fail)
 
 	logger.Level = logger.WARN
