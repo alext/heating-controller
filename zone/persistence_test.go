@@ -8,6 +8,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/scheduler"
 )
@@ -32,6 +33,7 @@ var _ = Describe("persisting a zone's state", func() {
 	)
 
 	BeforeEach(func() {
+		logger.SetDestination("/dev/null")
 		tempDataDir, _ = ioutil.TempDir("", "persistence_test")
 		DataDir = tempDataDir
 
@@ -94,6 +96,25 @@ var _ = Describe("persisting a zone's state", func() {
 			Expect(z.Restore()).To(Succeed())
 
 			Expect(z.Scheduler.ReadEvents()).To(HaveLen(0))
+		})
+
+		It("should skip over any invalid events in the file", func() {
+			writeJSONToFile(tempDataDir+"/ch.json", map[string]interface{}{
+				"events": []map[string]interface{}{
+					{"hour": 6, "min": 30, "action": "On"},
+					{"hour": 7, "min": 75, "action": "Off"}, // Invalid minute 75
+					{"hour": 16, "min": 30, "action": "On"},
+					{"hour": 18, "min": 40, "action": "Off"},
+				},
+			})
+
+			Expect(z.Restore()).To(Succeed())
+
+			events := z.Scheduler.ReadEvents()
+			Expect(events).To(HaveLen(3))
+			Expect(events[0]).To(Equal(scheduler.Event{Hour: 6, Min: 30, Action: scheduler.TurnOn}))
+			Expect(events[1]).To(Equal(scheduler.Event{Hour: 16, Min: 30, Action: scheduler.TurnOn}))
+			Expect(events[2]).To(Equal(scheduler.Event{Hour: 18, Min: 40, Action: scheduler.TurnOff}))
 		})
 	})
 })
