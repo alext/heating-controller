@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	"github.com/alext/heating-controller/logger"
@@ -13,8 +14,8 @@ import (
 
 func (srv *WebServer) zonesIndex(w http.ResponseWriter, req *http.Request) {
 	t, err := template.ParseFiles(
-		srv.templatesPath+"/_base.html",
-		srv.templatesPath+"/index.html",
+		filepath.Join(srv.templatesPath, "_base.html"),
+		filepath.Join(srv.templatesPath, "index.html"),
 	)
 	if err != nil {
 		logger.Warn("Error parsing template:", err)

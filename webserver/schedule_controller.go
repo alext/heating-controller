@@ -3,6 +3,7 @@ package webserver
 import (
 	"html/template"
 	"net/http"
+	"path/filepath"
 	"strconv"
 
 	"github.com/alext/heating-controller/logger"
@@ -13,8 +14,8 @@ import (
 
 func (srv *WebServer) scheduleEdit(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
 	t, err := template.ParseFiles(
-		srv.templatesPath+"/_base.html",
-		srv.templatesPath+"/schedule.html",
+		filepath.Join(srv.templatesPath, "_base.html"),
+		filepath.Join(srv.templatesPath, "schedule.html"),
 	)
 	if err != nil {
 		logger.Warn("Error parsing template:", err)

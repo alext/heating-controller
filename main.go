@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -17,7 +18,7 @@ import (
 )
 
 var (
-	dataDir  = flag.String("datadir", "./data", "The directory to save state information in")
+	dataDir  = flag.String("datadir", filepath.FromSlash("./data"), "The directory to save state information in")
 	port     = flag.Int("port", 8080, "The port to listen on")
 	logDest  = flag.String("log", "STDERR", "Where to log to - STDOUT, STDERR or a filename")
 	logLevel = flag.String("loglevel", "INFO", "Logging verbosity - DEBUG, INFO or WARN")
@@ -36,7 +37,7 @@ func main() {
 
 	setupDataDir(*dataDir)
 
-	srv := webserver.New(*port, "webserver/templates")
+	srv := webserver.New(*port, filepath.FromSlash("webserver/templates"))
 	err := setupZones(*zones, srv)
 	if err != nil {
 		logger.Fatal("Error setting up outputs: ", err)

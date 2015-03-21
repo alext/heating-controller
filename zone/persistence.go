@@ -3,6 +3,7 @@ package zone
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 
 	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/scheduler"
@@ -15,7 +16,7 @@ type zoneData struct {
 }
 
 func (z *Zone) Restore() error {
-	filename := DataDir + "/" + z.ID + ".json"
+	filename := filepath.Join(DataDir, z.ID+".json")
 	file, err := os.Open(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -43,7 +44,7 @@ func (z *Zone) Restore() error {
 }
 
 func (z *Zone) Save() error {
-	filename := DataDir + "/" + z.ID + ".json"
+	filename := filepath.Join(DataDir, z.ID+".json")
 	file, err := os.Create(filename)
 	if err != nil {
 		logger.Warnf("[Zone:%s] Error saving zone state: %s", z.ID, err.Error())

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -47,7 +48,7 @@ var _ = Describe("persisting a zone's state", func() {
 
 		It("should save an empty event list as JSON", func() {
 			Expect(z.Save()).To(Succeed())
-			data := readFile(tempDataDir + "/ch.json")
+			data := readFile(filepath.Join(tempDataDir, "ch.json"))
 			Expect(data).To(MatchJSON(`{"events":[]}`))
 		})
 
@@ -57,7 +58,7 @@ var _ = Describe("persisting a zone's state", func() {
 
 			Expect(z.Save()).To(Succeed())
 
-			data := readFile(tempDataDir + "/ch.json")
+			data := readFile(filepath.Join(tempDataDir, "ch.json"))
 			expected, _ := json.Marshal(map[string]interface{}{
 				"events": []map[string]interface{}{
 					{"hour": 6, "min": 30, "action": "On"},
@@ -70,14 +71,14 @@ var _ = Describe("persisting a zone's state", func() {
 
 	Describe("reading events", func() {
 		It("should load an empty event list", func() {
-			writeJSONToFile(tempDataDir+"/ch.json", map[string]interface{}{"events": []interface{}{}})
+			writeJSONToFile(filepath.Join(tempDataDir, "ch.json"), map[string]interface{}{"events": []interface{}{}})
 			Expect(z.Restore()).To(Succeed())
 
 			Expect(z.Scheduler.ReadEvents()).To(HaveLen(0))
 		})
 
 		It("should load the events from the file", func() {
-			writeJSONToFile(tempDataDir+"/ch.json", map[string]interface{}{
+			writeJSONToFile(filepath.Join(tempDataDir, "ch.json"), map[string]interface{}{
 				"events": []map[string]interface{}{
 					{"hour": 6, "min": 30, "action": "On"},
 					{"hour": 7, "min": 45, "action": "Off"},
@@ -99,7 +100,7 @@ var _ = Describe("persisting a zone's state", func() {
 		})
 
 		It("should skip over any invalid events in the file", func() {
-			writeJSONToFile(tempDataDir+"/ch.json", map[string]interface{}{
+			writeJSONToFile(filepath.Join(tempDataDir, "ch.json"), map[string]interface{}{
 				"events": []map[string]interface{}{
 					{"hour": 6, "min": 30, "action": "On"},
 					{"hour": 7, "min": 75, "action": "Off"}, // Invalid minute 75
