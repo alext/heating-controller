@@ -7,10 +7,20 @@ import (
 	"github.com/alext/heating-controller/scheduler"
 )
 
+type OverrideMode uint8
+
+const (
+	ModeNormal OverrideMode = iota
+	ModeOverrideOn
+	ModeOverrideOff
+)
+
 type Zone struct {
-	ID        string
-	Out       output.Output
-	Scheduler scheduler.Scheduler
+	ID                   string
+	Out                  output.Output
+	Scheduler            scheduler.Scheduler
+	overrideMode         OverrideMode
+	schedulerDemandState scheduler.Action
 }
 
 func New(id string, out output.Output) *Zone {
@@ -26,9 +36,30 @@ func (z *Zone) Active() (bool, error) {
 	return z.Out.Active()
 }
 
+func (z *Zone) SetOverride(s OverrideMode) {
+	z.overrideMode = s
+	z.applyOutputState()
+}
+
 func (z *Zone) schedulerDemand(a scheduler.Action) {
+	z.schedulerDemandState = a
+	z.applyOutputState()
+}
+
+func (z *Zone) applyOutputState() {
+	switch z.overrideMode {
+	case ModeOverrideOn:
+		z.setOutput(true)
+	case ModeOverrideOff:
+		z.setOutput(false)
+	default:
+		z.setOutput(z.schedulerDemandState == scheduler.TurnOn)
+	}
+}
+
+func (z *Zone) setOutput(on bool) {
 	var err error
-	if a == scheduler.TurnOn {
+	if on {
 		log.Printf("[Zone:%s] Activating output", z.ID)
 		err = z.Out.Activate()
 	} else {
