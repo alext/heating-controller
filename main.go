@@ -12,7 +12,6 @@ import (
 
 	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/output"
-	"github.com/alext/heating-controller/scheduler"
 	"github.com/alext/heating-controller/webserver"
 	"github.com/alext/heating-controller/zone"
 )
@@ -23,7 +22,6 @@ var (
 	logDest  = flag.String("log", "STDERR", "Where to log to - STDOUT, STDERR or a filename")
 	logLevel = flag.String("loglevel", "INFO", "Logging verbosity - DEBUG, INFO or WARN")
 	zones    = flag.String("zones", "", "The list of zones to use with their corresponding outputs - (id:(pin|'v'),)*")
-	schedule = flag.String("schedule", "", "The schedule to use - (hh:mm,(On|Off);)*")
 )
 
 type ZoneAdder interface {
@@ -111,42 +109,8 @@ func setupZones(zonesParam string, server ZoneAdder) error {
 		}
 		z := zone.New(id, out)
 		z.Restore()
-		if z.ID == "ch" {
-			err := processCmdlineSchedule(*schedule, z.Scheduler)
-			if err != nil {
-				return err
-			}
-		}
 		z.Scheduler.Start()
 		server.AddZone(z)
-	}
-	return nil
-}
-
-var schedulePart = regexp.MustCompile(`^(\d+):(\d+),(On|Off)$`)
-
-func processCmdlineSchedule(schedule string, t scheduler.Scheduler) error {
-	for _, part := range strings.Split(schedule, ";") {
-		if part == "" {
-			continue
-		}
-		matches := schedulePart.FindStringSubmatch(part)
-		if matches == nil {
-			return fmt.Errorf("Invalid schedule entry %s", part)
-		}
-
-		hour, _ := strconv.Atoi(matches[1])
-		min, _ := strconv.Atoi(matches[2])
-		if hour < 0 || hour > 23 || min < 0 || min > 59 {
-			return fmt.Errorf("Invalid schedule entry %s", part)
-		}
-		e := scheduler.Event{Hour: hour, Min: min}
-		if matches[3] == "On" {
-			e.Action = scheduler.TurnOn
-		} else {
-			e.Action = scheduler.TurnOff
-		}
-		t.AddEvent(e)
 	}
 	return nil
 }

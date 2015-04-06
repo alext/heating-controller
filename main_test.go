@@ -7,14 +7,11 @@ import (
 	"os"
 	"testing"
 
-	"code.google.com/p/gomock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/output"
-	"github.com/alext/heating-controller/scheduler"
-	"github.com/alext/heating-controller/scheduler/mock_scheduler"
 	"github.com/alext/heating-controller/zone"
 )
 
@@ -106,78 +103,6 @@ var _ = Describe("Reading zones from cmdline", func() {
 		Expect(srv.Zones[1].ID).To(Equal("bar"))
 		Expect(srv.Zones[0].Out.Id()).To(Equal("foo-gpio10"))
 		Expect(srv.Zones[1].Out.Id()).To(Equal("bar-gpio47"))
-	})
-})
-
-var _ = Describe("Reading schedule from cmdline", func() {
-	var (
-		mockCtrl     *gomock.Controller
-		theScheduler *mock_scheduler.MockScheduler
-	)
-
-	BeforeEach(func() {
-		mockCtrl = gomock.NewController(GinkgoT())
-		theScheduler = mock_scheduler.NewMockScheduler(mockCtrl)
-	})
-
-	AfterEach(func() {
-		mockCtrl.Finish()
-	})
-
-	It("Should add all given entries to the given scheduler", func() {
-
-		schedule := "6:30,On;7:30,Off;19:30,On;21:00,Off"
-		theScheduler.EXPECT().AddEvent(scheduler.Event{Hour: 6, Min: 30, Action: scheduler.TurnOn})
-		theScheduler.EXPECT().AddEvent(scheduler.Event{Hour: 7, Min: 30, Action: scheduler.TurnOff})
-		theScheduler.EXPECT().AddEvent(scheduler.Event{Hour: 19, Min: 30, Action: scheduler.TurnOn})
-		theScheduler.EXPECT().AddEvent(scheduler.Event{Hour: 21, Min: 0, Action: scheduler.TurnOff})
-
-		err := processCmdlineSchedule(schedule, theScheduler)
-		Expect(err).To(BeNil())
-	})
-
-	It("Should do nothing with a blank schedule", func() {
-		err := processCmdlineSchedule("", theScheduler)
-		Expect(err).To(BeNil())
-	})
-
-	It("Should ignore a trailing ';'", func() {
-		schedule := "6:30,On;7:30,Off;"
-		theScheduler.EXPECT().AddEvent(scheduler.Event{Hour: 6, Min: 30, Action: scheduler.TurnOn})
-		theScheduler.EXPECT().AddEvent(scheduler.Event{Hour: 7, Min: 30, Action: scheduler.TurnOff})
-
-		err := processCmdlineSchedule(schedule, theScheduler)
-		Expect(err).To(BeNil())
-	})
-
-	Context("Error handling", func() {
-		BeforeEach(func() {
-			theScheduler.EXPECT().AddEvent(gomock.Any()).AnyTimes()
-		})
-
-		It("Should return an error with any invalid times", func() {
-			err := processCmdlineSchedule("6:67,On;7:30,Off", theScheduler)
-			Expect(err).NotTo(BeNil())
-			Expect(err.Error()).To(Equal("Invalid schedule entry 6:67,On"))
-
-			err = processCmdlineSchedule("6:30,On;25:43,Off", theScheduler)
-			Expect(err).NotTo(BeNil())
-			Expect(err.Error()).To(Equal("Invalid schedule entry 25:43,Off"))
-		})
-
-		It("Should return an error with any malformed parts", func() {
-			err := processCmdlineSchedule("6:67,unsure;7:30,Off", theScheduler)
-			Expect(err).NotTo(BeNil())
-			Expect(err.Error()).To(Equal("Invalid schedule entry 6:67,unsure"))
-
-			err = processCmdlineSchedule("6:30,On;25-43_Off", theScheduler)
-			Expect(err).NotTo(BeNil())
-			Expect(err.Error()).To(Equal("Invalid schedule entry 25-43_Off"))
-
-			err = processCmdlineSchedule("6:30:45,On;25-43_Off", theScheduler)
-			Expect(err).NotTo(BeNil())
-			Expect(err.Error()).To(Equal("Invalid schedule entry 6:30:45,On"))
-		})
 	})
 })
 
