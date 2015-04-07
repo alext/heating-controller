@@ -66,6 +66,7 @@ var _ = Describe("schedule controller", func() {
 
 			data := readFile(zone.DataDir + "/one.json")
 			expected, _ := json.Marshal(map[string]interface{}{
+				"override_mode": "normal",
 				"events": []map[string]interface{}{
 					{"hour": 7, "min": 30, "action": "On"},
 					{"hour": 8, "min": 30, "action": "Off"},
@@ -130,6 +131,7 @@ var _ = Describe("schedule controller", func() {
 
 			data := readFile(zone.DataDir + "/one.json")
 			expected, _ := json.Marshal(map[string]interface{}{
+				"override_mode": "normal",
 				"events": []map[string]interface{}{
 					{"hour": 8, "min": 30, "action": "Off"},
 				},

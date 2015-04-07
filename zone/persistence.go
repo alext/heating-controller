@@ -2,6 +2,7 @@ package zone
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -11,8 +12,34 @@ import (
 
 var DataDir string
 
+func (o OverrideMode) MarshalText() ([]byte, error) {
+	switch o {
+	case ModeOverrideOn:
+		return []byte("override_on"), nil
+	case ModeOverrideOff:
+		return []byte("override_off"), nil
+	default:
+		return []byte("normal"), nil
+	}
+}
+
+func (o *OverrideMode) UnmarshalText(data []byte) error {
+	switch string(data) {
+	case "override_on":
+		*o = ModeOverrideOn
+	case "override_off":
+		*o = ModeOverrideOff
+	case "normal":
+		*o = ModeNormal
+	default:
+		return fmt.Errorf("Unrecognised OverrideMode value '%s'", data)
+	}
+	return nil
+}
+
 type zoneData struct {
-	Events []scheduler.Event `json:"events"`
+	OverrideMode OverrideMode      `json:"override_mode"`
+	Events       []scheduler.Event `json:"events"`
 }
 
 func (z *Zone) Restore() error {
@@ -28,12 +55,13 @@ func (z *Zone) Restore() error {
 	defer file.Close()
 
 	var data zoneData
-
 	err = json.NewDecoder(file).Decode(&data)
 	if err != nil {
 		log.Printf("[Zone:%s] Error parsing saved zone state: %s", z.ID, err.Error())
 		return err
 	}
+
+	z.overrideMode = data.OverrideMode
 	for _, e := range data.Events {
 		err = z.Scheduler.AddEvent(e)
 		if err != nil {
@@ -52,13 +80,16 @@ func (z *Zone) Save() error {
 	}
 	defer file.Close()
 
-	data := zoneData{Events: z.Scheduler.ReadEvents()}
+	data := zoneData{
+		OverrideMode: z.overrideMode,
+		Events:       z.Scheduler.ReadEvents(),
+	}
+
 	b, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
 		log.Printf("[Zone:%s] Error saving zone state: %s", z.ID, err.Error())
 		return err
 	}
-
 	_, err = file.Write(b)
 	if err != nil {
 		log.Printf("[Zone:%s] Error saving zone state: %s", z.ID, err.Error())
