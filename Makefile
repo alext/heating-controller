@@ -5,7 +5,7 @@ IMPORT_PATH := $(IMPORT_BASE)/heating-controller
 VENDOR_STAMP := _vendor/stamp
 
 build: $(VENDOR_STAMP)
-	gom build
+	gom build -o heating-controller
 
 test: $(VENDOR_STAMP)
 	gom test -v ./...
