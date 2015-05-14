@@ -7,6 +7,10 @@ VENDOR_STAMP := _vendor/stamp
 build: $(VENDOR_STAMP)
 	gom build -o heating-controller
 
+clean:
+	rm -f heating-controller
+	rm -rf _vendor
+
 test: $(VENDOR_STAMP)
 	gom test -v ./...
 
