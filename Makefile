@@ -12,11 +12,9 @@ test: $(VENDOR_STAMP)
 
 deps: $(VENDOR_STAMP)
 
-$(VENDOR_STAMP): Gomfile _vendor/src/$(IMPORT_PATH)
-	gom install
-	touch $(VENDOR_STAMP)
-
-_vendor/src/$(IMPORT_PATH):
+$(VENDOR_STAMP): Gomfile
 	rm -f _vendor/src/$(IMPORT_PATH)
 	mkdir -p _vendor/src/$(IMPORT_BASE)
 	ln -s $(CURDIR) _vendor/src/$(IMPORT_PATH)
+	gom install
+	touch $(VENDOR_STAMP)
