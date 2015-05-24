@@ -26,7 +26,6 @@ var _ = BeforeSuite(func() {
 	zone.DataDir, err = ioutil.TempDir("", "integration_test")
 	Expect(err).NotTo(HaveOccurred())
 	agoutiDriver = agouti.PhantomJS()
-	Expect(err).NotTo(HaveOccurred())
 	Expect(agoutiDriver.Start()).To(Succeed())
 })
 
