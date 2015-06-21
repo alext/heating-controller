@@ -16,8 +16,13 @@ import (
 	"github.com/alext/heating-controller/zone"
 )
 
+const (
+	defaultDataDir = "./data"
+	templateDir    = "webserver/templates"
+)
+
 var (
-	dataDir  = flag.String("datadir", filepath.FromSlash("./data"), "The directory to save state information in")
+	dataDir  = flag.String("datadir", filepath.FromSlash(defaultDataDir), "The directory to save state information in")
 	port     = flag.Int("port", 8080, "The port to listen on")
 	logDest  = flag.String("log", "STDERR", "Where to log to - STDOUT, STDERR or a filename")
 	logLevel = flag.String("loglevel", "INFO", "Logging verbosity - DEBUG, INFO or WARN")
@@ -35,7 +40,7 @@ func main() {
 
 	setupDataDir(*dataDir)
 
-	srv := webserver.New(*port, filepath.FromSlash("webserver/templates"))
+	srv := webserver.New(*port, filepath.FromSlash(templateDir))
 	err := setupZones(*zones, srv)
 	if err != nil {
 		logger.Fatal("Error setting up outputs: ", err)
