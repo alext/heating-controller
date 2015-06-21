@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"time"
 
-	"code.google.com/p/gomock/gomock"
+	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 

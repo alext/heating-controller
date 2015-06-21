@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"code.google.com/p/gomock/gomock"
+	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 

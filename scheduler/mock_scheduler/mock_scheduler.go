@@ -4,9 +4,10 @@
 package mock_scheduler
 
 import (
-	scheduler "github.com/alext/heating-controller/scheduler"
 	time "time"
-	gomock "code.google.com/p/gomock/gomock"
+
+	scheduler "github.com/alext/heating-controller/scheduler"
+	gomock "github.com/golang/mock/gomock"
 )
 
 // Mock of Scheduler interface
