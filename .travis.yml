@@ -1,6 +1,7 @@
 language: go
 go:
   - 1.4.2
+sudo: false
 before_install: go get github.com/mattn/gom
 install: make deps
 script: make test
