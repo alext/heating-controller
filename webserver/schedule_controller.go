@@ -2,11 +2,11 @@ package webserver
 
 import (
 	"html/template"
+	"log"
 	"net/http"
 	"path/filepath"
 	"strconv"
 
-	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/scheduler"
 	"github.com/alext/heating-controller/zone"
 	"github.com/gorilla/mux"
@@ -18,13 +18,13 @@ func (srv *WebServer) scheduleEdit(w http.ResponseWriter, req *http.Request, z *
 		filepath.Join(srv.templatesPath, "schedule.html"),
 	)
 	if err != nil {
-		logger.Warn("Error parsing template:", err)
+		log.Println("Error parsing template:", err)
 		writeError(w, err)
 		return
 	}
 	err = t.Execute(w, z)
 	if err != nil {
-		logger.Warn("Error executing template:", err)
+		log.Println("Error executing template:", err)
 	}
 }
 

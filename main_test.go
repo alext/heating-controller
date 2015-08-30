@@ -4,19 +4,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/zone"
 )
 
 func TestMain(t *testing.T) {
 	RegisterFailHandler(Fail)
+	log.SetOutput(ioutil.Discard)
 	RunSpecs(t, "Main")
 }
 
@@ -34,7 +35,6 @@ var _ = Describe("Reading zones from cmdline", func() {
 	)
 
 	BeforeEach(func() {
-		logger.SetDestination("/dev/null")
 		zone.DataDir, _ = ioutil.TempDir("", "heating-controller-test")
 
 		srv = &testZoneAdder{make([]*zone.Zone, 0)}

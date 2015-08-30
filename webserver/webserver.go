@@ -2,9 +2,9 @@ package webserver
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
-	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/zone"
 )
 
@@ -30,7 +30,7 @@ func (srv *WebServer) AddZone(z *zone.Zone) {
 }
 
 func (srv *WebServer) Run() error {
-	logger.Info("Web server starting on", srv.listenUrl)
+	log.Print("[webserver] server starting on", srv.listenUrl)
 	return http.ListenAndServe(srv.listenUrl, srv)
 }
 

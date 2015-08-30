@@ -2,6 +2,8 @@ package webserver_test
 
 import (
 	"encoding/json"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -14,6 +16,7 @@ import (
 
 func TestWebServer(t *testing.T) {
 	RegisterFailHandler(Fail)
+	log.SetOutput(ioutil.Discard)
 	RunSpecs(t, "Web Server Suite")
 }
 

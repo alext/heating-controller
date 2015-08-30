@@ -1,12 +1,13 @@
 package zone
 
 import (
+	"io/ioutil"
+	"log"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/scheduler"
 )
@@ -14,7 +15,7 @@ import (
 func TestZone(t *testing.T) {
 	RegisterFailHandler(Fail)
 
-	logger.Level = logger.WARN
+	log.SetOutput(ioutil.Discard)
 
 	RunSpecs(t, "Zone")
 }

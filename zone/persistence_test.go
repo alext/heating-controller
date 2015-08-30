@@ -9,7 +9,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/scheduler"
 )
@@ -34,7 +33,6 @@ var _ = Describe("persisting a zone's state", func() {
 	)
 
 	BeforeEach(func() {
-		logger.SetDestination("/dev/null")
 		tempDataDir, _ = ioutil.TempDir("", "persistence_test")
 		DataDir = tempDataDir
 

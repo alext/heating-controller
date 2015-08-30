@@ -2,6 +2,7 @@ package integration_test
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
 	"testing"
 
@@ -9,13 +10,12 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/sclevine/agouti"
 
-	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/zone"
 )
 
 func TestIntegration(t *testing.T) {
 	RegisterFailHandler(Fail)
-	logger.SetDestination("/dev/null")
+	log.SetOutput(ioutil.Discard)
 	RunSpecs(t, "Integration tests")
 }
 

@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/webserver"
 	"github.com/alext/heating-controller/zone"
@@ -22,11 +21,10 @@ const (
 )
 
 var (
-	dataDir  = flag.String("datadir", filepath.FromSlash(defaultDataDir), "The directory to save state information in")
-	port     = flag.Int("port", 8080, "The port to listen on")
-	logDest  = flag.String("log", "STDERR", "Where to log to - STDOUT, STDERR or a filename")
-	logLevel = flag.String("loglevel", "INFO", "Logging verbosity - DEBUG, INFO or WARN")
-	zones    = flag.String("zones", "", "The list of zones to use with their corresponding outputs - (id:(pin|'v'),)*")
+	dataDir = flag.String("datadir", filepath.FromSlash(defaultDataDir), "The directory to save state information in")
+	port    = flag.Int("port", 8080, "The port to listen on")
+	logDest = flag.String("log", "STDERR", "Where to log to - STDOUT, STDERR or a filename")
+	zones   = flag.String("zones", "", "The list of zones to use with their corresponding outputs - (id:(pin|'v'),)*")
 )
 
 type ZoneAdder interface {
@@ -36,36 +34,38 @@ type ZoneAdder interface {
 func main() {
 	flag.Parse()
 
-	setupLogging(*logDest, *logLevel)
+	err := setupLogging(*logDest)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	setupDataDir(*dataDir)
 
 	srv := webserver.New(*port, filepath.FromSlash(templateDir))
-	err := setupZones(*zones, srv)
+	err = setupZones(*zones, srv)
 	if err != nil {
-		logger.Fatal("Error setting up outputs: ", err)
+		log.Fatalln("[main] Error setting up outputs:", err)
 	}
 	err = srv.Run()
 	if err != nil {
-		logger.Fatal("Server.Run: ", err)
+		log.Fatalln("[main] Server.Run:", err)
 	}
 }
 
-func setupLogging(dest, level string) {
-	err := logger.SetDestination(dest)
-	if err != nil {
-		log.Fatalln("Error opening log", err)
-	}
-	switch *logLevel {
-	case "DEBUG":
-		logger.Level = logger.DEBUG
-	case "INFO":
-		logger.Level = logger.INFO
-	case "WARN":
-		logger.Level = logger.WARN
+func setupLogging(destination string) error {
+	switch destination {
+	case "STDERR":
+		log.SetOutput(os.Stderr)
+	case "STDOUT":
+		log.SetOutput(os.Stdout)
 	default:
-		log.Fatalln("Unrecognised log level:", level)
+		file, err := os.OpenFile(destination, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
+		if err != nil {
+			return fmt.Errorf("Error opening log %s: %s", destination, err.Error())
+		}
+		log.SetOutput(file)
 	}
+	return nil
 }
 
 func setupDataDir(dir string) {
@@ -78,10 +78,10 @@ func setupDataDir(dir string) {
 				return
 			}
 		}
-		logger.Fatalf("Error using data dir '%s': %s", dir, err.Error())
+		log.Fatalf("[main] Error using data dir '%s': %s", dir, err.Error())
 	}
 	if !fi.IsDir() {
-		logger.Fatalf("Error, data dir '%s' is not a directory", dir)
+		log.Fatalf("[main] Error, data dir '%s' is not a directory", dir)
 	}
 }
 

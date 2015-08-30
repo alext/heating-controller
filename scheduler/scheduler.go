@@ -2,11 +2,10 @@ package scheduler
 
 import (
 	"errors"
+	"log"
 	"sort"
 	"sync"
 	"time"
-
-	"github.com/alext/heating-controller/logger"
 )
 
 // variable indirection to enable testing
@@ -69,7 +68,7 @@ func (s *scheduler) Start() {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	if !s.running {
-		logger.Infof("[Scheduler:%s] Starting", s.id)
+		log.Printf("[Scheduler:%s] Starting", s.id)
 		s.running = true
 		go s.run()
 	}
@@ -79,7 +78,7 @@ func (s *scheduler) Stop() {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	if s.running {
-		logger.Infof("[Scheduler:%s] Stopping", s.id)
+		log.Printf("[Scheduler:%s] Stopping", s.id)
 		s.running = false
 		s.commandCh <- command{cmdType: stopCommand}
 	}
@@ -97,7 +96,7 @@ func (s *scheduler) AddEvent(e Event) error {
 	}
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	logger.Debugf("[Scheduler:%s] Adding event: %v", s.id, e)
+	log.Printf("[Scheduler:%s] Adding event: %v", s.id, e)
 	if s.running {
 		s.commandCh <- command{cmdType: addEventCommand, e: &e}
 		return nil
@@ -185,7 +184,7 @@ func (s *scheduler) run() {
 			at, event = s.next(now)
 			tmr.Reset(at.Sub(now))
 			s.boosted = false
-			logger.Debugf("[Scheduler:%s] Next event at %v - %v", s.id, at, event)
+			log.Printf("[Scheduler:%s] Next event at %v - %v", s.id, at, event)
 		}
 		select {
 		case <-tmr.Channel():
@@ -227,12 +226,12 @@ func (s *scheduler) run() {
 					event = cmd.e
 					at = boostEnd
 					tmr.Reset(at.Sub(now))
-					logger.Debugf("[Scheduler:%s] Boosting until %v", s.id, at)
+					log.Printf("[Scheduler:%s] Boosting until %v", s.id, at)
 				} else {
-					logger.Debugf("[Scheduler:%s] Boosting until next event", s.id)
+					log.Printf("[Scheduler:%s] Boosting until next event", s.id)
 				}
 			case cancelBoostCommand:
-				logger.Debugf("[Scheduler:%s] Cancelling boost", s.id)
+				log.Printf("[Scheduler:%s] Cancelling boost", s.id)
 				s.setCurrentState()
 				event = nil
 			}

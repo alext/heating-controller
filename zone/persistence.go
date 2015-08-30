@@ -2,10 +2,10 @@ package zone
 
 import (
 	"encoding/json"
+	"log"
 	"os"
 	"path/filepath"
 
-	"github.com/alext/heating-controller/logger"
 	"github.com/alext/heating-controller/scheduler"
 )
 
@@ -20,7 +20,7 @@ func (z *Zone) Restore() error {
 	file, err := os.Open(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
-			logger.Infof("[Zone:%s] No saved state found for zone.", z.ID)
+			log.Printf("[Zone:%s] No saved state found for zone.", z.ID)
 			return nil
 		}
 		return err
@@ -31,13 +31,13 @@ func (z *Zone) Restore() error {
 
 	err = json.NewDecoder(file).Decode(&data)
 	if err != nil {
-		logger.Warnf("[Zone:%s] Error parsing saved zone state: %s", z.ID, err.Error())
+		log.Printf("[Zone:%s] Error parsing saved zone state: %s", z.ID, err.Error())
 		return err
 	}
 	for _, e := range data.Events {
 		err = z.Scheduler.AddEvent(e)
 		if err != nil {
-			logger.Warnf("[Zone:%s] Error restoring event '%v': %s", z.ID, e, err.Error())
+			log.Printf("[Zone:%s] Error restoring event '%v': %s", z.ID, e, err.Error())
 		}
 	}
 	return nil
@@ -47,7 +47,7 @@ func (z *Zone) Save() error {
 	filename := filepath.Join(DataDir, z.ID+".json")
 	file, err := os.Create(filename)
 	if err != nil {
-		logger.Warnf("[Zone:%s] Error saving zone state: %s", z.ID, err.Error())
+		log.Printf("[Zone:%s] Error saving zone state: %s", z.ID, err.Error())
 		return err
 	}
 	defer file.Close()
@@ -55,13 +55,13 @@ func (z *Zone) Save() error {
 	data := zoneData{Events: z.Scheduler.ReadEvents()}
 	b, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
-		logger.Warnf("[Zone:%s] Error saving zone state: %s", z.ID, err.Error())
+		log.Printf("[Zone:%s] Error saving zone state: %s", z.ID, err.Error())
 		return err
 	}
 
 	_, err = file.Write(b)
 	if err != nil {
-		logger.Warnf("[Zone:%s] Error saving zone state: %s", z.ID, err.Error())
+		log.Printf("[Zone:%s] Error saving zone state: %s", z.ID, err.Error())
 		return err
 	}
 

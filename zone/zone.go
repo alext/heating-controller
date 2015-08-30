@@ -1,7 +1,8 @@
 package zone
 
 import (
-	"github.com/alext/heating-controller/logger"
+	"log"
+
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/scheduler"
 )
@@ -28,13 +29,13 @@ func (z *Zone) Active() (bool, error) {
 func (z *Zone) schedulerDemand(a scheduler.Action) {
 	var err error
 	if a == scheduler.TurnOn {
-		logger.Infof("[Zone:%s] Activating output", z.ID)
+		log.Printf("[Zone:%s] Activating output", z.ID)
 		err = z.Out.Activate()
 	} else {
-		logger.Infof("[Zone:%s] Deactivating output", z.ID)
+		log.Printf("[Zone:%s] Deactivating output", z.ID)
 		err = z.Out.Deactivate()
 	}
 	if err != nil {
-		logger.Warnf("[Zone:%s] Output error: %v", z.ID, err)
+		log.Printf("[Zone:%s] Output error: %v", z.ID, err)
 	}
 }

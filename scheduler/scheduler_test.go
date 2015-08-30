@@ -1,19 +1,19 @@
 package scheduler
 
 import (
+	"io/ioutil"
+	"log"
 	"testing"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	"github.com/alext/heating-controller/logger"
 )
 
 func TestScheduler(t *testing.T) {
 	RegisterFailHandler(Fail)
 
-	logger.Level = logger.WARN
+	log.SetOutput(ioutil.Discard)
 
 	RunSpecs(t, "Scheduler")
 }
