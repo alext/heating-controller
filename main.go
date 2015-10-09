@@ -32,7 +32,14 @@ type ZoneAdder interface {
 }
 
 func main() {
+	returnVersion := flag.Bool("version", false, "Return version and exit")
+
 	flag.Parse()
+
+	if *returnVersion {
+		fmt.Printf("heating-controller %s\n", versionInfo())
+		os.Exit(0)
+	}
 
 	err := setupLogging(*logDest)
 	if err != nil {
