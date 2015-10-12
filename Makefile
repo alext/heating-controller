@@ -14,7 +14,7 @@ VERSION := $(shell git describe --always | tr -d '\n'; test -z "`git status --po
 endif
 
 build: Godeps/Godeps.json
-	go build -ldflags "-X main.version $(VERSION)" -o $(BINARY)
+	go build -ldflags "-X main.version=$(VERSION)" -o $(BINARY)
 
 test: build
 	go test -v ./...
