@@ -6,9 +6,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strconv"
-	"strings"
 
 	"github.com/alext/afero"
 
@@ -20,16 +17,10 @@ import (
 var fs afero.Fs = &afero.OsFs{}
 
 const (
-	defaultDataDir = "./data"
-	defaultPort    = 8080
-	templateDir    = "webserver/templates"
-)
-
-var (
-	dataDir = flag.String("datadir", filepath.FromSlash(defaultDataDir), "The directory to save state information in")
-	port    = flag.Int("port", defaultPort, "The port to listen on")
-	logDest = flag.String("log", "STDERR", "Where to log to - STDOUT, STDERR or a filename")
-	zones   = flag.String("zones", "", "The list of zones to use with their corresponding outputs - (id:(pin|'v'),)*")
+	defaultConfigFile = "./config.json"
+	defaultDataDir    = "./data"
+	defaultPort       = 8080
+	templateDir       = "webserver/templates"
 )
 
 type ZoneAdder interface {
@@ -37,7 +28,12 @@ type ZoneAdder interface {
 }
 
 func main() {
-	returnVersion := flag.Bool("version", false, "Return version and exit")
+	var (
+		logDest       = flag.String("log", "STDERR", "Where to log to - STDOUT, STDERR or a filename")
+		dataDir       = flag.String("datadir", filepath.FromSlash(defaultDataDir), "The directory to save state information in")
+		configFile    = flag.String("config-file", filepath.FromSlash(defaultConfigFile), "Path to the config file")
+		returnVersion = flag.Bool("version", false, "Return version and exit")
+	)
 
 	flag.Parse()
 
@@ -51,10 +47,15 @@ func main() {
 		log.Fatal(err)
 	}
 
+	config, err := loadConfig(*configFile)
+	if err != nil {
+		log.Fatalln("Error reading config file:", err)
+	}
+
 	setupDataDir(*dataDir)
 
-	srv := webserver.New(*port, filepath.FromSlash(templateDir))
-	err = setupZones(*zones, srv)
+	srv := webserver.New(config.Port, filepath.FromSlash(templateDir))
+	err = setupZones(config.Zones, srv)
 	if err != nil {
 		log.Fatalln("[main] Error setting up outputs:", err)
 	}
@@ -99,27 +100,14 @@ func setupDataDir(dir string) {
 
 var output_New = output.New // variable indirection to facilitate testing
 
-var zonePart = regexp.MustCompile(`^([a-z]+):(\d+|v)$`)
-
-func setupZones(zonesParam string, server ZoneAdder) error {
-	for _, part := range strings.Split(zonesParam, ",") {
-		if part == "" {
-			continue
-		}
-
-		matches := zonePart.FindStringSubmatch(part)
-		if matches == nil {
-			return fmt.Errorf("Invalid output entry '%s'", part)
-		}
-
-		id := matches[1]
+func setupZones(zones map[string]zoneConfig, server ZoneAdder) error {
+	for id, config := range zones {
 		var out output.Output
-		if matches[2] == "v" {
+		if config.Virtual {
 			out = output.Virtual(id)
 		} else {
-			pin, _ := strconv.Atoi(matches[2])
 			var err error
-			out, err = output_New(id, pin)
+			out, err = output_New(id, config.GPIOPin)
 			if err != nil {
 				return err
 			}

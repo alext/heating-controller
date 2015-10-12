@@ -31,12 +31,14 @@ func (t *testZoneAdder) AddZone(z *zone.Zone) {
 
 var _ = Describe("Reading zones from cmdline", func() {
 	var (
-		srv *testZoneAdder
+		srv    *testZoneAdder
+		config map[string]zoneConfig
 	)
 
 	BeforeEach(func() {
 		zone.DataDir, _ = ioutil.TempDir("", "heating-controller-test")
 
+		config = make(map[string]zoneConfig)
 		srv = &testZoneAdder{make([]*zone.Zone, 0)}
 		output_New = func(id string, pin int) (output.Output, error) {
 			out := output.Virtual(fmt.Sprintf("%s-gpio%d", id, pin))
@@ -51,15 +53,16 @@ var _ = Describe("Reading zones from cmdline", func() {
 	})
 
 	It("Should do nothing with a blank list of zones", func() {
-		err := setupZones("", srv)
-		Expect(err).To(BeNil())
+		Expect(setupZones(config, srv)).To(Succeed())
 
 		Expect(srv.Zones).To(HaveLen(0))
 	})
 
 	It("Should add zones with virtual outputs", func() {
-		err := setupZones("foo:v,bar:v", srv)
-		Expect(err).To(BeNil())
+		config["foo"] = zoneConfig{Virtual: true}
+		config["bar"] = zoneConfig{Virtual: true}
+
+		Expect(setupZones(config, srv)).To(Succeed())
 
 		Expect(srv.Zones).To(HaveLen(2))
 
@@ -76,8 +79,9 @@ var _ = Describe("Reading zones from cmdline", func() {
 				{"hour": 7, "min": 45, "action": "Off"},
 			},
 		})
-		err := setupZones("ch:v", srv)
-		Expect(err).NotTo(HaveOccurred())
+		config["ch"] = zoneConfig{Virtual: true}
+
+		Expect(setupZones(config, srv)).To(Succeed())
 
 		Expect(srv.Zones).To(HaveLen(1))
 		events := srv.Zones[0].Scheduler.ReadEvents()
@@ -85,8 +89,8 @@ var _ = Describe("Reading zones from cmdline", func() {
 	})
 
 	It("Should start the scheduler for the zone", func() {
-		err := setupZones("foo:v", srv)
-		Expect(err).To(BeNil())
+		config["ch"] = zoneConfig{Virtual: true}
+		Expect(setupZones(config, srv)).To(Succeed())
 
 		Expect(srv.Zones).To(HaveLen(1))
 
@@ -94,8 +98,10 @@ var _ = Describe("Reading zones from cmdline", func() {
 	})
 
 	It("Should add real outputs with correct pin", func() {
-		err := setupZones("foo:10,bar:47", srv)
-		Expect(err).To(BeNil())
+		config["foo"] = zoneConfig{GPIOPin: 10}
+		config["bar"] = zoneConfig{GPIOPin: 47}
+
+		Expect(setupZones(config, srv)).To(Succeed())
 
 		Expect(srv.Zones).To(HaveLen(2))
 
