@@ -10,19 +10,24 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/alext/afero"
+
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/webserver"
 	"github.com/alext/heating-controller/zone"
 )
 
+var fs afero.Fs = &afero.OsFs{}
+
 const (
 	defaultDataDir = "./data"
+	defaultPort    = 8080
 	templateDir    = "webserver/templates"
 )
 
 var (
 	dataDir = flag.String("datadir", filepath.FromSlash(defaultDataDir), "The directory to save state information in")
-	port    = flag.Int("port", 8080, "The port to listen on")
+	port    = flag.Int("port", defaultPort, "The port to listen on")
 	logDest = flag.String("log", "STDERR", "Where to log to - STDOUT, STDERR or a filename")
 	zones   = flag.String("zones", "", "The list of zones to use with their corresponding outputs - (id:(pin|'v'),)*")
 )
