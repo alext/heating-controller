@@ -3,6 +3,7 @@ package scheduler
 import (
 	"io/ioutil"
 	"log"
+	"sync"
 	"testing"
 	"time"
 
@@ -45,12 +46,36 @@ func (tmr dummyTimer) Stop() bool {
 	return true
 }
 
+type dummyZone struct {
+	mu    sync.Mutex
+	state Action
+}
+
+func (z *dummyZone) State() Action {
+	z.mu.Lock()
+	defer z.mu.Unlock()
+	return z.state
+}
+
+func (z *dummyZone) SetState(a Action) {
+	z.mu.Lock()
+	defer z.mu.Unlock()
+	z.state = a
+}
+
+func (z *dummyZone) ExpectState(a Action) {
+	// State should change to a
+	EventuallyWithOffset(1, z.State, 100*time.Millisecond, time.Millisecond).Should(Equal(a))
+	// and remain there
+	ConsistentlyWithOffset(1, z.State, 10*time.Millisecond, time.Millisecond).Should(Equal(a))
+}
+
 var _ = Describe("a basic scheduler", func() {
 	var (
 		mockNow      time.Time
 		nowCount     int
-		demandState  Action
 		theScheduler Scheduler
+		zone         *dummyZone
 	)
 
 	BeforeEach(func() {
@@ -61,9 +86,8 @@ var _ = Describe("a basic scheduler", func() {
 			return dummyTimer{}
 		}
 
-		theScheduler = New("something", func(a Action) {
-			demandState = a
-		})
+		zone = &dummyZone{}
+		theScheduler = New("something", zone.SetState)
 
 		mockNow = time.Now()
 		nowCount = 0
@@ -120,13 +144,13 @@ var _ = Describe("a basic scheduler", func() {
 
 					theScheduler.Start()
 					<-waitNotify
-					Expect(demandState).To(Equal(TurnOn))
+					zone.ExpectState(TurnOn)
 					theScheduler.Stop()
 
 					mockNow = todayAt(12, 00, 0)
 					theScheduler.Start()
 					<-waitNotify
-					Expect(demandState).To(Equal(TurnOff))
+					zone.ExpectState(TurnOff)
 				})
 
 				It("should use the last entry from the previous day if necessary", func() {
@@ -134,7 +158,7 @@ var _ = Describe("a basic scheduler", func() {
 
 					theScheduler.Start()
 					<-waitNotify
-					Expect(demandState).To(Equal(TurnOff))
+					zone.ExpectState(TurnOff)
 				})
 			})
 
@@ -175,28 +199,28 @@ var _ = Describe("a basic scheduler", func() {
 
 			theScheduler.Start()
 			<-waitNotify
-			Expect(demandState).To(Equal(TurnOff))
+			zone.ExpectState(TurnOff)
 
 			Expect(resetParam.String()).To(Equal("10m0s"))
 
 			mockNow = todayAt(6, 30, 0)
 			timerCh <- mockNow
 			<-waitNotify
-			Expect(demandState).To(Equal(TurnOn))
+			zone.ExpectState(TurnOn)
 
 			Expect(resetParam.String()).To(Equal("1h15m0s"))
 
 			mockNow = todayAt(7, 45, 0)
 			timerCh <- mockNow
 			<-waitNotify
-			Expect(demandState).To(Equal(TurnOff))
+			zone.ExpectState(TurnOff)
 
 			Expect(resetParam.String()).To(Equal("9h48m0s"))
 
 			mockNow = todayAt(17, 33, 0)
 			timerCh <- mockNow
 			<-waitNotify
-			Expect(demandState).To(Equal(TurnOn))
+			zone.ExpectState(TurnOn)
 		})
 
 		It("should wrap around at the end of the day", func() {
@@ -204,21 +228,21 @@ var _ = Describe("a basic scheduler", func() {
 
 			theScheduler.Start()
 			<-waitNotify
-			Expect(demandState).To(Equal(TurnOn))
+			zone.ExpectState(TurnOn)
 
 			Expect(resetParam.String()).To(Equal("1h7m37s"))
 
 			mockNow = todayAt(21, 12, 0)
 			timerCh <- mockNow
 			<-waitNotify
-			Expect(demandState).To(Equal(TurnOff))
+			zone.ExpectState(TurnOff)
 
 			Expect(resetParam.String()).To(Equal("9h18m0s"))
 
 			mockNow = todayAt(6, 30, 0)
 			timerCh <- mockNow
 			<-waitNotify
-			Expect(demandState).To(Equal(TurnOn))
+			zone.ExpectState(TurnOn)
 		})
 
 		It("should handle events added in a non-sequential order", func() {
@@ -229,28 +253,28 @@ var _ = Describe("a basic scheduler", func() {
 
 			theScheduler.Start()
 			<-waitNotify
-			Expect(demandState).To(Equal(TurnOn))
+			zone.ExpectState(TurnOn)
 
 			Expect(resetParam.String()).To(Equal("15m0s"))
 
 			mockNow = todayAt(7, 45, 0)
 			timerCh <- mockNow
 			<-waitNotify
-			Expect(demandState).To(Equal(TurnOff))
+			zone.ExpectState(TurnOff)
 
 			Expect(resetParam.String()).To(Equal("3h45m0s"))
 
 			mockNow = todayAt(11, 30, 0)
 			timerCh <- mockNow
 			<-waitNotify
-			Expect(demandState).To(Equal(TurnOn))
+			zone.ExpectState(TurnOn)
 
 			Expect(resetParam.String()).To(Equal("1h30m0s"))
 
 			mockNow = todayAt(13, 0, 0)
 			timerCh <- mockNow
 			<-waitNotify
-			Expect(demandState).To(Equal(TurnOff))
+			zone.ExpectState(TurnOff)
 
 			Expect(resetParam.String()).To(Equal("4h33m0s"))
 		})
@@ -260,14 +284,14 @@ var _ = Describe("a basic scheduler", func() {
 
 			theScheduler.Start()
 			<-waitNotify
-			Expect(demandState).To(Equal(TurnOn))
+			zone.ExpectState(TurnOn)
 
 			Expect(resetParam.String()).To(Equal("15m0s"))
 
 			mockNow = todayAt(7, 45, 0)
 			timerCh <- mockNow
 			<-waitNotify
-			Expect(demandState).To(Equal(TurnOff))
+			zone.ExpectState(TurnOff)
 
 			Expect(resetParam.String()).To(Equal("9h48m0s"))
 
@@ -280,7 +304,7 @@ var _ = Describe("a basic scheduler", func() {
 			mockNow = todayAt(11, 30, 0)
 			timerCh <- mockNow
 			<-waitNotify
-			Expect(demandState).To(Equal(TurnOn))
+			zone.ExpectState(TurnOn)
 		})
 	})
 
@@ -453,14 +477,14 @@ var _ = Describe("a basic scheduler", func() {
 				theScheduler.Boost(45 * time.Minute)
 
 				<-waitNotify
-				Expect(demandState).To(Equal(TurnOn))
+				zone.ExpectState(TurnOn)
 				Expect(resetParam.String()).To(Equal("45m0s"))
 				Expect(theScheduler.Boosted()).To(BeTrue())
 
 				mockNow = todayAt(8, 15, 0)
 				timerCh <- mockNow
 				<-waitNotify
-				Expect(demandState).To(Equal(TurnOff))
+				zone.ExpectState(TurnOff)
 				Expect(resetParam.String()).To(Equal("24h0m0s"))
 				Expect(theScheduler.Boosted()).To(BeFalse())
 			})
@@ -468,12 +492,13 @@ var _ = Describe("a basic scheduler", func() {
 			It("should allow cancelling the boost", func() {
 				theScheduler.Boost(45 * time.Minute)
 				<-waitNotify
+				zone.ExpectState(TurnOn)
 
 				mockNow = todayAt(6, 26, 0)
 				theScheduler.CancelBoost()
 				<-waitNotify
 
-				Expect(demandState).To(Equal(TurnOff))
+				zone.ExpectState(TurnOff)
 				Expect(theScheduler.Boosted()).To(BeFalse())
 				Expect(resetParam.String()).To(Equal("24h0m0s"))
 			})
@@ -497,14 +522,14 @@ var _ = Describe("a basic scheduler", func() {
 				theScheduler.Boost(40 * time.Minute)
 
 				<-waitNotify
-				Expect(demandState).To(Equal(TurnOn))
+				zone.ExpectState(TurnOn)
 				Expect(resetParam.String()).To(Equal("40m0s"))
 				Expect(theScheduler.Boosted()).To(BeTrue())
 
 				mockNow = todayAt(15, 10, 0)
 				timerCh <- mockNow
 				<-waitNotify
-				Expect(demandState).To(Equal(TurnOff))
+				zone.ExpectState(TurnOff)
 				Expect(resetParam.String()).To(Equal("2h23m0s"))
 				Expect(theScheduler.Boosted()).To(BeFalse())
 			})
@@ -517,14 +542,15 @@ var _ = Describe("a basic scheduler", func() {
 				mockNow = todayAt(14, 30, 0)
 				theScheduler.Boost(40 * time.Minute)
 				<-waitNotify
+				zone.ExpectState(TurnOn)
 
 				mockNow = todayAt(14, 55, 0)
 				theScheduler.CancelBoost()
 				<-waitNotify
 
-				Expect(demandState).To(Equal(TurnOff))
 				Expect(theScheduler.Boosted()).To(BeFalse())
 				Expect(resetParam.String()).To(Equal("2h38m0s"))
+				zone.ExpectState(TurnOff)
 			})
 
 			Context("overlapping an upcoming TurnOn event", func() {
@@ -539,13 +565,13 @@ var _ = Describe("a basic scheduler", func() {
 					theScheduler.Boost(40 * time.Minute)
 
 					<-waitNotify
-					Expect(demandState).To(Equal(TurnOn))
+					zone.ExpectState(TurnOn)
 					Expect(theScheduler.Boosted()).To(BeTrue())
 
 					mockNow = todayAt(17, 33, 0)
 					timerCh <- mockNow
 					<-waitNotify
-					Expect(demandState).To(Equal(TurnOn))
+					zone.ExpectState(TurnOn)
 					Expect(resetParam.String()).To(Equal("3h39m0s"))
 					Expect(theScheduler.Boosted()).To(BeFalse())
 				})
@@ -559,7 +585,7 @@ var _ = Describe("a basic scheduler", func() {
 					theScheduler.CancelBoost()
 					<-waitNotify
 
-					Expect(demandState).To(Equal(TurnOn))
+					zone.ExpectState(TurnOn)
 					Expect(theScheduler.Boosted()).To(BeFalse())
 					Expect(resetParam.String()).To(Equal("3h37m0s"))
 				})
@@ -577,14 +603,15 @@ var _ = Describe("a basic scheduler", func() {
 					theScheduler.Boost(30 * time.Minute)
 
 					<-waitNotify
-					Expect(demandState).To(Equal(TurnOn))
+					zone.ExpectState(TurnOn)
 					Expect(resetParam.String()).To(Equal("30m0s"))
 					Expect(theScheduler.Boosted()).To(BeTrue())
 
 					mockNow = todayAt(8, 0, 0)
 					timerCh <- mockNow
+
 					<-waitNotify
-					Expect(demandState).To(Equal(TurnOff))
+					zone.ExpectState(TurnOff)
 					Expect(resetParam.String()).To(Equal("9h33m0s"))
 					Expect(theScheduler.Boosted()).To(BeFalse())
 				})
@@ -598,7 +625,7 @@ var _ = Describe("a basic scheduler", func() {
 					theScheduler.CancelBoost()
 					<-waitNotify
 
-					Expect(demandState).To(Equal(TurnOn))
+					zone.ExpectState(TurnOn)
 					Expect(theScheduler.Boosted()).To(BeFalse())
 					Expect(resetParam.String()).To(Equal("5m0s"))
 				})
