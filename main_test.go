@@ -29,7 +29,7 @@ func (t *testZoneAdder) AddZone(z *zone.Zone) {
 	t.Zones = append(t.Zones, z)
 }
 
-var _ = Describe("Reading zones from cmdline", func() {
+var _ = Describe("Setting up zones from config file", func() {
 	var (
 		srv    *testZoneAdder
 		config map[string]zoneConfig
