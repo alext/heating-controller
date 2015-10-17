@@ -21,7 +21,7 @@ func loadConfig(filename string) (*config, error) {
 		Port: defaultPort,
 	}
 
-	file, err := fs.Open(filename)
+	file, err := os.Open(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
 			log.Printf("[main] Config file '%s' not found, ignoring", filename)

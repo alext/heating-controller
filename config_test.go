@@ -2,39 +2,46 @@ package main
 
 import (
 	"encoding/json"
+	"io/ioutil"
+	"os"
 
-	"github.com/alext/afero"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Parsing the config file", func() {
-	BeforeEach(func() {
-		fs = &afero.MemMapFs{}
+	var (
+		configFileName string
+	)
+
+	AfterEach(func() {
+		if configFileName != "" {
+			os.Remove(configFileName)
+		}
 	})
 
 	Context("with a config file", func() {
 
 		It("should set the port", func() {
-			createConfigFile("/etc/config.json", configData{
+			configFileName = createConfigFile(configData{
 				"port": 1234,
 			})
 
-			config, err := loadConfig("/etc/config.json")
+			config, err := loadConfig(configFileName)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(config.Port).To(Equal(1234))
 		})
 
 		It("should set a default port if none is specified", func() {
-			createConfigFile("/etc/config.json", configData{})
+			configFileName = createConfigFile(configData{})
 
-			config, err := loadConfig("/etc/config.json")
+			config, err := loadConfig(configFileName)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(config.Port).To(Equal(defaultPort))
 		})
 
 		It("should setup the zone details", func() {
-			createConfigFile("/etc/config.json", configData{
+			configFileName = createConfigFile(configData{
 				"zones": map[string]map[string]interface{}{
 					"foo": map[string]interface{}{
 						"gpio_pin": 42,
@@ -48,7 +55,7 @@ var _ = Describe("Parsing the config file", func() {
 				},
 			})
 
-			config, err := loadConfig("/etc/config.json")
+			config, err := loadConfig(configFileName)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(config.Zones).To(HaveLen(3))
 
@@ -60,9 +67,9 @@ var _ = Describe("Parsing the config file", func() {
 		})
 
 		It("should have an empty list of zones if none given", func() {
-			createConfigFile("/etc/config.json", configData{})
+			configFileName = createConfigFile(configData{})
 
-			config, err := loadConfig("/etc/config.json")
+			config, err := loadConfig(configFileName)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(config.Zones).To(HaveLen(0))
 		})
@@ -70,13 +77,13 @@ var _ = Describe("Parsing the config file", func() {
 
 	Context("when the config file doesn't exist", func() {
 		It("should set a default port", func() {
-			config, err := loadConfig("/etc/config.json")
+			config, err := loadConfig("/non-existent.json")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(config.Port).To(Equal(defaultPort))
 		})
 
 		It("should set an empty list of zones", func() {
-			config, err := loadConfig("/etc/config.json")
+			config, err := loadConfig("/non-existent.json")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(config.Zones).To(HaveLen(0))
 		})
@@ -85,10 +92,11 @@ var _ = Describe("Parsing the config file", func() {
 
 type configData map[string]interface{}
 
-func createConfigFile(filename string, data configData) {
-	file, err := fs.Create(filename)
+func createConfigFile(data configData) string {
+	file, err := ioutil.TempFile("", "config")
 	ExpectWithOffset(1, err).NotTo(HaveOccurred())
 	defer file.Close()
 	err = json.NewEncoder(file).Encode(data)
 	ExpectWithOffset(1, err).NotTo(HaveOccurred())
+	return file.Name()
 }

@@ -7,14 +7,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/alext/afero"
-
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/webserver"
 	"github.com/alext/heating-controller/zone"
 )
-
-var fs afero.Fs = &afero.OsFs{}
 
 const (
 	defaultConfigFile = "./config.json"
