@@ -22,11 +22,11 @@ func TestMain(t *testing.T) {
 }
 
 type testZoneAdder struct {
-	Zones []*zone.Zone
+	Zones map[string]*zone.Zone
 }
 
 func (t *testZoneAdder) AddZone(z *zone.Zone) {
-	t.Zones = append(t.Zones, z)
+	t.Zones[z.ID] = z
 }
 
 var _ = Describe("Setting up zones from config file", func() {
@@ -39,7 +39,7 @@ var _ = Describe("Setting up zones from config file", func() {
 		zone.DataDir, _ = ioutil.TempDir("", "heating-controller-test")
 
 		config = make(map[string]zoneConfig)
-		srv = &testZoneAdder{make([]*zone.Zone, 0)}
+		srv = &testZoneAdder{make(map[string]*zone.Zone)}
 		output_New = func(id string, pin int) (output.Output, error) {
 			out := output.Virtual(fmt.Sprintf("%s-gpio%d", id, pin))
 			return out, nil
@@ -66,10 +66,10 @@ var _ = Describe("Setting up zones from config file", func() {
 
 		Expect(srv.Zones).To(HaveLen(2))
 
-		Expect(srv.Zones[0].ID).To(Equal("foo"))
-		Expect(srv.Zones[1].ID).To(Equal("bar"))
-		Expect(srv.Zones[0].Out.Id()).To(Equal("foo"))
-		Expect(srv.Zones[1].Out.Id()).To(Equal("bar"))
+		Expect(srv.Zones).To(HaveKey("foo"))
+		Expect(srv.Zones).To(HaveKey("bar"))
+		Expect(srv.Zones["foo"].Out.Id()).To(Equal("foo"))
+		Expect(srv.Zones["bar"].Out.Id()).To(Equal("bar"))
 	})
 
 	It("Should restore the state of the zones", func() {
@@ -84,7 +84,7 @@ var _ = Describe("Setting up zones from config file", func() {
 		Expect(setupZones(config, srv)).To(Succeed())
 
 		Expect(srv.Zones).To(HaveLen(1))
-		events := srv.Zones[0].Scheduler.ReadEvents()
+		events := srv.Zones["ch"].Scheduler.ReadEvents()
 		Expect(events).To(HaveLen(2))
 	})
 
@@ -94,7 +94,7 @@ var _ = Describe("Setting up zones from config file", func() {
 
 		Expect(srv.Zones).To(HaveLen(1))
 
-		Expect(srv.Zones[0].Scheduler.Running()).To(BeTrue())
+		Expect(srv.Zones["ch"].Scheduler.Running()).To(BeTrue())
 	})
 
 	It("Should add real outputs with correct pin", func() {
@@ -105,10 +105,10 @@ var _ = Describe("Setting up zones from config file", func() {
 
 		Expect(srv.Zones).To(HaveLen(2))
 
-		Expect(srv.Zones[0].ID).To(Equal("foo"))
-		Expect(srv.Zones[1].ID).To(Equal("bar"))
-		Expect(srv.Zones[0].Out.Id()).To(Equal("foo-gpio10"))
-		Expect(srv.Zones[1].Out.Id()).To(Equal("bar-gpio47"))
+		Expect(srv.Zones).To(HaveKey("foo"))
+		Expect(srv.Zones).To(HaveKey("bar"))
+		Expect(srv.Zones["foo"].Out.Id()).To(Equal("foo-gpio10"))
+		Expect(srv.Zones["bar"].Out.Id()).To(Equal("bar-gpio47"))
 	})
 })
 
