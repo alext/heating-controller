@@ -6,10 +6,6 @@
 	],
 	"Deps": [
 		{
-			"ImportPath": "github.com/alext/afero",
-			"Rev": "d459e62d603a6413bb09dd6d1fb9b35ec734eb95"
-		},
-		{
 			"ImportPath": "github.com/alext/gpio",
 			"Rev": "51f9c368ab0ade610f44da0068743346638410b6"
 		},
