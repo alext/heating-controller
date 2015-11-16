@@ -17,7 +17,7 @@ build: Godeps/Godeps.json
 	go build -ldflags "-X main.version=$(VERSION)" -o $(BINARY)
 
 test: build
-	go test -v ./...
+	go test -v $$(go list ./... | grep -v '/vendor/')
 	./$(BINARY) -version
 
 clean:
