@@ -4,8 +4,8 @@ BINARY := heating-controller
 IMPORT_BASE := github.com/alext
 IMPORT_PATH := $(IMPORT_BASE)/heating-controller
 
-GOPATH := $(CURDIR)/Godeps/_workspace:$(GOPATH)
-export GOPATH
+GO15VENDOREXPERIMENT := 1
+export GO15VENDOREXPERIMENT
 
 ifdef RELEASE_VERSION
 VERSION := $(RELEASE_VERSION)
