@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 )
 
 //By default, pins 14 and 15 boot to UART mode, so they are going to be ignored for now.
@@ -110,7 +111,7 @@ func OpenPin(n int, mode Mode) (Pin, error) {
 	if err != nil {
 		return nil, err
 	}
-	value, err := os.OpenFile(filepath.Join(pinBase, "value"), os.O_RDWR, 0600)
+	value, err := openPinValueFile(pinBase)
 	if err != nil {
 		return nil, err
 	}
@@ -244,6 +245,17 @@ func expose(pin int) (string, error) {
 		err = writeFile(filepath.Join(gpiobase, "export"), "%d", pin)
 	}
 	return pinBase, err
+}
+
+func openPinValueFile(pinBase string) (*os.File, error) {
+	path := filepath.Join(pinBase, "value")
+	file, err := os.OpenFile(path, os.O_RDWR, 0600)
+	if os.IsPermission(err) {
+		// Give any udev permission setting commands time to run
+		time.Sleep(100 * time.Millisecond)
+		file, err = os.OpenFile(path, os.O_RDWR, 0600)
+	}
+	return file, err
 }
 
 func writeFile(path string, format string, args ...interface{}) error {

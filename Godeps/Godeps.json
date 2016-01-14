@@ -1,13 +1,20 @@
 {
 	"ImportPath": "github.com/alext/heating-controller",
-	"GoVersion": "go1.5.1",
+	"GoVersion": "go1.5.3",
 	"Packages": [
-		"./..."
+		"github.com/alext/heating-controller",
+		"github.com/alext/heating-controller/output",
+		"github.com/alext/heating-controller/output/mock_output",
+		"github.com/alext/heating-controller/scheduler",
+		"github.com/alext/heating-controller/scheduler/mock_scheduler",
+		"github.com/alext/heating-controller/webserver",
+		"github.com/alext/heating-controller/webserver/integration_test",
+		"github.com/alext/heating-controller/zone"
 	],
 	"Deps": [
 		{
 			"ImportPath": "github.com/alext/gpio",
-			"Rev": "51f9c368ab0ade610f44da0068743346638410b6"
+			"Rev": "599999cd4c12aca85ba6168acf6134dc08b6ec39"
 		},
 		{
 			"ImportPath": "github.com/golang/mock/gomock",
