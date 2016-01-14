@@ -22,3 +22,6 @@ test: build
 
 clean:
 	rm -rf $(BINARY)
+
+save_deps:
+	godep save $$(go list ./... | grep -v '/vendor/')
