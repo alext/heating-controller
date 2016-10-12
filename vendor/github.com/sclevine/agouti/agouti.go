@@ -6,6 +6,7 @@ package agouti
 import (
 	"fmt"
 	"path/filepath"
+	"runtime"
 )
 
 // PhantomJS returns an instance of a PhantomJS WebDriver.
@@ -32,7 +33,13 @@ func PhantomJS(options ...Option) *WebDriver {
 // New pages will accept invalid SSL certificates by default. This
 // may be disabled using the RejectInvalidSSL Option.
 func ChromeDriver(options ...Option) *WebDriver {
-	command := []string{"chromedriver", "--port={{.Port}}"}
+	var binaryName string
+	if runtime.GOOS == "windows" {
+		binaryName = "chromedriver.exe"
+	} else {
+		binaryName = "chromedriver"
+	}
+	command := []string{binaryName, "--port={{.Port}}"}
 	return NewWebDriver("http://{{.Address}}", command, options...)
 }
 
@@ -70,9 +77,12 @@ func Selendroid(jarFile string, options ...Option) *WebDriver {
 }
 
 // SauceLabs opens a Sauce Labs session and returns a *Page. Does not support Sauce Connect.
-func SauceLabs(name, platform, browser, version, username, accessKey string) (*Page, error) {
+//
+// This method takes the same Options as NewPage. Passing the Desired Option will
+// completely override the provided name, platform, browser, and version.
+func SauceLabs(name, platform, browser, version, username, accessKey string, options ...Option) (*Page, error) {
 	url := fmt.Sprintf("http://%s:%s@ondemand.saucelabs.com/wd/hub", username, accessKey)
 	capabilities := NewCapabilities().Browser(name).Platform(platform).Version(version)
 	capabilities["name"] = name
-	return NewPage(url, Desired(capabilities))
+	return NewPage(url, append([]Option{Desired(capabilities)}, options...)...)
 }

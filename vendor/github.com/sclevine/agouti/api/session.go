@@ -3,6 +3,8 @@ package api
 import (
 	"encoding/base64"
 	"errors"
+	"net/http"
+	"strings"
 
 	"github.com/sclevine/agouti/api/internal/bus"
 )
@@ -16,7 +18,11 @@ type Bus interface {
 }
 
 func Open(url string, capabilities map[string]interface{}) (*Session, error) {
-	busClient, err := bus.Connect(url, capabilities)
+	return OpenWithClient(url, capabilities, nil)
+}
+
+func OpenWithClient(url string, capabilities map[string]interface{}, client *http.Client) (*Session, error) {
+	busClient, err := bus.Connect(url, capabilities, client)
 	if err != nil {
 		return nil, err
 	}
@@ -423,10 +429,40 @@ func (s *Session) TouchScroll(element *Element, offset Offset) error {
 	return s.Send("POST", "touch/scroll", request, nil)
 }
 
+func (s *Session) Keys(text string) error {
+	splitText := strings.Split(text, "")
+	request := struct {
+		Value []string `json:"value"`
+	}{splitText}
+	return s.Send("POST", "keys", request, nil)
+}
+
 func (s *Session) DeleteLocalStorage() error {
 	return s.Send("DELETE", "local_storage", nil, nil)
 }
 
 func (s *Session) DeleteSessionStorage() error {
 	return s.Send("DELETE", "session_storage", nil, nil)
+}
+
+func (s *Session) SetImplicitWait(timeout int) error {
+	request := struct {
+		MS int `json:"ms"`
+	}{timeout}
+	return s.Send("POST", "timeouts/implicit_wait", request, nil)
+}
+
+func (s *Session) SetPageLoad(timeout int) error {
+	request := struct {
+		MS   int    `json:"ms"`
+		Type string `json:"type"`
+	}{timeout, "page load"}
+	return s.Send("POST", "timeouts", request, nil)
+}
+
+func (s *Session) SetScriptTimeout(timeout int) error {
+	request := struct {
+		MS int `json:"ms"`
+	}{timeout}
+	return s.Send("POST", "timeouts/async_script", request, nil)
 }
