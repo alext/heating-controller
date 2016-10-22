@@ -53,13 +53,10 @@ func (z *Zone) Save() error {
 	defer file.Close()
 
 	data := zoneData{Events: z.Scheduler.ReadEvents()}
-	b, err := json.MarshalIndent(data, "", "  ")
-	if err != nil {
-		log.Printf("[Zone:%s] Error saving zone state: %s", z.ID, err.Error())
-		return err
-	}
 
-	_, err = file.Write(b)
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	err = encoder.Encode(data)
 	if err != nil {
 		log.Printf("[Zone:%s] Error saving zone state: %s", z.ID, err.Error())
 		return err
