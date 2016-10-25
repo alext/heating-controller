@@ -81,15 +81,15 @@ var _ = Describe("A Thermostat", func() {
 
 		Describe("error handling", func() {
 			BeforeEach(func() {
+				server = httptest.NewServer(http.HandlerFunc(http.NotFound))
 				t = &thermostat{
+					url:     server.URL,
 					current: 18000,
 				}
 			})
 
 			Context("when the network connection fails", func() {
 				It("doesn't update the current temperature", func() {
-					server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
-					t.url = server.URL
 					server.Close()
 					t.readTemp()
 					Expect(t.current).To(BeNumerically("==", 18000))
@@ -98,12 +98,11 @@ var _ = Describe("A Thermostat", func() {
 
 			Context("when the HTTP returns non-200 response", func() {
 				It("doesn't update the current temperature", func() {
-					server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 						w.WriteHeader(http.StatusInternalServerError)
 						data := map[string]interface{}{"temperature": 19000}
 						Expect(json.NewEncoder(w).Encode(&data)).To(Succeed())
-					}))
-					t.url = server.URL
+					})
 					t.readTemp()
 					Expect(t.current).To(BeNumerically("==", 18000))
 				})
@@ -111,10 +110,9 @@ var _ = Describe("A Thermostat", func() {
 
 			Context("when the response isn't JSON", func() {
 				It("doesn't update the current temperature", func() {
-					server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 						w.Write([]byte("I'm not JSON..."))
-					}))
-					t.url = server.URL
+					})
 					t.readTemp()
 					Expect(t.current).To(BeNumerically("==", 18000))
 				})
@@ -122,11 +120,10 @@ var _ = Describe("A Thermostat", func() {
 
 			Context("when the response does not include a temperature field", func() {
 				It("doesn't update the current temperature", func() {
-					server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 						data := map[string]interface{}{"something": "else"}
 						Expect(json.NewEncoder(w).Encode(&data)).To(Succeed())
-					}))
-					t.url = server.URL
+					})
 					t.readTemp()
 					Expect(t.current).To(BeNumerically("==", 18000))
 				})
