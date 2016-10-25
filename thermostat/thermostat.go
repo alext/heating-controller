@@ -78,9 +78,14 @@ func (t *thermostat) readTemp() {
 		return
 	}
 
+	if d.Temp == nil {
+		//log
+		return
+	}
+
 	t.lock.Lock()
 	defer t.lock.Unlock()
-	t.current = d.Temp
+	t.current = *d.Temp
 	t.trigger()
 }
 
