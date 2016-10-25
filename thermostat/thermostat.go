@@ -10,14 +10,16 @@ import (
 
 type Thermostat interface {
 	Set(Temperature)
+	Close()
 }
 
 type demandFunc func(bool)
 
 type thermostat struct {
-	id     string
-	url    string
-	demand demandFunc
+	id      string
+	url     string
+	demand  demandFunc
+	closeCh chan struct{}
 
 	lock    sync.Mutex
 	target  Temperature
@@ -28,10 +30,11 @@ type thermostat struct {
 func New(id string, url string, target Temperature, df demandFunc) Thermostat {
 
 	t := &thermostat{
-		id:     id,
-		url:    url,
-		target: target,
-		demand: df,
+		id:      id,
+		url:     url,
+		target:  target,
+		demand:  df,
+		closeCh: make(chan struct{}),
 	}
 
 	// Set active so that a new thermostat defaults to active when within the
@@ -50,11 +53,22 @@ func (t *thermostat) Set(tmp Temperature) {
 	t.trigger()
 }
 
+func (t *thermostat) Close() {
+	if t.closeCh != nil {
+		close(t.closeCh)
+	}
+}
+
 func (t *thermostat) readLoop() {
 	tkr := time.NewTicker(time.Minute)
+	defer tkr.Stop()
 	for {
-		<-tkr.C
-		t.readTemp()
+		select {
+		case <-tkr.C:
+			t.readTemp()
+		case <-t.closeCh:
+			return
+		}
 	}
 }
 
