@@ -21,6 +21,13 @@ func TestThermostat(t *testing.T) {
 	RunSpecs(t, "Thermostat")
 }
 
+func temperatureHandler(value uint) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		data := map[string]interface{}{"temperature": value}
+		Expect(json.NewEncoder(w).Encode(&data)).To(Succeed())
+	})
+}
+
 var _ = Describe("A Thermostat", func() {
 
 	Describe("setting the target temperature", func() {
@@ -56,10 +63,7 @@ var _ = Describe("A Thermostat", func() {
 
 		Context("happy path", func() {
 			BeforeEach(func() {
-				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					data := map[string]interface{}{"temperature": 19000}
-					Expect(json.NewEncoder(w).Encode(&data)).To(Succeed())
-				}))
+				server = httptest.NewServer(temperatureHandler(19000))
 				t = &thermostat{
 					url:     server.URL,
 					current: 17000,
@@ -81,7 +85,7 @@ var _ = Describe("A Thermostat", func() {
 
 		Describe("error handling", func() {
 			BeforeEach(func() {
-				server = httptest.NewServer(http.HandlerFunc(http.NotFound))
+				server = httptest.NewServer(temperatureHandler(19000))
 				t = &thermostat{
 					url:     server.URL,
 					current: 18000,
