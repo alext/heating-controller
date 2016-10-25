@@ -29,9 +29,35 @@ func temperatureHandler(value uint) http.Handler {
 }
 
 var _ = Describe("A Thermostat", func() {
+	var (
+		t      *thermostat
+		server *httptest.Server
+	)
+	AfterEach(func() {
+		if server != nil {
+			server.Close()
+		}
+	})
+
+	Describe("constructing a thermostat", func() {
+		BeforeEach(func() {
+			server = httptest.NewServer(temperatureHandler(19000))
+		})
+
+		It("builds one correctly", func() {
+			t = New("something", server.URL, 19000, func(b bool) {}).(*thermostat)
+			Expect(t.id).To(Equal("something"))
+			Expect(t.url).To(Equal(server.URL))
+			Expect(t.target).To(BeNumerically("==", 19000))
+		})
+
+		It("starts as active when current temp is within the threshold", func() {
+			t = New("something", server.URL, 19000, func(b bool) {}).(*thermostat)
+			Expect(t.active).To(BeTrue())
+		})
+	})
 
 	Describe("setting the target temperature", func() {
-		var t *thermostat
 		BeforeEach(func() {
 			t = &thermostat{
 				current: 18000,
@@ -51,15 +77,6 @@ var _ = Describe("A Thermostat", func() {
 	})
 
 	Describe("reading the temperature from the source", func() {
-		var (
-			server *httptest.Server
-			t      *thermostat
-		)
-		AfterEach(func() {
-			if server != nil {
-				server.Close()
-			}
-		})
 
 		Context("happy path", func() {
 			BeforeEach(func() {

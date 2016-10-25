@@ -25,11 +25,12 @@ type thermostat struct {
 	active  bool
 }
 
-func New(id string, url string, df demandFunc) Thermostat {
+func New(id string, url string, target Temperature, df demandFunc) Thermostat {
 
 	t := &thermostat{
 		id:     id,
 		url:    url,
+		target: target,
 		demand: df,
 	}
 
