@@ -2,6 +2,7 @@ package thermostat
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -59,13 +60,13 @@ func (t *thermostat) readLoop() {
 func (t *thermostat) readTemp() {
 	resp, err := http.Get(t.url)
 	if err != nil {
-		//log
+		log.Printf("[Thermostat:%s] Error querying '%s': %s", t.id, t.url, err.Error())
 		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		//log
+		log.Printf("[Thermostat:%s] Got %d querying '%s'", t.id, resp.StatusCode, t.url)
 		return
 	}
 
@@ -74,12 +75,12 @@ func (t *thermostat) readTemp() {
 	}
 	err = json.NewDecoder(resp.Body).Decode(&d)
 	if err != nil {
-		//log
+		log.Printf("[Thermostat:%s] Error decoding JSON from '%s': %s", t.id, t.url, err.Error())
 		return
 	}
 
 	if d.Temp == nil {
-		//log
+		log.Printf("[Thermostat:%s] Missing temperature field in data from '%s'", t.id, t.url)
 		return
 	}
 

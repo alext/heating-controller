@@ -2,6 +2,8 @@ package thermostat
 
 import (
 	"encoding/json"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,6 +15,8 @@ import (
 
 func TestThermostat(t *testing.T) {
 	RegisterFailHandler(Fail)
+
+	log.SetOutput(ioutil.Discard)
 
 	RunSpecs(t, "Thermostat")
 }
