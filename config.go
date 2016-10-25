@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+
+	"github.com/alext/heating-controller/thermostat"
 )
 
 type config struct {
@@ -12,8 +14,14 @@ type config struct {
 }
 
 type zoneConfig struct {
-	Virtual bool `json:"virtual"`
-	GPIOPin int  `json:"gpio_pin"`
+	Virtual    bool              `json:"virtual"`
+	GPIOPin    int               `json:"gpio_pin"`
+	Thermostat *thermostatConfig `json:"thermostat"`
+}
+
+type thermostatConfig struct {
+	SensorURL     string                 `json:"sensor_url"`
+	DefaultTarget thermostat.Temperature `json:"default_target"`
 }
 
 func loadConfig(filename string) (*config, error) {

@@ -109,6 +109,9 @@ func setupZones(zones map[string]zoneConfig, server ZoneAdder) error {
 			}
 		}
 		z := zone.New(id, out)
+		if config.Thermostat != nil {
+			z.SetupThermostat(config.Thermostat.SensorURL, config.Thermostat.DefaultTarget)
+		}
 		z.Restore()
 		z.Scheduler.Start()
 		server.AddZone(z)
