@@ -2,53 +2,59 @@
 <h1>Zones</h1>
 {{ if len . }}
 <table>
-  <tr>
-    <th>Zone</th>
-    <th>State</th>
-    <th>Next Event</th>
-    <th>Boost</th>
-    <th>&nbsp;</th>
-  </tr>
   {{ range . }}
-  <tr>
-    <td>{{ .ID }}</td>
-    <td>{{ if .Active }}active{{ else }}inactive{{end}}</td>
-    <td>{{ .Scheduler.NextEvent }}</td>
-    <td>
-      {{ if .Scheduler.Boosted }}
-      Boosted
-      <form action="/zones/{{ .ID }}/boost" method="post">
-        <input type="hidden" name="_method" value="DELETE">
-        <input type="submit" value="Cancel boost">
-      </form>
-      {{ else }}
-      <form action="/zones/{{ .ID }}/boost" method="post">
-        <input type="hidden" name="_method" value="PUT">
-        <select name="duration">
-          <option value="15m">15 mins</option>
-          <option value="30m">30 mins</option>
-          <option value="1h" selected>1 hour</option>
-          <option value="2h">2 hours</option>
-        </select>
-        <input type="submit" value="Boost">
-      </form>
-      {{ end }}
-    </td>
-    <td>
-      {{ if .Active }}
-      <form action="/zones/{{ .ID }}/deactivate" method="post">
-        <input type="hidden" name="_method" value="PUT">
-        <input type="submit" value="Deactivate">
-      </form>
-      {{ else }}
-      <form action="/zones/{{ .ID }}/activate" method="post">
-        <input type="hidden" name="_method" value="PUT">
-        <input type="submit" value="Activate">
-      </form>
-      {{ end }}
-      <a href="/zones/{{ .ID }}/schedule">edit schedule</a>
-    </td>
-  </tr>
+  <tbody id="zone-{{ .ID }}">
+    <tr>
+      <th>{{ .ID }}</th>
+      <td>{{ if .Active }}active{{ else }}inactive{{end}}</td>
+    </tr>
+    <tr>
+      <td>Next event</td>
+      <td>
+        {{ .Scheduler.NextEvent }}
+        <a href="/zones/{{ .ID }}/schedule">edit schedule</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Boost</td>
+      <td>
+        {{ if .Scheduler.Boosted }}
+          Boosted
+          <form action="/zones/{{ .ID }}/boost" method="post" class="single-button">
+            <input type="hidden" name="_method" value="DELETE">
+            <input type="submit" value="Cancel boost">
+          </form>
+          {{ else }}
+          <form action="/zones/{{ .ID }}/boost" method="post">
+            <input type="hidden" name="_method" value="PUT">
+            <select name="duration">
+              <option value="15m">15 mins</option>
+              <option value="30m">30 mins</option>
+              <option value="1h" selected>1 hour</option>
+              <option value="2h">2 hours</option>
+            </select>
+            <input type="submit" value="Boost">
+          </form>
+        {{ end }}
+      </td>
+    </tr>
+    <tr>
+      <td>Manual override</td>
+      <td>
+        {{ if .Active }}
+        <form action="/zones/{{ .ID }}/deactivate" method="post">
+          <input type="hidden" name="_method" value="PUT">
+          <input type="submit" value="Deactivate">
+        </form>
+        {{ else }}
+        <form action="/zones/{{ .ID }}/activate" method="post">
+          <input type="hidden" name="_method" value="PUT">
+          <input type="submit" value="Activate">
+        </form>
+        {{ end }}
+      <td>
+    </tr>
+  </tbody>
   {{ end }}
 </table>
 {{ else }}

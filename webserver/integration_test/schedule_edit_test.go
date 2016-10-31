@@ -47,7 +47,7 @@ var _ = Describe("Editing the schedule for a zone", func() {
 		It("should show an empty schedule with no events", func() {
 			Expect(page.Navigate(testServer.URL)).To(Succeed())
 
-			link := page.All("table tr").At(1).FindByLink("edit schedule")
+			link := page.FindByID("zone-one").FindByLink("edit schedule")
 			Expect(link).To(BeFound())
 			Expect(link.Click()).To(Succeed())
 
@@ -66,7 +66,7 @@ var _ = Describe("Editing the schedule for a zone", func() {
 			It("should show the schedule", func() {
 				Expect(page.Navigate(testServer.URL)).To(Succeed())
 
-				link := page.All("table tr").At(1).FindByLink("edit schedule")
+				link := page.FindByID("zone-one").FindByLink("edit schedule")
 				Expect(link).To(BeFound())
 				Expect(link.Click()).To(Succeed())
 
