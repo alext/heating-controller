@@ -38,6 +38,16 @@
         {{ end }}
       </td>
     </tr>
+    {{ if .Thermostat }}
+      <tr>
+        <td>Current temp</td>
+        <td>{{ .Thermostat.Current }}</td>
+      </tr>
+      <tr>
+        <td>Target temp</td>
+        <td>{{ .Thermostat.Target }}</td>
+      </tr>
+    {{ end }}
     <tr>
       <td>Manual override</td>
       <td>

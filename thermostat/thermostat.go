@@ -9,6 +9,8 @@ import (
 )
 
 type Thermostat interface {
+	Current() Temperature
+	Target() Temperature
 	Set(Temperature)
 	Close()
 }
@@ -21,7 +23,7 @@ type thermostat struct {
 	demand  demandFunc
 	closeCh chan struct{}
 
-	lock    sync.Mutex
+	lock    sync.RWMutex
 	target  Temperature
 	current Temperature
 	active  bool
@@ -44,6 +46,18 @@ func New(id string, url string, target Temperature, df demandFunc) Thermostat {
 
 	go t.readLoop()
 	return t
+}
+
+func (t *thermostat) Current() Temperature {
+	t.lock.RLock()
+	defer t.lock.RUnlock()
+	return t.current
+}
+
+func (t *thermostat) Target() Temperature {
+	t.lock.RLock()
+	defer t.lock.RUnlock()
+	return t.target
 }
 
 func (t *thermostat) Set(tmp Temperature) {
@@ -107,7 +121,7 @@ func (t *thermostat) readTemp() {
 
 const threshold = 500
 
-// Must be called with the lock held.
+// Must be called with the lock held for writing.
 func (t *thermostat) trigger() {
 	if t.current < (t.target - threshold) {
 		t.active = true

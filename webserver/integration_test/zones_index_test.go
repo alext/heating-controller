@@ -1,6 +1,8 @@
 package integration_test
 
 import (
+	"encoding/json"
+	"net/http"
 	"net/http/httptest"
 
 	. "github.com/onsi/ginkgo"
@@ -74,5 +76,47 @@ var _ = Describe("viewing the index", func() {
 			Expect(zoneContent.Find("th")).To(HaveText("two"))
 			Expect(zoneContent.All("tr").At(0).Find("td")).To(HaveText("inactive"))
 		})
+
+		Context("with a thermostat configured", func() {
+			var (
+				sensor *mockSensor
+			)
+
+			BeforeEach(func() {
+				sensor = &mockSensor{temp: 18253}
+				sensor.Start()
+				zone1.SetupThermostat(sensor.URL, 19500)
+			})
+			AfterEach(func() {
+				if sensor != nil {
+					sensor.Close()
+				}
+			})
+
+			It("should include details from the thermostat", func() {
+				Expect(page.Navigate(testServer.URL)).To(Succeed())
+				zoneContent := page.FindByID("zone-one")
+				Expect(zoneContent).To(BeFound())
+				Expect(zoneContent).To(MatchText("Current temp\\s+18.253"))
+				Expect(zoneContent).To(MatchText("Target temp\\s+19.5"))
+			})
+		})
 	})
 })
+
+type mockSensor struct {
+	*httptest.Server
+	temp int
+}
+
+func (s *mockSensor) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	data := map[string]interface{}{
+		"temperature": s.temp,
+	}
+	json.NewEncoder(w).Encode(&data)
+}
+
+func (s *mockSensor) Start() {
+	s.Server = httptest.NewServer(s)
+}
