@@ -12,6 +12,7 @@ import (
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/output/mock_output"
 	"github.com/alext/heating-controller/scheduler/mock_scheduler"
+	"github.com/alext/heating-controller/thermostat/mock_thermostat"
 	"github.com/alext/heating-controller/webserver"
 	"github.com/alext/heating-controller/zone"
 )
@@ -176,7 +177,7 @@ var _ = Describe("zones controller", func() {
 
 		Context("for a zone with a thermostat configured", func() {
 			BeforeEach(func() {
-				zone1.Thermostat = &dummyThermostat{Tgt: 19000}
+				zone1.Thermostat = mock_thermostat.New(19000)
 			})
 
 			It("increments the target and redirects back", func() {
