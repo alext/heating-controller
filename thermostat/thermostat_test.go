@@ -171,6 +171,7 @@ var _ = Describe("A Thermostat", func() {
 				target:  c.Target,
 				active:  c.CurrentlyActive,
 				demand: func(param bool) {
+					defer GinkgoRecover()
 					demandCalled = true
 					Expect(param).To(Equal(c.ExpectedActive))
 					close(demandNotify)
@@ -194,6 +195,10 @@ var _ = Describe("A Thermostat", func() {
 			Current: 20000, Target: 18000, CurrentlyActive: true,
 			ExpectedActive: false,
 		}),
+		Entry("deactivates when current slightly above target", TriggeringCase{
+			Current: 18050, Target: 18000, CurrentlyActive: true,
+			ExpectedActive: false,
+		}),
 		Entry("remains inactive when current well above target", TriggeringCase{
 			Current: 20000, Target: 18000, CurrentlyActive: false,
 			ExpectedActive: false,
@@ -206,11 +211,7 @@ var _ = Describe("A Thermostat", func() {
 			Current: 17950, Target: 18000, CurrentlyActive: false,
 			ExpectedActive: false,
 		}),
-		Entry("remains active when current within threhold above target", TriggeringCase{
-			Current: 18050, Target: 18000, CurrentlyActive: true,
-			ExpectedActive: true,
-		}),
-		Entry("remains inactive when current within threhold above target", TriggeringCase{
+		Entry("remains inactive when current slightly above target", TriggeringCase{
 			Current: 18050, Target: 18000, CurrentlyActive: false,
 			ExpectedActive: false,
 		}),

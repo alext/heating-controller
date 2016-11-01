@@ -125,7 +125,7 @@ const threshold = 500
 func (t *thermostat) trigger() {
 	if t.current < (t.target - threshold) {
 		t.active = true
-	} else if t.current > (t.target + threshold) {
+	} else if t.current > t.target { // no threshold here due to hysteresis in system.
 		t.active = false
 	}
 	if t.demand != nil {
