@@ -164,4 +164,51 @@ var _ = Describe("zones controller", func() {
 		})
 	})
 
+	Describe("incrementing/decrementing the thermostat", func() {
+		var (
+			zone1 *zone.Zone
+		)
+
+		BeforeEach(func() {
+			zone1 = zone.New("one", output.Virtual("one"))
+			server.AddZone(zone1)
+		})
+
+		Context("for a zone with a thermostat configured", func() {
+			BeforeEach(func() {
+				zone1.Thermostat = &dummyThermostat{Tgt: 19000}
+			})
+
+			It("increments the target and redirects back", func() {
+				w := doRequest(server, "POST", "/zones/one/thermostat/increment")
+
+				Expect(w.Code).To(Equal(302))
+				Expect(w.Header().Get("Location")).To(Equal("/"))
+
+				Expect(zone1.Thermostat.Target()).To(BeNumerically("==", 19500))
+			})
+
+			It("decrements the target and redirects back", func() {
+				w := doRequest(server, "POST", "/zones/one/thermostat/decrement")
+
+				Expect(w.Code).To(Equal(302))
+				Expect(w.Header().Get("Location")).To(Equal("/"))
+
+				Expect(zone1.Thermostat.Target()).To(BeNumerically("==", 18500))
+			})
+		})
+
+		Context("for a zone without a thermostat configured", func() {
+
+			It("should 404 on increment", func() {
+				w := doRequest(server, "POST", "/zones/one/thermostat/increment")
+				Expect(w.Code).To(Equal(404))
+			})
+
+			It("should 404 on decrement", func() {
+				w := doRequest(server, "POST", "/zones/one/thermostat/decrement")
+				Expect(w.Code).To(Equal(404))
+			})
+		})
+	})
 })

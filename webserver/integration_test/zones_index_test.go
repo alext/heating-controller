@@ -1,8 +1,6 @@
 package integration_test
 
 import (
-	"encoding/json"
-	"net/http"
 	"net/http/httptest"
 
 	. "github.com/onsi/ginkgo"
@@ -103,20 +101,3 @@ var _ = Describe("viewing the index", func() {
 		})
 	})
 })
-
-type mockSensor struct {
-	*httptest.Server
-	temp int
-}
-
-func (s *mockSensor) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	data := map[string]interface{}{
-		"temperature": s.temp,
-	}
-	json.NewEncoder(w).Encode(&data)
-}
-
-func (s *mockSensor) Start() {
-	s.Server = httptest.NewServer(s)
-}

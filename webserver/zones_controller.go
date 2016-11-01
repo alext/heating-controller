@@ -48,6 +48,27 @@ func (srv *WebServer) zoneCancelBoost(w http.ResponseWriter, req *http.Request, 
 	http.Redirect(w, req, "/", http.StatusFound)
 }
 
+const thermostatIncrement = 500
+
+func (srv *WebServer) thermostatInc(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
+	if z.Thermostat == nil {
+		write404(w)
+		return
+	}
+	target := z.Thermostat.Target()
+	z.Thermostat.Set(target + thermostatIncrement)
+	http.Redirect(w, req, "/", http.StatusFound)
+}
+func (srv *WebServer) thermostatDec(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
+	if z.Thermostat == nil {
+		write404(w)
+		return
+	}
+	target := z.Thermostat.Target()
+	z.Thermostat.Set(target - thermostatIncrement)
+	http.Redirect(w, req, "/", http.StatusFound)
+}
+
 func (srv *WebServer) zoneActivate(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
 	err := z.Out.Activate()
 	if err != nil {

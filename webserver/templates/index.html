@@ -45,7 +45,15 @@
       </tr>
       <tr>
         <td>Target temp</td>
-        <td>{{ .Thermostat.Target }}</td>
+        <td>
+          <form action="/zones/{{ .ID }}/thermostat/increment" method="post" class="single-button">
+            <input type="submit" value="+">
+          </form>
+          {{ .Thermostat.Target }}
+          <form action="/zones/{{ .ID }}/thermostat/decrement" method="post" class="single-button">
+            <input type="submit" value="-">
+          </form>
+        </td>
       </tr>
     {{ end }}
     <tr>
