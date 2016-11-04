@@ -57,6 +57,11 @@ func (srv *WebServer) thermostatInc(w http.ResponseWriter, req *http.Request, z 
 	}
 	target := z.Thermostat.Target()
 	z.Thermostat.Set(target + thermostatIncrement)
+	err := z.Save()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	http.Redirect(w, req, "/", http.StatusFound)
 }
 func (srv *WebServer) thermostatDec(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
@@ -66,6 +71,11 @@ func (srv *WebServer) thermostatDec(w http.ResponseWriter, req *http.Request, z 
 	}
 	target := z.Thermostat.Target()
 	z.Thermostat.Set(target - thermostatIncrement)
+	err := z.Save()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	http.Redirect(w, req, "/", http.StatusFound)
 }
 

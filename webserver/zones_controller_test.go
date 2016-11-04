@@ -1,8 +1,11 @@
 package webserver_test
 
 import (
+	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/golang/mock/gomock"
@@ -167,12 +170,19 @@ var _ = Describe("zones controller", func() {
 
 	Describe("incrementing/decrementing the thermostat", func() {
 		var (
-			zone1 *zone.Zone
+			tempDataDir string
+			zone1       *zone.Zone
 		)
 
 		BeforeEach(func() {
+			tempDataDir, _ = ioutil.TempDir("", "schedule_controller_test")
+			zone.DataDir = tempDataDir
 			zone1 = zone.New("one", output.Virtual("one"))
 			server.AddZone(zone1)
+		})
+
+		AfterEach(func() {
+			os.RemoveAll(tempDataDir)
 		})
 
 		Context("for a zone with a thermostat configured", func() {
@@ -196,6 +206,17 @@ var _ = Describe("zones controller", func() {
 				Expect(w.Header().Get("Location")).To(Equal("/"))
 
 				Expect(zone1.Thermostat.Target()).To(BeNumerically("==", 18500))
+			})
+
+			It("saves the zone state", func() {
+				doRequest(server, "POST", "/zones/one/thermostat/increment")
+
+				file, err := os.Open(zone.DataDir + "/one.json")
+				Expect(err).NotTo(HaveOccurred())
+				var data map[string]interface{}
+				err = json.NewDecoder(file).Decode(&data)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(data["thermostat_target"]).To(BeNumerically("==", 19500))
 			})
 		})
 
