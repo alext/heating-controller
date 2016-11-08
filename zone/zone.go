@@ -41,6 +41,18 @@ func (z *Zone) Active() (bool, error) {
 	return z.Out.Active()
 }
 
+func (z *Zone) SDemand() bool {
+	z.lock.RLock()
+	defer z.lock.RUnlock()
+	return z.schedDemand
+}
+
+func (z *Zone) TDemand() bool {
+	z.lock.RLock()
+	defer z.lock.RUnlock()
+	return z.thermDemand
+}
+
 func (z *Zone) schedulerDemand(a scheduler.Action) {
 	z.lock.Lock()
 	defer z.lock.Unlock()
