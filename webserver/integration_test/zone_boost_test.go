@@ -57,7 +57,7 @@ var _ = Describe("boosting a zone", func() {
 		It("applies the boost and redirects back to the index", func() {
 			Expect(page.Navigate(testServer.URL)).To(Succeed())
 
-			cell := boostCell(page, 2)
+			cell := boostCell(page, "one")
 
 			Expect(cell.Find("select").Select("30 mins")).To(Succeed())
 			cell.Find("input[value=Boost]").Click()
@@ -75,7 +75,7 @@ var _ = Describe("boosting a zone", func() {
 			expected := time.Now().Local().Add(30 * time.Minute)
 			Expect(eventTime).To(BeTemporally("~", expected, 65*time.Second)) // allow for minute tickover.
 
-			cell = boostCell(page, 2)
+			cell = boostCell(page, "one")
 			Expect(cell).To(MatchText("Boosted"))
 		})
 	})
@@ -101,7 +101,7 @@ var _ = Describe("boosting a zone", func() {
 		It("cancels the boost and redirects back to the index", func() {
 			Expect(page.Navigate(testServer.URL)).To(Succeed())
 
-			cell := boostCell(page, 2)
+			cell := boostCell(page, "one")
 			Expect(cell).To(MatchText("Boosted"))
 			button := cell.Find("input[value=\"Cancel boost\"]")
 			Expect(button).To(BeFound())
@@ -120,14 +120,14 @@ var _ = Describe("boosting a zone", func() {
 			//expected := time.Now().Local().Add(30 * time.Minute)
 			//Expect(eventTime).To(BeTemporally("~", expected, 65*time.Second)) // allow for minute tickover.
 
-			cell = boostCell(page, 2)
+			cell = boostCell(page, "one")
 			Expect(cell.Find("input[value=Boost]")).To(BeFound())
 		})
 	})
 })
 
-func boostCell(page *agouti.Page, row int) *agouti.Selection {
-	cell := page.All("table tr").At(row - 1).All("td").At(3)
+func boostCell(page *agouti.Page, zoneName string) *agouti.Selection {
+	cell := page.FindByID("zone-" + zoneName).All("tr").At(2).All("td").At(1)
 	ExpectWithOffset(1, cell).To(BeFound())
 	return cell
 }

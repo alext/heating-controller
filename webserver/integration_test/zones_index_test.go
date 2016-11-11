@@ -64,10 +64,40 @@ var _ = Describe("viewing the index", func() {
 			output1.Activate()
 
 			Expect(page.Navigate(testServer.URL)).To(Succeed())
-			Expect(page.All("table tr").At(1).All("td").At(0)).To(HaveText("one"))
-			Expect(page.All("table tr").At(1).All("td").At(1)).To(HaveText("active"))
-			Expect(page.All("table tr").At(2).All("td").At(0)).To(HaveText("two"))
-			Expect(page.All("table tr").At(2).All("td").At(1)).To(HaveText("inactive"))
+			zoneContent := page.FindByID("zone-one")
+			Expect(zoneContent).To(BeFound())
+			Expect(zoneContent.Find("th")).To(HaveText("one"))
+			Expect(zoneContent.All("tr").At(0).Find("td")).To(HaveText("active"))
+
+			zoneContent = page.FindByID("zone-two")
+			Expect(zoneContent).To(BeFound())
+			Expect(zoneContent.Find("th")).To(HaveText("two"))
+			Expect(zoneContent.All("tr").At(0).Find("td")).To(HaveText("inactive"))
+		})
+
+		Context("with a thermostat configured", func() {
+			var (
+				sensor *mockSensor
+			)
+
+			BeforeEach(func() {
+				sensor = &mockSensor{temp: 18253}
+				sensor.Start()
+				zone1.SetupThermostat(sensor.URL, 19500)
+			})
+			AfterEach(func() {
+				if sensor != nil {
+					sensor.Close()
+				}
+			})
+
+			It("should include details from the thermostat", func() {
+				Expect(page.Navigate(testServer.URL)).To(Succeed())
+				zoneContent := page.FindByID("zone-one")
+				Expect(zoneContent).To(BeFound())
+				Expect(zoneContent).To(MatchText("Current temp\\s+18.253"))
+				Expect(zoneContent).To(MatchText("Target temp\\s+19.5"))
+			})
 		})
 	})
 })

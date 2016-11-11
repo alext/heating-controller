@@ -72,6 +72,22 @@ var _ = Describe("Setting up zones from config file", func() {
 		Expect(srv.Zones["bar"].Out.Id()).To(Equal("bar"))
 	})
 
+	It("should add a thermostat when configured", func() {
+		config["foo"] = zoneConfig{
+			Virtual: true,
+			Thermostat: &thermostatConfig{
+				SensorURL:     "http://foo.example.com/foo",
+				DefaultTarget: 18500,
+			},
+		}
+
+		Expect(setupZones(config, srv)).To(Succeed())
+		Expect(srv.Zones).To(HaveLen(1))
+		Expect(srv.Zones).To(HaveKey("foo"))
+
+		Expect(srv.Zones["foo"].Thermostat).NotTo(BeNil())
+	})
+
 	It("Should restore the state of the zones", func() {
 		writeJSONToFile(zone.DataDir+"/ch.json", map[string]interface{}{
 			"events": []map[string]interface{}{

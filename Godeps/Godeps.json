@@ -8,6 +8,7 @@
 		"github.com/alext/heating-controller/output/mock_output",
 		"github.com/alext/heating-controller/scheduler",
 		"github.com/alext/heating-controller/scheduler/mock_scheduler",
+		"github.com/alext/heating-controller/thermostat",
 		"github.com/alext/heating-controller/webserver",
 		"github.com/alext/heating-controller/webserver/integration_test",
 		"github.com/alext/heating-controller/zone"
@@ -37,6 +38,11 @@
 		},
 		{
 			"ImportPath": "github.com/onsi/ginkgo/config",
+			"Comment": "v1.2.0-75-gacfa16a",
+			"Rev": "acfa16ac8e9e0d2c6b11cfe78c79d8652c3ee3fd"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo/extensions/table",
 			"Comment": "v1.2.0-75-gacfa16a",
 			"Rev": "acfa16ac8e9e0d2c6b11cfe78c79d8652c3ee3fd"
 		},

@@ -7,12 +7,14 @@ import (
 	"path/filepath"
 
 	"github.com/alext/heating-controller/scheduler"
+	"github.com/alext/heating-controller/thermostat"
 )
 
 var DataDir string
 
 type zoneData struct {
-	Events []scheduler.Event `json:"events"`
+	Events           []scheduler.Event       `json:"events"`
+	ThermostatTarget *thermostat.Temperature `json:"thermostat_target,omitempty"`
 }
 
 func (z *Zone) Restore() error {
@@ -40,6 +42,9 @@ func (z *Zone) Restore() error {
 			log.Printf("[Zone:%s] Error restoring event '%v': %s", z.ID, e, err.Error())
 		}
 	}
+	if data.ThermostatTarget != nil && z.Thermostat != nil {
+		z.Thermostat.Set(*data.ThermostatTarget)
+	}
 	return nil
 }
 
@@ -53,6 +58,11 @@ func (z *Zone) Save() error {
 	defer file.Close()
 
 	data := zoneData{Events: z.Scheduler.ReadEvents()}
+	if z.Thermostat != nil {
+		// temporary variable needed so we can take the address of it.
+		target := z.Thermostat.Target()
+		data.ThermostatTarget = &target
+	}
 
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")

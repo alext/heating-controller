@@ -73,6 +73,42 @@ var _ = Describe("Parsing the config file", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(config.Zones).To(HaveLen(0))
 		})
+
+		Describe("adding thermostat details", func() {
+
+			It("should add thermostat details if present", func() {
+				configFileName = createConfigFile(configData{
+					"zones": map[string]map[string]interface{}{
+						"foo": map[string]interface{}{
+							"gpio_pin": 42,
+							"thermostat": map[string]interface{}{
+								"sensor_url":     "http://foo.example.com/sensors/foo",
+								"default_target": 18000,
+							},
+						},
+					},
+				})
+
+				config, err := loadConfig(configFileName)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(config.Zones["foo"].Thermostat.SensorURL).To(Equal("http://foo.example.com/sensors/foo"))
+				Expect(config.Zones["foo"].Thermostat.DefaultTarget).To(BeNumerically("==", 18000))
+			})
+
+			It("should set thermostat to nil if no details present", func() {
+				configFileName = createConfigFile(configData{
+					"zones": map[string]map[string]interface{}{
+						"foo": map[string]interface{}{
+							"gpio_pin": 42,
+						},
+					},
+				})
+
+				config, err := loadConfig(configFileName)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(config.Zones["foo"].Thermostat).To(BeNil())
+			})
+		})
 	})
 
 	Context("when the config file doesn't exist", func() {

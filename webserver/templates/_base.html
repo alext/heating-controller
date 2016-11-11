@@ -3,6 +3,21 @@
   <head>
     <title>Heating controller</title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <style>
+      th {
+        text-align: left;
+      }
+      tbody {
+        display: block;
+      }
+      tbody:not(:last-child) {
+        margin-bottom: 1em;
+      }
+
+      form.single-button {
+        display: inline;
+      }
+    </style>
   </head>
   <body>
     {{ template "content" . }}

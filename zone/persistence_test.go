@@ -11,6 +11,7 @@ import (
 
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/scheduler"
+	"github.com/alext/heating-controller/thermostat/mock_thermostat"
 )
 
 type EventHolder struct {
@@ -42,15 +43,15 @@ var _ = Describe("persisting a zone's state", func() {
 		os.RemoveAll(tempDataDir)
 	})
 
-	Describe("saving event list", func() {
+	Describe("saving zone state", func() {
 
-		It("should save an empty event list as JSON", func() {
+		It("should save an empty scheduler event list as JSON", func() {
 			Expect(z.Save()).To(Succeed())
 			data := readFile(filepath.Join(tempDataDir, "ch.json"))
 			Expect(data).To(MatchJSON(`{"events":[]}`))
 		})
 
-		It("should save the events to the file", func() {
+		It("should save the scheduler events to the file", func() {
 			z.Scheduler.AddEvent(scheduler.Event{Hour: 6, Min: 30, Action: scheduler.TurnOn})
 			z.Scheduler.AddEvent(scheduler.Event{Hour: 7, Min: 45, Action: scheduler.TurnOff})
 
@@ -65,17 +66,24 @@ var _ = Describe("persisting a zone's state", func() {
 			})
 			Expect(data).To(MatchJSON(expected))
 		})
+
+		It("should save the thermostat target", func() {
+			z.Thermostat = mock_thermostat.New(18500)
+			Expect(z.Save()).To(Succeed())
+			data := readFile(filepath.Join(tempDataDir, "ch.json"))
+			Expect(data).To(MatchJSON(`{"events":[],"thermostat_target":18500}`))
+		})
 	})
 
-	Describe("reading events", func() {
-		It("should load an empty event list", func() {
+	Describe("restoring zone state", func() {
+		It("should load an empty scheduler event list", func() {
 			writeJSONToFile(filepath.Join(tempDataDir, "ch.json"), map[string]interface{}{"events": []interface{}{}})
 			Expect(z.Restore()).To(Succeed())
 
 			Expect(z.Scheduler.ReadEvents()).To(HaveLen(0))
 		})
 
-		It("should load the events from the file", func() {
+		It("should load the scheduler events from the file", func() {
 			writeJSONToFile(filepath.Join(tempDataDir, "ch.json"), map[string]interface{}{
 				"events": []map[string]interface{}{
 					{"hour": 6, "min": 30, "action": "On"},
@@ -91,13 +99,13 @@ var _ = Describe("persisting a zone's state", func() {
 			Expect(events[1]).To(Equal(scheduler.Event{Hour: 7, Min: 45, Action: scheduler.TurnOff}))
 		})
 
-		It("should treat a non-existent data file the same as a file with an empty event list", func() {
+		It("should treat a non-existent data file the same as a file with an empty scheduler event list", func() {
 			Expect(z.Restore()).To(Succeed())
 
 			Expect(z.Scheduler.ReadEvents()).To(HaveLen(0))
 		})
 
-		It("should skip over any invalid events in the file", func() {
+		It("should skip over any invalid scheduler events in the file", func() {
 			writeJSONToFile(filepath.Join(tempDataDir, "ch.json"), map[string]interface{}{
 				"events": []map[string]interface{}{
 					{"hour": 6, "min": 30, "action": "On"},
@@ -115,7 +123,36 @@ var _ = Describe("persisting a zone's state", func() {
 			Expect(events[1]).To(Equal(scheduler.Event{Hour: 16, Min: 30, Action: scheduler.TurnOn}))
 			Expect(events[2]).To(Equal(scheduler.Event{Hour: 18, Min: 40, Action: scheduler.TurnOff}))
 		})
+
+		It("should restore the thermostat target", func() {
+			z.Thermostat = mock_thermostat.New(18500)
+			writeJSONToFile(filepath.Join(tempDataDir, "ch.json"), map[string]interface{}{
+				"thermostat_target": 19000,
+			})
+
+			Expect(z.Restore()).To(Succeed())
+
+			Expect(z.Thermostat.Target()).To(BeNumerically("==", 19000))
+		})
+
+		It("should leave the thermostat target unchanged if not present in the file", func() {
+			z.Thermostat = mock_thermostat.New(18500)
+			writeJSONToFile(filepath.Join(tempDataDir, "ch.json"), map[string]interface{}{})
+
+			Expect(z.Restore()).To(Succeed())
+
+			Expect(z.Thermostat.Target()).To(BeNumerically("==", 18500))
+		})
+
+		It("should ignore a thermostat target in the file for a zone with no thermostat configured", func() {
+			writeJSONToFile(filepath.Join(tempDataDir, "ch.json"), map[string]interface{}{
+				"thermostat_target": 19000,
+			})
+
+			Expect(z.Restore()).To(Succeed())
+		})
 	})
+
 })
 
 func writeJSONToFile(filename string, data interface{}) {
