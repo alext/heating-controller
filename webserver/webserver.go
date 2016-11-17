@@ -43,5 +43,6 @@ func write404(w http.ResponseWriter) {
 }
 
 func writeError(w http.ResponseWriter, err error) {
+	log.Printf("[webserver] Error : %s", err.Error())
 	http.Error(w, err.Error(), http.StatusInternalServerError)
 }

@@ -57,6 +57,7 @@ func (z *Zone) schedulerDemand(a scheduler.Action) {
 	z.lock.Lock()
 	defer z.lock.Unlock()
 	z.schedDemand = a == scheduler.TurnOn
+	log.Printf("[Zone:%s] received scheduler demand : %t", z.ID, z.schedDemand)
 	z.updateDemand()
 }
 
@@ -64,6 +65,7 @@ func (z *Zone) thermostatDemand(demand bool) {
 	z.lock.Lock()
 	defer z.lock.Unlock()
 	z.thermDemand = demand
+	log.Printf("[Zone:%s] received thermostat demand : %t", z.ID, z.thermDemand)
 	z.updateDemand()
 }
 

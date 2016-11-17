@@ -36,6 +36,7 @@ func (srv *WebServer) zoneBoost(w http.ResponseWriter, req *http.Request, z *zon
 	durationString := req.FormValue("duration")
 	d, err := time.ParseDuration(durationString)
 	if err == nil {
+		log.Printf("[webserver] Zone %s, boosting for %s", z.ID, d)
 		z.Scheduler.Boost(d)
 		http.Redirect(w, req, "/", http.StatusFound)
 	} else {
@@ -44,6 +45,7 @@ func (srv *WebServer) zoneBoost(w http.ResponseWriter, req *http.Request, z *zon
 }
 
 func (srv *WebServer) zoneCancelBoost(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
+	log.Printf("[webserver] Zone %s, cancelling boost", z.ID)
 	z.Scheduler.CancelBoost()
 	http.Redirect(w, req, "/", http.StatusFound)
 }
@@ -80,6 +82,7 @@ func (srv *WebServer) thermostatDec(w http.ResponseWriter, req *http.Request, z 
 }
 
 func (srv *WebServer) zoneActivate(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
+	log.Printf("[webserver] Manual activation zone %s", z.ID)
 	err := z.Out.Activate()
 	if err != nil {
 		writeError(w, fmt.Errorf("Error activating output '%s': %s", z.ID, err.Error()))
@@ -89,6 +92,7 @@ func (srv *WebServer) zoneActivate(w http.ResponseWriter, req *http.Request, z *
 }
 
 func (srv *WebServer) zoneDeactivate(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
+	log.Printf("[webserver] Manual deactivation zone %s", z.ID)
 	err := z.Out.Deactivate()
 	if err != nil {
 		writeError(w, fmt.Errorf("Error deactivating output '%s': %s", z.ID, err.Error()))
