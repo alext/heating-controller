@@ -13,10 +13,10 @@ import (
 )
 
 const (
-	defaultConfigFile = "./config.json"
-	defaultDataDir    = "./data"
-	defaultPort       = 8080
-	templateDir       = "webserver/templates"
+	defaultConfigFile  = "./config.json"
+	defaultDataDir     = "./data"
+	defaultPort        = 8080
+	defaultTemplateDir = "webserver/templates"
 )
 
 type ZoneAdder interface {
@@ -27,6 +27,7 @@ func main() {
 	var (
 		logDest       = flag.String("log", "STDERR", "Where to log to - STDOUT, STDERR or a filename")
 		dataDir       = flag.String("datadir", filepath.FromSlash(defaultDataDir), "The directory to save state information in")
+		templateDir   = flag.String("templatedir", filepath.FromSlash(defaultTemplateDir), "The directory containing the templates")
 		configFile    = flag.String("config-file", filepath.FromSlash(defaultConfigFile), "Path to the config file")
 		returnVersion = flag.Bool("version", false, "Return version and exit")
 	)
@@ -51,7 +52,7 @@ func main() {
 
 	setupDataDir(*dataDir)
 
-	srv := webserver.New(config.Port, filepath.FromSlash(templateDir))
+	srv := webserver.New(config.Port, filepath.FromSlash(*templateDir))
 	err = setupZones(config.Zones, srv)
 	if err != nil {
 		log.Fatalln("[main] Error setting up outputs:", err)
