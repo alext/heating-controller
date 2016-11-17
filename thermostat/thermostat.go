@@ -123,12 +123,13 @@ const threshold = 500
 
 // Must be called with the lock held for writing.
 func (t *thermostat) trigger() {
+	previousActive := t.active
 	if t.current < (t.target - threshold) {
 		t.active = true
 	} else if t.current > t.target { // no threshold here due to hysteresis in system.
 		t.active = false
 	}
-	if t.demand != nil {
+	if t.active != previousActive && t.demand != nil {
 		go t.demand(t.active)
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -156,10 +157,11 @@ var _ = Describe("A Thermostat", func() {
 	})
 
 	type TriggeringCase struct {
-		Current         Temperature
-		Target          Temperature
-		CurrentlyActive bool
-		ExpectedActive  bool
+		Current            Temperature
+		Target             Temperature
+		CurrentlyActive    bool
+		ExpectedActive     bool
+		ExpectDemandCalled bool
 	}
 
 	DescribeTable("triggering changes in state",
@@ -180,40 +182,45 @@ var _ = Describe("A Thermostat", func() {
 
 			t.trigger()
 			Expect(t.active).To(Equal(c.ExpectedActive))
-			<-demandNotify
-			Expect(demandCalled).To(BeTrue(), "expected demandFunc to be called")
+			if c.ExpectDemandCalled {
+				select {
+				case <-demandNotify:
+				case <-time.After(time.Second):
+				}
+				Expect(demandCalled).To(BeTrue(), "expected demandFunc to be called")
+			}
 		},
 		Entry("activates when current well below target", TriggeringCase{
 			Current: 15000, Target: 18000, CurrentlyActive: false,
-			ExpectedActive: true,
+			ExpectedActive: true, ExpectDemandCalled: true,
 		}),
 		Entry("remains active when current well below target", TriggeringCase{
 			Current: 15000, Target: 18000, CurrentlyActive: true,
-			ExpectedActive: true,
+			ExpectedActive: true, ExpectDemandCalled: false,
 		}),
 		Entry("deactivates when current well above target", TriggeringCase{
 			Current: 20000, Target: 18000, CurrentlyActive: true,
-			ExpectedActive: false,
+			ExpectedActive: false, ExpectDemandCalled: true,
 		}),
 		Entry("deactivates when current slightly above target", TriggeringCase{
 			Current: 18050, Target: 18000, CurrentlyActive: true,
-			ExpectedActive: false,
+			ExpectedActive: false, ExpectDemandCalled: true,
 		}),
 		Entry("remains inactive when current well above target", TriggeringCase{
 			Current: 20000, Target: 18000, CurrentlyActive: false,
-			ExpectedActive: false,
+			ExpectedActive: false, ExpectDemandCalled: false,
 		}),
 		Entry("remains active when current within threhold below target", TriggeringCase{
 			Current: 17950, Target: 18000, CurrentlyActive: true,
-			ExpectedActive: true,
+			ExpectedActive: true, ExpectDemandCalled: false,
 		}),
 		Entry("remains inactive when current within threhold below target", TriggeringCase{
 			Current: 17950, Target: 18000, CurrentlyActive: false,
-			ExpectedActive: false,
+			ExpectedActive: false, ExpectDemandCalled: false,
 		}),
 		Entry("remains inactive when current slightly above target", TriggeringCase{
 			Current: 18050, Target: 18000, CurrentlyActive: false,
-			ExpectedActive: false,
+			ExpectedActive: false, ExpectDemandCalled: false,
 		}),
 	)
 })
