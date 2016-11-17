@@ -42,10 +42,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("[main] heating-controller starting")
 
 	config, err := loadConfig(*configFile)
 	if err != nil {
-		log.Fatalln("Error reading config file:", err)
+		log.Fatalln("[main] Error reading config file:", err)
 	}
 
 	setupDataDir(*dataDir)
