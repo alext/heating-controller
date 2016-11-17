@@ -51,7 +51,7 @@ func (srv *WebServer) scheduleAddEvent(w http.ResponseWriter, req *http.Request,
 	}
 	err = z.Save()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, err)
 		return
 	}
 	http.Redirect(w, req, "/zones/"+z.ID+"/schedule", 302)
@@ -69,7 +69,7 @@ func (srv *WebServer) scheduleRemoveEvent(w http.ResponseWriter, req *http.Reque
 
 	err := z.Save()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, err)
 		return
 	}
 

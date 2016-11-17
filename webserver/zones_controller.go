@@ -61,7 +61,7 @@ func (srv *WebServer) thermostatInc(w http.ResponseWriter, req *http.Request, z 
 	z.Thermostat.Set(target + thermostatIncrement)
 	err := z.Save()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, err)
 		return
 	}
 	http.Redirect(w, req, "/", http.StatusFound)
@@ -75,7 +75,7 @@ func (srv *WebServer) thermostatDec(w http.ResponseWriter, req *http.Request, z 
 	z.Thermostat.Set(target - thermostatIncrement)
 	err := z.Save()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, err)
 		return
 	}
 	http.Redirect(w, req, "/", http.StatusFound)
