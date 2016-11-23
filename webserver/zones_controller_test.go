@@ -35,6 +35,50 @@ var _ = Describe("zones controller", func() {
 		mockCtrl.Finish()
 	})
 
+	Describe("zones API index", func() {
+		Context("with no zones", func() {
+			It("returns empty hash", func() {
+				w := doGetRequest(server, "/zones.json")
+				Expect(w.Code).To(Equal(200))
+				Expect(w.Header().Get("Content-Type")).To(Equal("application/json"))
+				Expect(w.Body).To(MatchJSON("{}"))
+			})
+		})
+
+		Context("with some zones", func() {
+			var (
+				output1 output.Output
+				output2 output.Output
+				zone1   *zone.Zone
+				zone2   *zone.Zone
+			)
+
+			BeforeEach(func() {
+				output1 = output.Virtual("one")
+				output2 = output.Virtual("two")
+				zone1 = zone.New("one", output1)
+				zone2 = zone.New("two", output2)
+				server.AddZone(zone1)
+				server.AddZone(zone2)
+			})
+
+			It("returns zone details", func() {
+				w := doGetRequest(server, "/zones.json")
+				Expect(w.Code).To(Equal(200))
+				Expect(w.Header().Get("Content-Type")).To(Equal("application/json"))
+
+				data := decodeJsonResponse(w)
+				Expect(data).To(HaveKey("one"))
+				Expect(data).To(HaveKey("two"))
+				data1 := data["one"].(map[string]interface{})
+				Expect(data1["temperature"]).To(BeEquivalentTo(18345))
+				data2 := data["two"].(map[string]interface{})
+				Expect(data2["temperature"]).To(BeEquivalentTo(19542))
+
+			})
+		})
+	})
+
 	Describe("changing an output state", func() {
 		var (
 			output1 output.Output

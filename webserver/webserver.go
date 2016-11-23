@@ -1,6 +1,7 @@
 package webserver
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -36,6 +37,16 @@ func (srv *WebServer) Run() error {
 
 func (srv *WebServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	srv.mux.ServeHTTP(w, req)
+}
+
+func writeJSON(w http.ResponseWriter, data interface{}) {
+	output, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(output)
 }
 
 func write404(w http.ResponseWriter) {

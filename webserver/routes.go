@@ -11,6 +11,7 @@ import (
 func (srv *WebServer) buildRouter() http.Handler {
 	r := mux.NewRouter()
 	r.Methods("GET").Path("/").HandlerFunc(srv.zonesIndex)
+	r.Methods("GET").Path("/zones.json").HandlerFunc(srv.zonesIndexJSON)
 
 	r.Methods("PUT").Path("/zones/{zone_id}/boost").HandlerFunc(srv.withZone(srv.zoneBoost))
 	r.Methods("DELETE").Path("/zones/{zone_id}/boost").HandlerFunc(srv.withZone(srv.zoneCancelBoost))

@@ -62,7 +62,7 @@ func doRequestWithValues(server http.Handler, method, path string, values ...url
 
 func decodeJsonResponse(w *httptest.ResponseRecorder) map[string]interface{} {
 	var data map[string]interface{}
-	err := json.Unmarshal(w.Body.Bytes(), &data)
-	Expect(err).To(BeNil())
+	err := json.NewDecoder(w.Body).Decode(&data)
+	ExpectWithOffset(1, err).To(BeNil())
 	return data
 }

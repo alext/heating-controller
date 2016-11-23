@@ -32,6 +32,11 @@ func (srv *WebServer) zonesIndex(w http.ResponseWriter, req *http.Request) {
 	w.Write(b.Bytes())
 }
 
+func (srv *WebServer) zonesIndexJSON(w http.ResponseWriter, req *http.Request) {
+	data := map[string]string{}
+	writeJSON(w, data)
+}
+
 func (srv *WebServer) zoneBoost(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
 	durationString := req.FormValue("duration")
 	d, err := time.ParseDuration(durationString)
