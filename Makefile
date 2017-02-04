@@ -10,7 +10,7 @@ export GO15VENDOREXPERIMENT
 ifdef RELEASE_VERSION
 VERSION := $(RELEASE_VERSION)
 else
-VERSION := $(shell git describe --always | tr -d '\n'; test -z "`git status --porcelain`" || echo '-dirty')
+VERSION := $(shell git describe --always --tags | tr -d '\n'; test -z "`git status --porcelain`" || echo '-dirty')
 endif
 
 build: Godeps/Godeps.json
