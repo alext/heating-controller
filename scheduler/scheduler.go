@@ -28,23 +28,6 @@ type Scheduler interface {
 
 type demandFunc func(Action)
 
-type commandType uint8
-
-const (
-	stopCommand commandType = iota
-	addEventCommand
-	removeEventCommand
-	nextEventCommand
-	readEventsCommand
-	boostCommand
-	cancelBoostCommand
-)
-
-type command struct {
-	cmdType commandType
-	e       *Event
-}
-
 type scheduler struct {
 	id        string
 	demand    demandFunc
@@ -52,10 +35,11 @@ type scheduler struct {
 	running   bool
 	boosted   bool
 	lock      sync.Mutex
-	commandCh chan command
+	commandCh chan func()
 
 	nextEvent *Event
 	nextAt    time.Time
+	tmr       timer
 }
 
 func New(zoneID string, df demandFunc) Scheduler {
@@ -63,7 +47,7 @@ func New(zoneID string, df demandFunc) Scheduler {
 		id:        zoneID,
 		demand:    df,
 		events:    make(eventList, 0),
-		commandCh: make(chan command),
+		commandCh: make(chan func()),
 	}
 }
 
@@ -72,6 +56,7 @@ func (s *scheduler) Start() {
 	defer s.lock.Unlock()
 	if !s.running {
 		log.Printf("[Scheduler:%s] Starting", s.id)
+		s.tmr = newTimer(100 * time.Hour) // arbitrary duration that will be reset in the run loop
 		s.running = true
 		go s.run()
 	}
@@ -82,8 +67,9 @@ func (s *scheduler) Stop() {
 	defer s.lock.Unlock()
 	if s.running {
 		log.Printf("[Scheduler:%s] Stopping", s.id)
+		s.commandCh <- nil
+		s.tmr.Stop()
 		s.running = false
-		s.commandCh <- command{cmdType: stopCommand}
 	}
 }
 
@@ -93,29 +79,41 @@ func (s *scheduler) Running() bool {
 	return s.running
 }
 
-func (s *scheduler) AddEvent(e Event) error {
-	if !e.Valid() {
+func (s *scheduler) AddEvent(event Event) error {
+	if !event.Valid() {
 		return ErrInvalidEvent
 	}
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	log.Printf("[Scheduler:%s] Adding event: %v", s.id, e)
+	log.Printf("[Scheduler:%s] Adding event: %v", s.id, event)
 	if s.running {
-		s.commandCh <- command{cmdType: addEventCommand, e: &e}
-		return nil
+		s.commandCh <- func() {
+			s.addEvent(&event)
+			if _, e := s.next(time_Now().Local()); *e == event {
+				// let the new event be picked up by the run loop
+				s.nextEvent = nil
+			}
+		}
+	} else {
+		s.addEvent(&event)
 	}
-	s.addEvent(&e)
 	return nil
 }
 
-func (s *scheduler) RemoveEvent(e Event) {
+func (s *scheduler) RemoveEvent(event Event) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	if s.running {
-		s.commandCh <- command{cmdType: removeEventCommand, e: &e}
-		return
+		s.commandCh <- func() {
+			s.removeEvent(&event)
+			if event == *s.nextEvent {
+				// let the new event be picked up by the run loop
+				s.nextEvent = nil
+			}
+		}
+	} else {
+		s.removeEvent(&event)
 	}
-	s.removeEvent(&e)
 }
 
 func (s *scheduler) Boosted() bool {
@@ -125,13 +123,29 @@ func (s *scheduler) Boosted() bool {
 func (s *scheduler) Boost(d time.Duration) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	if s.running {
-		endTime := time_Now().Local().Add(d)
-		s.commandCh <- command{cmdType: boostCommand, e: &Event{
-			Hour:   endTime.Hour(),
-			Min:    endTime.Minute(),
-			Action: TurnOff,
-		}}
+	if !s.running {
+		return
+	}
+
+	endTime := time_Now().Local().Add(d)
+	endEvent := Event{
+		Hour:   endTime.Hour(),
+		Min:    endTime.Minute(),
+		Action: TurnOff,
+	}
+
+	s.commandCh <- func() {
+		go s.demand(TurnOn)
+		s.boosted = true
+		if s.nextEvent == nil || s.nextEvent.Action == TurnOff || endTime.Before(s.nextAt) {
+			s.nextEvent = &endEvent
+			s.nextAt = endTime
+			now := time_Now().Local()
+			s.tmr.Reset(s.nextAt.Sub(now))
+			log.Printf("[Scheduler:%s] Boosting until %v", s.id, s.nextAt)
+		} else {
+			log.Printf("[Scheduler:%s] Boosting until next event", s.id)
+		}
 	}
 }
 
@@ -139,7 +153,11 @@ func (s *scheduler) CancelBoost() {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	if s.running {
-		s.commandCh <- command{cmdType: cancelBoostCommand}
+		s.commandCh <- func() {
+			log.Printf("[Scheduler:%s] Cancelling boost", s.id)
+			s.setCurrentState()
+			s.nextEvent = nil
+		}
 	}
 }
 
@@ -147,9 +165,11 @@ func (s *scheduler) NextEvent() *Event {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	if s.running {
-		s.commandCh <- command{cmdType: nextEventCommand}
-		cmd := <-s.commandCh
-		return cmd.e
+		retCh := make(chan *Event, 1)
+		s.commandCh <- func() {
+			retCh <- s.nextEvent
+		}
+		return <-retCh
 	}
 	_, nextEvent := s.next(time_Now().Local())
 	return nextEvent
@@ -161,13 +181,15 @@ func (s *scheduler) ReadEvents() []Event {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	if s.running {
-		s.commandCh <- command{cmdType: readEventsCommand}
-		for cmd := range s.commandCh {
-			if cmd.e == nil {
-				break
+		var wg sync.WaitGroup
+		wg.Add(1)
+		s.commandCh <- func() {
+			for _, e := range s.events {
+				result = append(result, *e)
 			}
-			result = append(result, *cmd.e)
+			wg.Done()
 		}
+		wg.Wait()
 	} else {
 		for _, e := range s.events {
 			result = append(result, *e)
@@ -178,64 +200,26 @@ func (s *scheduler) ReadEvents() []Event {
 
 func (s *scheduler) run() {
 	s.setCurrentState()
-	tmr := newTimer(100 * time.Hour) // arbitrary duration that will be reset in the loop
 	for {
 		if s.nextEvent == nil {
 			now := time_Now().Local()
 			s.nextAt, s.nextEvent = s.next(now)
-			tmr.Reset(s.nextAt.Sub(now))
+			s.tmr.Reset(s.nextAt.Sub(now))
 			s.boosted = false
 			log.Printf("[Scheduler:%s] Next event at %v - %v", s.id, s.nextAt, s.nextEvent)
 		}
 		select {
-		case <-tmr.Channel():
+		case <-s.tmr.Channel():
 			if s.nextEvent != nil {
 				go s.demand(s.nextEvent.Action)
 				s.nextEvent = nil
 			}
-		case cmd := <-s.commandCh:
-			switch cmd.cmdType {
-			case stopCommand:
-				tmr.Stop()
+		case f := <-s.commandCh:
+			if f == nil {
+				// Scheduler is stopping. Exit.
 				return
-			case addEventCommand:
-				s.addEvent(cmd.e)
-				if _, e := s.next(time_Now().Local()); e == cmd.e {
-					// let the new event be picked up at the top of the loop
-					s.nextEvent = nil
-				}
-			case removeEventCommand:
-				s.removeEvent(cmd.e)
-				if *cmd.e == *s.nextEvent {
-					// let the new event be picked up at the top of the loop
-					s.nextEvent = nil
-				}
-			case nextEventCommand:
-				cmd.e = s.nextEvent
-				s.commandCh <- cmd
-			case readEventsCommand:
-				for _, e := range s.events {
-					s.commandCh <- command{e: e}
-				}
-				s.commandCh <- command{}
-			case boostCommand:
-				go s.demand(TurnOn)
-				s.boosted = true
-				now := time_Now().Local()
-				boostEnd := cmd.e.nextOccuranceAfter(now)
-				if s.nextEvent == nil || s.nextEvent.Action == TurnOff || boostEnd.Before(s.nextAt) {
-					s.nextEvent = cmd.e
-					s.nextAt = boostEnd
-					tmr.Reset(s.nextAt.Sub(now))
-					log.Printf("[Scheduler:%s] Boosting until %v", s.id, s.nextAt)
-				} else {
-					log.Printf("[Scheduler:%s] Boosting until next event", s.id)
-				}
-			case cancelBoostCommand:
-				log.Printf("[Scheduler:%s] Cancelling boost", s.id)
-				s.setCurrentState()
-				s.nextEvent = nil
 			}
+			f()
 		}
 	}
 }
