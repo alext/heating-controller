@@ -53,6 +53,9 @@ type scheduler struct {
 	boosted   bool
 	lock      sync.Mutex
 	commandCh chan command
+
+	nextEvent *Event
+	nextAt    time.Time
 }
 
 func New(zoneID string, df demandFunc) Scheduler {
@@ -175,22 +178,20 @@ func (s *scheduler) ReadEvents() []Event {
 
 func (s *scheduler) run() {
 	s.setCurrentState()
-	var event *Event
-	var at time.Time
 	tmr := newTimer(100 * time.Hour) // arbitrary duration that will be reset in the loop
 	for {
-		if event == nil {
+		if s.nextEvent == nil {
 			now := time_Now().Local()
-			at, event = s.next(now)
-			tmr.Reset(at.Sub(now))
+			s.nextAt, s.nextEvent = s.next(now)
+			tmr.Reset(s.nextAt.Sub(now))
 			s.boosted = false
-			log.Printf("[Scheduler:%s] Next event at %v - %v", s.id, at, event)
+			log.Printf("[Scheduler:%s] Next event at %v - %v", s.id, s.nextAt, s.nextEvent)
 		}
 		select {
 		case <-tmr.Channel():
-			if event != nil {
-				go s.demand(event.Action)
-				event = nil
+			if s.nextEvent != nil {
+				go s.demand(s.nextEvent.Action)
+				s.nextEvent = nil
 			}
 		case cmd := <-s.commandCh:
 			switch cmd.cmdType {
@@ -201,16 +202,16 @@ func (s *scheduler) run() {
 				s.addEvent(cmd.e)
 				if _, e := s.next(time_Now().Local()); e == cmd.e {
 					// let the new event be picked up at the top of the loop
-					event = nil
+					s.nextEvent = nil
 				}
 			case removeEventCommand:
 				s.removeEvent(cmd.e)
-				if *cmd.e == *event {
+				if *cmd.e == *s.nextEvent {
 					// let the new event be picked up at the top of the loop
-					event = nil
+					s.nextEvent = nil
 				}
 			case nextEventCommand:
-				cmd.e = event
+				cmd.e = s.nextEvent
 				s.commandCh <- cmd
 			case readEventsCommand:
 				for _, e := range s.events {
@@ -222,18 +223,18 @@ func (s *scheduler) run() {
 				s.boosted = true
 				now := time_Now().Local()
 				boostEnd := cmd.e.nextOccuranceAfter(now)
-				if event == nil || event.Action == TurnOff || boostEnd.Before(at) {
-					event = cmd.e
-					at = boostEnd
-					tmr.Reset(at.Sub(now))
-					log.Printf("[Scheduler:%s] Boosting until %v", s.id, at)
+				if s.nextEvent == nil || s.nextEvent.Action == TurnOff || boostEnd.Before(s.nextAt) {
+					s.nextEvent = cmd.e
+					s.nextAt = boostEnd
+					tmr.Reset(s.nextAt.Sub(now))
+					log.Printf("[Scheduler:%s] Boosting until %v", s.id, s.nextAt)
 				} else {
 					log.Printf("[Scheduler:%s] Boosting until next event", s.id)
 				}
 			case cancelBoostCommand:
 				log.Printf("[Scheduler:%s] Cancelling boost", s.id)
 				s.setCurrentState()
-				event = nil
+				s.nextEvent = nil
 			}
 		}
 	}
