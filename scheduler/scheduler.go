@@ -117,7 +117,17 @@ func (s *scheduler) RemoveEvent(event Event) {
 }
 
 func (s *scheduler) Boosted() bool {
-	return s.boosted
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	if !s.running {
+		return false
+	}
+
+	retCh := make(chan bool, 1)
+	s.commandCh <- func() {
+		retCh <- s.boosted
+	}
+	return <-retCh
 }
 
 func (s *scheduler) Boost(d time.Duration) {
