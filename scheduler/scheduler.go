@@ -137,20 +137,21 @@ func (s *scheduler) Boost(d time.Duration) {
 		return
 	}
 
-	endTime := time_Now().Local().Add(d)
-	endEvent := Event{
-		Hour:   endTime.Hour(),
-		Min:    endTime.Minute(),
-		Action: TurnOff,
-	}
-
 	s.commandCh <- func() {
 		go s.demand(TurnOn)
 		s.boosted = true
-		if s.nextEvent == nil || s.nextEvent.Action == TurnOff || endTime.Before(s.nextAt) {
-			s.nextEvent = &endEvent
+		if d == 0 && len(s.events) == 0 {
+			d = time.Hour
+		}
+		now := time_Now().Local()
+		endTime := now.Add(d)
+		if d != 0 && (s.nextEvent == nil || s.nextEvent.Action == TurnOff || endTime.Before(s.nextAt)) {
 			s.nextAt = endTime
-			now := time_Now().Local()
+			s.nextEvent = &Event{
+				Hour:   endTime.Hour(),
+				Min:    endTime.Minute(),
+				Action: TurnOff,
+			}
 			s.tmr.Reset(s.nextAt.Sub(now))
 			log.Printf("[Scheduler:%s] Boosting until %v", s.id, s.nextAt)
 		} else {

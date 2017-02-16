@@ -502,6 +502,25 @@ var _ = Describe("a basic scheduler", func() {
 				Expect(theScheduler.Boosted()).To(BeFalse())
 				Expect(resetParam.String()).To(Equal("24h0m0s"))
 			})
+
+			Context("attempting to boost until the next event", func() {
+				It("should boost for an hour", func() {
+					mockNow = todayAt(7, 30, 0)
+					theScheduler.Boost(0)
+
+					<-waitNotify
+					zone.ExpectState(TurnOn)
+					Expect(resetParam.String()).To(Equal("1h0m0s"))
+					Expect(theScheduler.Boosted()).To(BeTrue())
+
+					mockNow = todayAt(8, 30, 0)
+					timerCh <- mockNow
+					<-waitNotify
+					zone.ExpectState(TurnOff)
+					Expect(resetParam.String()).To(Equal("24h0m0s"))
+					Expect(theScheduler.Boosted()).To(BeFalse())
+				})
+			})
 		})
 
 		Context("a scheduler with events", func() {
@@ -551,6 +570,30 @@ var _ = Describe("a basic scheduler", func() {
 				Expect(theScheduler.Boosted()).To(BeFalse())
 				Expect(resetParam.String()).To(Equal("2h38m0s"))
 				zone.ExpectState(TurnOff)
+			})
+
+			Context("boosting until the next event", func() {
+				It("activates the output, then resumes the schedule", func() {
+					mockNow = todayAt(14, 0, 0)
+					theScheduler.Start()
+
+					<-waitNotify
+
+					mockNow = todayAt(14, 30, 0)
+					theScheduler.Boost(0)
+
+					<-waitNotify
+					zone.ExpectState(TurnOn)
+					Expect(theScheduler.Boosted()).To(BeTrue())
+					Expect(theScheduler.NextEvent()).To(Equal(&Event{Hour: 17, Min: 33, Action: TurnOn}))
+
+					mockNow = todayAt(17, 33, 0)
+					timerCh <- mockNow
+					<-waitNotify
+					zone.ExpectState(TurnOn)
+					Expect(resetParam.String()).To(Equal("3h39m0s"))
+					Expect(theScheduler.Boosted()).To(BeFalse())
+				})
 			})
 
 			Context("overlapping an upcoming TurnOn event", func() {
