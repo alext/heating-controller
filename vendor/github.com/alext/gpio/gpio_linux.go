@@ -252,7 +252,7 @@ func openPinValueFile(pinBase string) (*os.File, error) {
 	file, err := os.OpenFile(path, os.O_RDWR, 0600)
 	if os.IsPermission(err) {
 		// Give any udev permission setting commands time to run
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(300 * time.Millisecond)
 		file, err = os.OpenFile(path, os.O_RDWR, 0600)
 	}
 	return file, err

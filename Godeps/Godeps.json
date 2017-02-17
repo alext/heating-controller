@@ -16,11 +16,11 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/alext/gpio",
-			"Rev": "599999cd4c12aca85ba6168acf6134dc08b6ec39"
+			"Rev": "a971ac03fc9189b7a87f66e9c020478dc07584ea"
 		},
 		{
 			"ImportPath": "github.com/alext/gpio/mock_gpio",
-			"Rev": "599999cd4c12aca85ba6168acf6134dc08b6ec39"
+			"Rev": "a971ac03fc9189b7a87f66e9c020478dc07584ea"
 		},
 		{
 			"ImportPath": "github.com/golang/mock/gomock",
