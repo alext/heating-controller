@@ -1,4 +1,4 @@
-package zone
+package controller
 
 import (
 	"log"
@@ -22,7 +22,7 @@ type Zone struct {
 	currentDemand bool
 }
 
-func New(id string, out output.Output) *Zone {
+func NewZone(id string, out output.Output) *Zone {
 	z := &Zone{
 		ID:          id,
 		Out:         out,

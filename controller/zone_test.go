@@ -1,10 +1,6 @@
-package zone
+package controller
 
 import (
-	"io/ioutil"
-	"log"
-	"testing"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
@@ -12,14 +8,6 @@ import (
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/scheduler"
 )
-
-func TestZone(t *testing.T) {
-	RegisterFailHandler(Fail)
-
-	log.SetOutput(ioutil.Discard)
-
-	RunSpecs(t, "Zone")
-}
 
 var _ = Describe("A heating zone", func() {
 
@@ -33,11 +21,11 @@ var _ = Describe("A heating zone", func() {
 		})
 
 		It("should return a zone with the given id", func() {
-			Expect(New("foo", out).ID).To(Equal("foo"))
+			Expect(NewZone("foo", out).ID).To(Equal("foo"))
 		})
 
 		It("should construct a scheduler", func() {
-			z := New("foo", out)
+			z := NewZone("foo", out)
 			Expect(z.Scheduler).NotTo(BeNil())
 		})
 	})
@@ -50,7 +38,7 @@ var _ = Describe("A heating zone", func() {
 
 		BeforeEach(func() {
 			out = output.Virtual("something")
-			z = New("someting", out)
+			z = NewZone("someting", out)
 		})
 
 		Describe("activating demand", func() {
@@ -97,7 +85,7 @@ var _ = Describe("A heating zone", func() {
 
 		BeforeEach(func() {
 			out = output.Virtual("something")
-			z = New("someting", out)
+			z = NewZone("someting", out)
 			z.schedDemand = true // so that thermDemand changes trigger output
 		})
 

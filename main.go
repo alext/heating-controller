@@ -7,9 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/webserver"
-	"github.com/alext/heating-controller/zone"
 )
 
 const (
@@ -20,7 +20,7 @@ const (
 )
 
 type ZoneAdder interface {
-	AddZone(*zone.Zone)
+	AddZone(*controller.Zone)
 }
 
 func main() {
@@ -80,7 +80,7 @@ func setupLogging(destination string) error {
 }
 
 func setupDataDir(dir string) {
-	zone.DataDir = dir
+	controller.DataDir = dir
 	fi, err := os.Stat(dir)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -110,7 +110,7 @@ func setupZones(zones map[string]zoneConfig, server ZoneAdder) error {
 				return err
 			}
 		}
-		z := zone.New(id, out)
+		z := controller.NewZone(id, out)
 		if config.Thermostat != nil {
 			z.SetupThermostat(config.Thermostat.SensorURL, config.Thermostat.DefaultTarget)
 		}

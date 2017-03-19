@@ -8,9 +8,9 @@ import (
 	"github.com/sclevine/agouti"
 	. "github.com/sclevine/agouti/matchers"
 
+	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/webserver"
-	"github.com/alext/heating-controller/zone"
 )
 
 var _ = Describe("viewing the index", func() {
@@ -47,15 +47,15 @@ var _ = Describe("viewing the index", func() {
 		var (
 			output1 output.Output
 			output2 output.Output
-			zone1   *zone.Zone
-			zone2   *zone.Zone
+			zone1   *controller.Zone
+			zone2   *controller.Zone
 		)
 
 		BeforeEach(func() {
 			output1 = output.Virtual("one")
 			output2 = output.Virtual("two")
-			zone1 = zone.New("one", output1)
-			zone2 = zone.New("two", output2)
+			zone1 = controller.NewZone("one", output1)
+			zone2 = controller.NewZone("two", output2)
 			server.AddZone(zone1)
 			server.AddZone(zone2)
 		})

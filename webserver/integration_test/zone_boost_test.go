@@ -9,10 +9,10 @@ import (
 	"github.com/sclevine/agouti"
 	. "github.com/sclevine/agouti/matchers"
 
+	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/scheduler"
 	"github.com/alext/heating-controller/webserver"
-	"github.com/alext/heating-controller/zone"
 )
 
 var _ = Describe("boosting a zone", func() {
@@ -40,12 +40,12 @@ var _ = Describe("boosting a zone", func() {
 	Describe("using the boost function", func() {
 		var (
 			output1 output.Output
-			zone1   *zone.Zone
+			zone1   *controller.Zone
 		)
 
 		BeforeEach(func() {
 			output1 = output.Virtual("one")
-			zone1 = zone.New("one", output1)
+			zone1 = controller.NewZone("one", output1)
 			server.AddZone(zone1)
 			zone1.Scheduler.Start()
 		})
@@ -83,12 +83,12 @@ var _ = Describe("boosting a zone", func() {
 	Describe("cancelling a boost", func() {
 		var (
 			output1 output.Output
-			zone1   *zone.Zone
+			zone1   *controller.Zone
 		)
 
 		BeforeEach(func() {
 			output1 = output.Virtual("one")
-			zone1 = zone.New("one", output1)
+			zone1 = controller.NewZone("one", output1)
 			server.AddZone(zone1)
 			zone1.Scheduler.Start()
 			zone1.Scheduler.Boost(23 * time.Minute)

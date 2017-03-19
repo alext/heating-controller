@@ -1,4 +1,4 @@
-package zone
+package controller
 
 import (
 	"encoding/json"
@@ -37,7 +37,7 @@ var _ = Describe("persisting a zone's state", func() {
 		tempDataDir, _ = ioutil.TempDir("", "persistence_test")
 		DataDir = tempDataDir
 
-		z = New("ch", output.Virtual("something"))
+		z = NewZone("ch", output.Virtual("something"))
 	})
 	AfterEach(func() {
 		os.RemoveAll(tempDataDir)

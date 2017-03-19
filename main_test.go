@@ -11,8 +11,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/output"
-	"github.com/alext/heating-controller/zone"
 )
 
 func TestMain(t *testing.T) {
@@ -22,10 +22,10 @@ func TestMain(t *testing.T) {
 }
 
 type testZoneAdder struct {
-	Zones map[string]*zone.Zone
+	Zones map[string]*controller.Zone
 }
 
-func (t *testZoneAdder) AddZone(z *zone.Zone) {
+func (t *testZoneAdder) AddZone(z *controller.Zone) {
 	t.Zones[z.ID] = z
 }
 
@@ -36,10 +36,10 @@ var _ = Describe("Setting up zones from config file", func() {
 	)
 
 	BeforeEach(func() {
-		zone.DataDir, _ = ioutil.TempDir("", "heating-controller-test")
+		controller.DataDir, _ = ioutil.TempDir("", "heating-controller-test")
 
 		config = make(map[string]zoneConfig)
-		srv = &testZoneAdder{make(map[string]*zone.Zone)}
+		srv = &testZoneAdder{make(map[string]*controller.Zone)}
 		output_New = func(id string, pin int) (output.Output, error) {
 			out := output.Virtual(fmt.Sprintf("%s-gpio%d", id, pin))
 			return out, nil
@@ -49,7 +49,7 @@ var _ = Describe("Setting up zones from config file", func() {
 		for _, z := range srv.Zones {
 			z.Scheduler.Stop()
 		}
-		os.RemoveAll(zone.DataDir)
+		os.RemoveAll(controller.DataDir)
 	})
 
 	It("Should do nothing with a blank list of zones", func() {
@@ -89,7 +89,7 @@ var _ = Describe("Setting up zones from config file", func() {
 	})
 
 	It("Should restore the state of the zones", func() {
-		writeJSONToFile(zone.DataDir+"/ch.json", map[string]interface{}{
+		writeJSONToFile(controller.DataDir+"/ch.json", map[string]interface{}{
 			"events": []map[string]interface{}{
 				{"hour": 6, "min": 30, "action": "On"},
 				{"hour": 7, "min": 45, "action": "Off"},

@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/alext/heating-controller/zone"
+	"github.com/alext/heating-controller/controller"
 )
 
 func (srv *WebServer) zonesIndex(w http.ResponseWriter, req *http.Request) {
@@ -32,7 +32,7 @@ func (srv *WebServer) zonesIndex(w http.ResponseWriter, req *http.Request) {
 	w.Write(b.Bytes())
 }
 
-func (srv *WebServer) zoneBoost(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
+func (srv *WebServer) zoneBoost(w http.ResponseWriter, req *http.Request, z *controller.Zone) {
 	durationString := req.FormValue("duration")
 	d, err := time.ParseDuration(durationString)
 	if err == nil {
@@ -44,7 +44,7 @@ func (srv *WebServer) zoneBoost(w http.ResponseWriter, req *http.Request, z *zon
 	}
 }
 
-func (srv *WebServer) zoneCancelBoost(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
+func (srv *WebServer) zoneCancelBoost(w http.ResponseWriter, req *http.Request, z *controller.Zone) {
 	log.Printf("[webserver] Zone %s, cancelling boost", z.ID)
 	z.Scheduler.CancelBoost()
 	http.Redirect(w, req, "/", http.StatusFound)
@@ -52,7 +52,7 @@ func (srv *WebServer) zoneCancelBoost(w http.ResponseWriter, req *http.Request, 
 
 const thermostatIncrement = 500
 
-func (srv *WebServer) thermostatInc(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
+func (srv *WebServer) thermostatInc(w http.ResponseWriter, req *http.Request, z *controller.Zone) {
 	if z.Thermostat == nil {
 		write404(w)
 		return
@@ -66,7 +66,7 @@ func (srv *WebServer) thermostatInc(w http.ResponseWriter, req *http.Request, z 
 	}
 	http.Redirect(w, req, "/", http.StatusFound)
 }
-func (srv *WebServer) thermostatDec(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
+func (srv *WebServer) thermostatDec(w http.ResponseWriter, req *http.Request, z *controller.Zone) {
 	if z.Thermostat == nil {
 		write404(w)
 		return
@@ -81,7 +81,7 @@ func (srv *WebServer) thermostatDec(w http.ResponseWriter, req *http.Request, z 
 	http.Redirect(w, req, "/", http.StatusFound)
 }
 
-func (srv *WebServer) zoneActivate(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
+func (srv *WebServer) zoneActivate(w http.ResponseWriter, req *http.Request, z *controller.Zone) {
 	log.Printf("[webserver] Manual activation zone %s", z.ID)
 	err := z.Out.Activate()
 	if err != nil {
@@ -91,7 +91,7 @@ func (srv *WebServer) zoneActivate(w http.ResponseWriter, req *http.Request, z *
 	http.Redirect(w, req, "/", http.StatusFound)
 }
 
-func (srv *WebServer) zoneDeactivate(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
+func (srv *WebServer) zoneDeactivate(w http.ResponseWriter, req *http.Request, z *controller.Zone) {
 	log.Printf("[webserver] Manual deactivation zone %s", z.ID)
 	err := z.Out.Deactivate()
 	if err != nil {

@@ -9,10 +9,10 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/scheduler"
 	"github.com/alext/heating-controller/webserver"
-	"github.com/alext/heating-controller/zone"
 )
 
 var _ = Describe("schedule controller", func() {
@@ -23,7 +23,7 @@ var _ = Describe("schedule controller", func() {
 
 	BeforeEach(func() {
 		tempDataDir, _ = ioutil.TempDir("", "schedule_controller_test")
-		zone.DataDir = tempDataDir
+		controller.DataDir = tempDataDir
 		server = webserver.New(8080, "")
 	})
 
@@ -33,12 +33,12 @@ var _ = Describe("schedule controller", func() {
 
 	Describe("adding an event", func() {
 		var (
-			zone1  *zone.Zone
+			zone1  *controller.Zone
 			values url.Values
 		)
 
 		BeforeEach(func() {
-			zone1 = zone.New("one", output.Virtual("one"))
+			zone1 = controller.NewZone("one", output.Virtual("one"))
 			server.AddZone(zone1)
 			zone1.Scheduler.AddEvent(scheduler.Event{Hour: 7, Min: 30, Action: scheduler.TurnOn})
 			zone1.Scheduler.AddEvent(scheduler.Event{Hour: 8, Min: 30, Action: scheduler.TurnOff})
@@ -64,7 +64,7 @@ var _ = Describe("schedule controller", func() {
 		It("should save the zone state", func() {
 			doRequestWithValues(server, "POST", "/zones/one/schedule", values)
 
-			data := readFile(zone.DataDir + "/one.json")
+			data := readFile(controller.DataDir + "/one.json")
 			expected, _ := json.Marshal(map[string]interface{}{
 				"events": []map[string]interface{}{
 					{"hour": 7, "min": 30, "action": "On"},
@@ -104,11 +104,11 @@ var _ = Describe("schedule controller", func() {
 
 	Describe("removing an event", func() {
 		var (
-			zone1 *zone.Zone
+			zone1 *controller.Zone
 		)
 
 		BeforeEach(func() {
-			zone1 = zone.New("one", output.Virtual("one"))
+			zone1 = controller.NewZone("one", output.Virtual("one"))
 			server.AddZone(zone1)
 			zone1.Scheduler.AddEvent(scheduler.Event{Hour: 7, Min: 30, Action: scheduler.TurnOn})
 			zone1.Scheduler.AddEvent(scheduler.Event{Hour: 8, Min: 30, Action: scheduler.TurnOff})
@@ -128,7 +128,7 @@ var _ = Describe("schedule controller", func() {
 		It("should save the zone state", func() {
 			doFakeDeleteRequest(server, "/zones/one/schedule/7-30")
 
-			data := readFile(zone.DataDir + "/one.json")
+			data := readFile(controller.DataDir + "/one.json")
 			expected, _ := json.Marshal(map[string]interface{}{
 				"events": []map[string]interface{}{
 					{"hour": 8, "min": 30, "action": "Off"},

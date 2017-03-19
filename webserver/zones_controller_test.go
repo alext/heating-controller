@@ -12,12 +12,12 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/output/mock_output"
 	"github.com/alext/heating-controller/scheduler/mock_scheduler"
 	"github.com/alext/heating-controller/thermostat/mock_thermostat"
 	"github.com/alext/heating-controller/webserver"
-	"github.com/alext/heating-controller/zone"
 )
 
 var _ = Describe("zones controller", func() {
@@ -38,12 +38,12 @@ var _ = Describe("zones controller", func() {
 	Describe("changing an output state", func() {
 		var (
 			output1 output.Output
-			zone1   *zone.Zone
+			zone1   *controller.Zone
 		)
 
 		BeforeEach(func() {
 			output1 = output.Virtual("one")
-			zone1 = zone.New("one", output1)
+			zone1 = controller.NewZone("one", output1)
 			server.AddZone(zone1)
 		})
 
@@ -64,7 +64,7 @@ var _ = Describe("zones controller", func() {
 
 			It("should show an error if activating fails", func() {
 				mockOutput := mock_output.NewMockOutput(mockCtrl)
-				server.AddZone(zone.New("mock", mockOutput))
+				server.AddZone(controller.NewZone("mock", mockOutput))
 
 				err := errors.New("Computer says no!")
 				mockOutput.EXPECT().Activate().Return(err)
@@ -96,7 +96,7 @@ var _ = Describe("zones controller", func() {
 
 			It("should show an error if activating fails", func() {
 				mockOutput := mock_output.NewMockOutput(mockCtrl)
-				server.AddZone(zone.New("mock", mockOutput))
+				server.AddZone(controller.NewZone("mock", mockOutput))
 
 				err := errors.New("Computer says no!")
 				mockOutput.EXPECT().Deactivate().Return(err)
@@ -112,12 +112,12 @@ var _ = Describe("zones controller", func() {
 	Describe("boosting", func() {
 		var (
 			output1 output.Output
-			zone1   *zone.Zone
+			zone1   *controller.Zone
 		)
 
 		BeforeEach(func() {
 			output1 = output.Virtual("one")
-			zone1 = zone.New("one", output1)
+			zone1 = controller.NewZone("one", output1)
 			server.AddZone(zone1)
 		})
 
@@ -171,13 +171,13 @@ var _ = Describe("zones controller", func() {
 	Describe("incrementing/decrementing the thermostat", func() {
 		var (
 			tempDataDir string
-			zone1       *zone.Zone
+			zone1       *controller.Zone
 		)
 
 		BeforeEach(func() {
 			tempDataDir, _ = ioutil.TempDir("", "schedule_controller_test")
-			zone.DataDir = tempDataDir
-			zone1 = zone.New("one", output.Virtual("one"))
+			controller.DataDir = tempDataDir
+			zone1 = controller.NewZone("one", output.Virtual("one"))
 			server.AddZone(zone1)
 		})
 
@@ -211,7 +211,7 @@ var _ = Describe("zones controller", func() {
 			It("saves the zone state", func() {
 				doRequest(server, "POST", "/zones/one/thermostat/increment")
 
-				file, err := os.Open(zone.DataDir + "/one.json")
+				file, err := os.Open(controller.DataDir + "/one.json")
 				Expect(err).NotTo(HaveOccurred())
 				var data map[string]interface{}
 				err = json.NewDecoder(file).Decode(&data)

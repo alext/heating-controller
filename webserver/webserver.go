@@ -5,27 +5,27 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/alext/heating-controller/zone"
+	"github.com/alext/heating-controller/controller"
 )
 
 type WebServer struct {
 	listenUrl     string
 	templatesPath string
 	mux           http.Handler
-	zones         map[string]*zone.Zone
+	zones         map[string]*controller.Zone
 }
 
 func New(port int, templatesPath string) (srv *WebServer) {
 	srv = &WebServer{
 		listenUrl:     fmt.Sprintf(":%d", port),
 		templatesPath: templatesPath,
-		zones:         make(map[string]*zone.Zone),
+		zones:         make(map[string]*controller.Zone),
 	}
 	srv.mux = srv.buildRouter()
 	return
 }
 
-func (srv *WebServer) AddZone(z *zone.Zone) {
+func (srv *WebServer) AddZone(z *controller.Zone) {
 	srv.zones[z.ID] = z
 }
 

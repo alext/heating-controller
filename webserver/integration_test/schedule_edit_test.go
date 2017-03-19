@@ -8,10 +8,10 @@ import (
 	"github.com/sclevine/agouti"
 	. "github.com/sclevine/agouti/matchers"
 
+	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/scheduler"
 	"github.com/alext/heating-controller/webserver"
-	"github.com/alext/heating-controller/zone"
 )
 
 var _ = Describe("Editing the schedule for a zone", func() {
@@ -19,15 +19,15 @@ var _ = Describe("Editing the schedule for a zone", func() {
 		page       *agouti.Page
 		server     *webserver.WebServer
 		testServer *httptest.Server
-		zone1      *zone.Zone
-		zone2      *zone.Zone
+		zone1      *controller.Zone
+		zone2      *controller.Zone
 	)
 
 	BeforeEach(func() {
 		server = webserver.New(8080, "../templates")
 
-		zone1 = zone.New("one", output.Virtual("one"))
-		zone2 = zone.New("two", output.Virtual("two"))
+		zone1 = controller.NewZone("one", output.Virtual("one"))
+		zone2 = controller.NewZone("two", output.Virtual("two"))
 		server.AddZone(zone1)
 		server.AddZone(zone2)
 

@@ -7,12 +7,12 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/scheduler"
-	"github.com/alext/heating-controller/zone"
 	"github.com/gorilla/mux"
 )
 
-func (srv *WebServer) scheduleEdit(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
+func (srv *WebServer) scheduleEdit(w http.ResponseWriter, req *http.Request, z *controller.Zone) {
 	t, err := template.ParseFiles(
 		filepath.Join(srv.templatesPath, "_base.html"),
 		filepath.Join(srv.templatesPath, "schedule.html"),
@@ -28,7 +28,7 @@ func (srv *WebServer) scheduleEdit(w http.ResponseWriter, req *http.Request, z *
 	}
 }
 
-func (srv *WebServer) scheduleAddEvent(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
+func (srv *WebServer) scheduleAddEvent(w http.ResponseWriter, req *http.Request, z *controller.Zone) {
 	var err error
 	e := scheduler.Event{}
 	e.Hour, err = strconv.Atoi(req.FormValue("hour"))
@@ -57,7 +57,7 @@ func (srv *WebServer) scheduleAddEvent(w http.ResponseWriter, req *http.Request,
 	http.Redirect(w, req, "/zones/"+z.ID+"/schedule", 302)
 }
 
-func (srv *WebServer) scheduleRemoveEvent(w http.ResponseWriter, req *http.Request, z *zone.Zone) {
+func (srv *WebServer) scheduleRemoveEvent(w http.ResponseWriter, req *http.Request, z *controller.Zone) {
 	hour, _ := strconv.Atoi(mux.Vars(req)["hour"])
 	min, _ := strconv.Atoi(mux.Vars(req)["min"])
 	for _, e := range z.Scheduler.ReadEvents() {

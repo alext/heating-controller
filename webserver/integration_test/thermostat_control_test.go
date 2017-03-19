@@ -8,9 +8,9 @@ import (
 	"github.com/sclevine/agouti"
 	. "github.com/sclevine/agouti/matchers"
 
+	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/webserver"
-	"github.com/alext/heating-controller/zone"
 )
 
 var _ = Describe("controlling the thermostat", func() {
@@ -38,13 +38,13 @@ var _ = Describe("controlling the thermostat", func() {
 	Describe("adjusting the thermostat", func() {
 		var (
 			sensor *mockSensor
-			zone1  *zone.Zone
+			zone1  *controller.Zone
 		)
 
 		BeforeEach(func() {
 			sensor = &mockSensor{temp: 18253}
 			sensor.Start()
-			zone1 = zone.New("one", output.Virtual("one"))
+			zone1 = controller.NewZone("one", output.Virtual("one"))
 			zone1.SetupThermostat(sensor.URL, 19500)
 			server.AddZone(zone1)
 		})

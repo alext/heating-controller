@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/sclevine/agouti"
 
-	"github.com/alext/heating-controller/zone"
+	"github.com/alext/heating-controller/controller"
 )
 
 func TestIntegration(t *testing.T) {
@@ -23,13 +23,13 @@ var agoutiDriver *agouti.WebDriver
 
 var _ = BeforeSuite(func() {
 	var err error
-	zone.DataDir, err = ioutil.TempDir("", "integration_test")
+	controller.DataDir, err = ioutil.TempDir("", "integration_test")
 	Expect(err).NotTo(HaveOccurred())
 	agoutiDriver = agouti.PhantomJS()
 	Expect(agoutiDriver.Start()).To(Succeed())
 })
 
 var _ = AfterSuite(func() {
-	os.RemoveAll(zone.DataDir)
+	os.RemoveAll(controller.DataDir)
 	agoutiDriver.Stop()
 })

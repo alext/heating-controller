@@ -5,7 +5,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/alext/heating-controller/zone"
+	"github.com/alext/heating-controller/controller"
 )
 
 func (srv *WebServer) buildRouter() http.Handler {
@@ -28,7 +28,7 @@ func (srv *WebServer) buildRouter() http.Handler {
 	return httpMethodOverrideHandler(r)
 }
 
-type zoneHandlerFunc func(http.ResponseWriter, *http.Request, *zone.Zone)
+type zoneHandlerFunc func(http.ResponseWriter, *http.Request, *controller.Zone)
 
 func (srv *WebServer) withZone(hf zoneHandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
