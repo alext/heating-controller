@@ -1,24 +1,27 @@
 package mock_thermostat
 
-import "github.com/alext/heating-controller/thermostat"
+import (
+	"github.com/alext/heating-controller/sensor"
+	"github.com/alext/heating-controller/thermostat"
+)
 
 type mockThermostat struct {
-	target thermostat.Temperature
+	target sensor.Temperature
 }
 
-func New(target thermostat.Temperature) thermostat.Thermostat {
+func New(target sensor.Temperature) thermostat.Thermostat {
 	return &mockThermostat{
 		target: target,
 	}
 }
 
-func (t *mockThermostat) Current() thermostat.Temperature {
+func (t *mockThermostat) Current() sensor.Temperature {
 	return 18000
 }
-func (t *mockThermostat) Target() thermostat.Temperature {
+func (t *mockThermostat) Target() sensor.Temperature {
 	return t.target
 }
-func (t *mockThermostat) Set(value thermostat.Temperature) {
+func (t *mockThermostat) Set(value sensor.Temperature) {
 	t.target = value
 }
 func (t *mockThermostat) Close() {}

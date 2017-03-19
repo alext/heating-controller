@@ -6,12 +6,14 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/alext/heating-controller/sensor"
 )
 
 type Thermostat interface {
-	Current() Temperature
-	Target() Temperature
-	Set(Temperature)
+	Current() sensor.Temperature
+	Target() sensor.Temperature
+	Set(sensor.Temperature)
 	Close()
 }
 
@@ -24,12 +26,12 @@ type thermostat struct {
 	closeCh chan struct{}
 
 	lock    sync.RWMutex
-	target  Temperature
-	current Temperature
+	target  sensor.Temperature
+	current sensor.Temperature
 	active  bool
 }
 
-func New(id string, url string, target Temperature, df demandFunc) Thermostat {
+func New(id string, url string, target sensor.Temperature, df demandFunc) Thermostat {
 
 	t := &thermostat{
 		id:      id,
@@ -48,19 +50,19 @@ func New(id string, url string, target Temperature, df demandFunc) Thermostat {
 	return t
 }
 
-func (t *thermostat) Current() Temperature {
+func (t *thermostat) Current() sensor.Temperature {
 	t.lock.RLock()
 	defer t.lock.RUnlock()
 	return t.current
 }
 
-func (t *thermostat) Target() Temperature {
+func (t *thermostat) Target() sensor.Temperature {
 	t.lock.RLock()
 	defer t.lock.RUnlock()
 	return t.target
 }
 
-func (t *thermostat) Set(tmp Temperature) {
+func (t *thermostat) Set(tmp sensor.Temperature) {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 	t.target = tmp
@@ -100,7 +102,7 @@ func (t *thermostat) readTemp() {
 	}
 
 	var d struct {
-		Temp *Temperature `json:"temperature"`
+		Temp *sensor.Temperature `json:"temperature"`
 	}
 	err = json.NewDecoder(resp.Body).Decode(&d)
 	if err != nil {

@@ -1,4 +1,4 @@
-package thermostat
+package sensor
 
 import "strconv"
 

@@ -1,18 +1,18 @@
-package thermostat_test
+package sensor_test
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 
-	"github.com/alext/heating-controller/thermostat"
+	"github.com/alext/heating-controller/sensor"
 )
 
 var _ = Describe("Temperature", func() {
 
 	DescribeTable("formatting as a string",
 		func(input int, expected string) {
-			temp := thermostat.Temperature(input)
+			temp := sensor.Temperature(input)
 			Expect(temp.String()).To(Equal(expected))
 		},
 		Entry("returns temp in °C", 19500, "19.5°C"),

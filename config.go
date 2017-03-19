@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/alext/heating-controller/thermostat"
+	"github.com/alext/heating-controller/sensor"
 )
 
 type config struct {
@@ -20,8 +20,8 @@ type zoneConfig struct {
 }
 
 type thermostatConfig struct {
-	SensorURL     string                 `json:"sensor_url"`
-	DefaultTarget thermostat.Temperature `json:"default_target"`
+	SensorURL     string             `json:"sensor_url"`
+	DefaultTarget sensor.Temperature `json:"default_target"`
 }
 
 func loadConfig(filename string) (*config, error) {

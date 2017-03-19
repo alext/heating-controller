@@ -6,6 +6,7 @@ import (
 
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/scheduler"
+	"github.com/alext/heating-controller/sensor"
 	"github.com/alext/heating-controller/thermostat"
 )
 
@@ -31,7 +32,7 @@ func New(id string, out output.Output) *Zone {
 	return z
 }
 
-func (z *Zone) SetupThermostat(url string, initialTarget thermostat.Temperature) {
+func (z *Zone) SetupThermostat(url string, initialTarget sensor.Temperature) {
 	z.Thermostat = thermostat.New(z.ID, url, initialTarget, z.thermostatDemand)
 }
 
