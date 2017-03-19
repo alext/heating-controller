@@ -1,14 +1,16 @@
 {
 	"ImportPath": "github.com/alext/heating-controller",
-	"GoVersion": "go1.7",
-	"GodepVersion": "v74",
+	"GoVersion": "go1.8",
+	"GodepVersion": "v79",
 	"Packages": [
 		"github.com/alext/heating-controller",
 		"github.com/alext/heating-controller/output",
 		"github.com/alext/heating-controller/output/mock_output",
 		"github.com/alext/heating-controller/scheduler",
 		"github.com/alext/heating-controller/scheduler/mock_scheduler",
+		"github.com/alext/heating-controller/sensor",
 		"github.com/alext/heating-controller/thermostat",
+		"github.com/alext/heating-controller/thermostat/mock_thermostat",
 		"github.com/alext/heating-controller/webserver",
 		"github.com/alext/heating-controller/webserver/integration_test",
 		"github.com/alext/heating-controller/zone"
@@ -215,6 +217,10 @@
 			"ImportPath": "github.com/sclevine/agouti/matchers/internal/colorparser",
 			"Comment": "v2-latest-73-g1b7bab9",
 			"Rev": "1b7bab9e087ad475174a2c1568d0f4680dc01fe1"
+		},
+		{
+			"ImportPath": "github.com/spf13/afero",
+			"Rev": "12fcb8c83df3df3966e373715df910ac01a10e5d"
 		},
 		{
 			"ImportPath": "golang.org/x/sys/unix",
