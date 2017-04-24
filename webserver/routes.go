@@ -12,6 +12,10 @@ func (srv *WebServer) buildRouter() http.Handler {
 	r := mux.NewRouter()
 	r.Methods("GET").Path("/").HandlerFunc(srv.zonesIndex)
 
+	r.Methods("GET").Path("/sensors").HandlerFunc(srv.sensorIndex)
+	r.Methods("GET").Path("/sensors/{sensor_id}").HandlerFunc(srv.sensorGet)
+	r.Methods("PUT").Path("/sensors/{sensor_id}").HandlerFunc(srv.sensorPut)
+
 	r.Methods("PUT").Path("/zones/{zone_id}/boost").HandlerFunc(srv.withZone(srv.zoneBoost))
 	r.Methods("DELETE").Path("/zones/{zone_id}/boost").HandlerFunc(srv.withZone(srv.zoneCancelBoost))
 

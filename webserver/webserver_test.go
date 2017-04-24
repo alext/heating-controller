@@ -1,6 +1,7 @@
 package webserver_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -26,6 +27,16 @@ func doGetRequest(server http.Handler, path string) *httptest.ResponseRecorder {
 
 func doPutRequest(server http.Handler, path string) *httptest.ResponseRecorder {
 	return doRequest(server, "PUT", path)
+}
+
+func doJSONPutRequest(server http.Handler, path string, bodyData interface{}) *httptest.ResponseRecorder {
+	var body bytes.Buffer
+	err := json.NewEncoder(&body).Encode(bodyData)
+	ExpectWithOffset(1, err).NotTo(HaveOccurred())
+	req := httptest.NewRequest("PUT", "http://example.com"+path, &body)
+	w := httptest.NewRecorder()
+	server.ServeHTTP(w, req)
+	return w
 }
 
 // POST request pretending to be a PUT request because browsers...
