@@ -40,6 +40,30 @@ var _ = Describe("Parsing the config file", func() {
 			Expect(config.Port).To(Equal(defaultPort))
 		})
 
+		It("should setup the sensor details", func() {
+			configFileName = createConfigFile(configData{
+				"sensors": map[string]map[string]interface{}{
+					"foo": map[string]interface{}{
+						"type": "w1",
+						"id":   "1234",
+					},
+					"bar": map[string]interface{}{
+						"type": "push",
+						"id":   "2345",
+					},
+				},
+			})
+
+			config, err := loadConfig(configFileName)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(config.Sensors).To(HaveLen(2))
+
+			Expect(config.Sensors["foo"].Type).To(Equal("w1"))
+			Expect(config.Sensors["foo"].ID).To(Equal("1234"))
+			Expect(config.Sensors["bar"].Type).To(Equal("push"))
+			Expect(config.Sensors["bar"].ID).To(Equal("2345"))
+		})
+
 		It("should setup the zone details", func() {
 			configFileName = createConfigFile(configData{
 				"zones": map[string]map[string]interface{}{
@@ -66,11 +90,12 @@ var _ = Describe("Parsing the config file", func() {
 			Expect(config.Zones["baz"].Virtual).To(BeTrue())
 		})
 
-		It("should have an empty list of zones if none given", func() {
+		It("should have an empty list of sensors and zones if none given", func() {
 			configFileName = createConfigFile(configData{})
 
 			config, err := loadConfig(configFileName)
 			Expect(err).NotTo(HaveOccurred())
+			Expect(config.Sensors).To(HaveLen(0))
 			Expect(config.Zones).To(HaveLen(0))
 		})
 

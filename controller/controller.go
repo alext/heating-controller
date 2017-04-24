@@ -1,13 +1,21 @@
 package controller
 
+import "github.com/alext/heating-controller/sensor"
+
 type Controller struct {
-	Zones map[string]*Zone
+	Sensors map[string]sensor.Sensor
+	Zones   map[string]*Zone
 }
 
 func New() *Controller {
 	return &Controller{
-		Zones: make(map[string]*Zone),
+		Sensors: make(map[string]sensor.Sensor),
+		Zones:   make(map[string]*Zone),
 	}
+}
+
+func (c *Controller) AddSensor(name string, s sensor.Sensor) {
+	c.Sensors[name] = s
 }
 
 func (c *Controller) AddZone(z *Zone) {

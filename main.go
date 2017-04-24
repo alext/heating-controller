@@ -9,6 +9,7 @@ import (
 
 	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/output"
+	"github.com/alext/heating-controller/sensor"
 	"github.com/alext/heating-controller/webserver"
 )
 
@@ -52,6 +53,12 @@ func main() {
 
 	setupDataDir(*dataDir)
 	ctrl := controller.New()
+
+	err = setupSensors(config.Sensors, ctrl)
+	if err != nil {
+		log.Fatalln("[main] Error setting up sensors:", err)
+	}
+
 	err = setupZones(config.Zones, ctrl)
 	if err != nil {
 		log.Fatalln("[main] Error setting up outputs:", err)
@@ -95,6 +102,28 @@ func setupDataDir(dir string) {
 	if !fi.IsDir() {
 		log.Fatalf("[main] Error, data dir '%s' is not a directory", dir)
 	}
+}
+
+func setupSensors(sensors map[string]sensorConfig, ctrl *controller.Controller) error {
+	for name, sensorConfig := range sensors {
+		var (
+			s   sensor.Sensor
+			err error
+		)
+		switch sensorConfig.Type {
+		case "w1":
+			s, err = sensor.NewW1Sensor(sensorConfig.ID)
+			if err != nil {
+				return err
+			}
+		case "push":
+			s = sensor.NewPushSensor(sensorConfig.ID)
+		default:
+			return fmt.Errorf("Unrecognised sensor type: '%s'", sensorConfig.Type)
+		}
+		ctrl.AddSensor(name, s)
+	}
+	return nil
 }
 
 var output_New = output.New // variable indirection to facilitate testing

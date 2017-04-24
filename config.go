@@ -9,8 +9,14 @@ import (
 )
 
 type config struct {
-	Port  int                   `json:"port"`
-	Zones map[string]zoneConfig `json:"zones"`
+	Port    int                     `json:"port"`
+	Sensors map[string]sensorConfig `json:"sensors"`
+	Zones   map[string]zoneConfig   `json:"zones"`
+}
+
+type sensorConfig struct {
+	Type string `json:"type"`
+	ID   string `json:"id"`
 }
 
 type zoneConfig struct {
