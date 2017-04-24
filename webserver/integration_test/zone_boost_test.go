@@ -18,12 +18,13 @@ import (
 var _ = Describe("boosting a zone", func() {
 	var (
 		page       *agouti.Page
-		server     *webserver.WebServer
+		ctrl       *controller.Controller
 		testServer *httptest.Server
 	)
 
 	BeforeEach(func() {
-		server = webserver.New(8080, "../templates")
+		ctrl = controller.New()
+		server := webserver.New(ctrl, 8080, "../templates")
 		testServer = httptest.NewServer(server)
 
 		var err error
@@ -46,7 +47,7 @@ var _ = Describe("boosting a zone", func() {
 		BeforeEach(func() {
 			output1 = output.Virtual("one")
 			zone1 = controller.NewZone("one", output1)
-			server.AddZone(zone1)
+			ctrl.AddZone(zone1)
 			zone1.Scheduler.Start()
 		})
 
@@ -89,7 +90,7 @@ var _ = Describe("boosting a zone", func() {
 		BeforeEach(func() {
 			output1 = output.Virtual("one")
 			zone1 = controller.NewZone("one", output1)
-			server.AddZone(zone1)
+			ctrl.AddZone(zone1)
 			zone1.Scheduler.Start()
 			zone1.Scheduler.Boost(23 * time.Minute)
 		})

@@ -16,12 +16,13 @@ import (
 var _ = Describe("toggling a zone's state", func() {
 	var (
 		page       *agouti.Page
-		server     *webserver.WebServer
+		ctrl       *controller.Controller
 		testServer *httptest.Server
 	)
 
 	BeforeEach(func() {
-		server = webserver.New(8080, "../templates")
+		ctrl = controller.New()
+		server := webserver.New(ctrl, 8080, "../templates")
 		testServer = httptest.NewServer(server)
 
 		var err error
@@ -44,7 +45,7 @@ var _ = Describe("toggling a zone's state", func() {
 		BeforeEach(func() {
 			output1 = output.Virtual("one")
 			zone1 = controller.NewZone("one", output1)
-			server.AddZone(zone1)
+			ctrl.AddZone(zone1)
 		})
 
 		It("activates the output and redirects back to the index", func() {

@@ -9,24 +9,20 @@ import (
 )
 
 type WebServer struct {
+	controller    *controller.Controller
 	listenUrl     string
 	templatesPath string
 	mux           http.Handler
-	zones         map[string]*controller.Zone
 }
 
-func New(port int, templatesPath string) (srv *WebServer) {
+func New(ctrl *controller.Controller, port int, templatesPath string) (srv *WebServer) {
 	srv = &WebServer{
+		controller:    ctrl,
 		listenUrl:     fmt.Sprintf(":%d", port),
 		templatesPath: templatesPath,
-		zones:         make(map[string]*controller.Zone),
 	}
 	srv.mux = srv.buildRouter()
 	return
-}
-
-func (srv *WebServer) AddZone(z *controller.Zone) {
-	srv.zones[z.ID] = z
 }
 
 func (srv *WebServer) Run() error {

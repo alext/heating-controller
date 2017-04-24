@@ -23,12 +23,14 @@ import (
 var _ = Describe("zones controller", func() {
 	var (
 		mockCtrl *gomock.Controller
+		ctrl     *controller.Controller
 		server   *webserver.WebServer
 	)
 
 	BeforeEach(func() {
 		mockCtrl = gomock.NewController(GinkgoT())
-		server = webserver.New(8080, "")
+		ctrl = controller.New()
+		server = webserver.New(ctrl, 8080, "")
 	})
 
 	AfterEach(func() {
@@ -44,7 +46,7 @@ var _ = Describe("zones controller", func() {
 		BeforeEach(func() {
 			output1 = output.Virtual("one")
 			zone1 = controller.NewZone("one", output1)
-			server.AddZone(zone1)
+			ctrl.AddZone(zone1)
 		})
 
 		Describe("activating the zone's output", func() {
@@ -64,7 +66,7 @@ var _ = Describe("zones controller", func() {
 
 			It("should show an error if activating fails", func() {
 				mockOutput := mock_output.NewMockOutput(mockCtrl)
-				server.AddZone(controller.NewZone("mock", mockOutput))
+				ctrl.AddZone(controller.NewZone("mock", mockOutput))
 
 				err := errors.New("Computer says no!")
 				mockOutput.EXPECT().Activate().Return(err)
@@ -96,7 +98,7 @@ var _ = Describe("zones controller", func() {
 
 			It("should show an error if activating fails", func() {
 				mockOutput := mock_output.NewMockOutput(mockCtrl)
-				server.AddZone(controller.NewZone("mock", mockOutput))
+				ctrl.AddZone(controller.NewZone("mock", mockOutput))
 
 				err := errors.New("Computer says no!")
 				mockOutput.EXPECT().Deactivate().Return(err)
@@ -118,7 +120,7 @@ var _ = Describe("zones controller", func() {
 		BeforeEach(func() {
 			output1 = output.Virtual("one")
 			zone1 = controller.NewZone("one", output1)
-			server.AddZone(zone1)
+			ctrl.AddZone(zone1)
 		})
 
 		Describe("setting the boost", func() {
@@ -178,7 +180,7 @@ var _ = Describe("zones controller", func() {
 			tempDataDir, _ = ioutil.TempDir("", "schedule_controller_test")
 			controller.DataDir = tempDataDir
 			zone1 = controller.NewZone("one", output.Virtual("one"))
-			server.AddZone(zone1)
+			ctrl.AddZone(zone1)
 		})
 
 		AfterEach(func() {

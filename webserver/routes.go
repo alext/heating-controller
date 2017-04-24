@@ -32,7 +32,7 @@ type zoneHandlerFunc func(http.ResponseWriter, *http.Request, *controller.Zone)
 
 func (srv *WebServer) withZone(hf zoneHandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		if z, ok := srv.zones[mux.Vars(req)["zone_id"]]; ok {
+		if z, ok := srv.controller.Zones[mux.Vars(req)["zone_id"]]; ok {
 			hf(w, req, z)
 		} else {
 			write404(w)

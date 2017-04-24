@@ -17,6 +17,7 @@ import (
 
 var _ = Describe("schedule controller", func() {
 	var (
+		ctrl        *controller.Controller
 		server      *webserver.WebServer
 		tempDataDir string
 	)
@@ -24,7 +25,8 @@ var _ = Describe("schedule controller", func() {
 	BeforeEach(func() {
 		tempDataDir, _ = ioutil.TempDir("", "schedule_controller_test")
 		controller.DataDir = tempDataDir
-		server = webserver.New(8080, "")
+		ctrl = controller.New()
+		server = webserver.New(ctrl, 8080, "")
 	})
 
 	AfterEach(func() {
@@ -39,7 +41,7 @@ var _ = Describe("schedule controller", func() {
 
 		BeforeEach(func() {
 			zone1 = controller.NewZone("one", output.Virtual("one"))
-			server.AddZone(zone1)
+			ctrl.AddZone(zone1)
 			zone1.Scheduler.AddEvent(scheduler.Event{Hour: 7, Min: 30, Action: scheduler.TurnOn})
 			zone1.Scheduler.AddEvent(scheduler.Event{Hour: 8, Min: 30, Action: scheduler.TurnOff})
 
@@ -109,7 +111,7 @@ var _ = Describe("schedule controller", func() {
 
 		BeforeEach(func() {
 			zone1 = controller.NewZone("one", output.Virtual("one"))
-			server.AddZone(zone1)
+			ctrl.AddZone(zone1)
 			zone1.Scheduler.AddEvent(scheduler.Event{Hour: 7, Min: 30, Action: scheduler.TurnOn})
 			zone1.Scheduler.AddEvent(scheduler.Event{Hour: 8, Min: 30, Action: scheduler.TurnOff})
 		})

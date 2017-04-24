@@ -17,20 +17,20 @@ import (
 var _ = Describe("Editing the schedule for a zone", func() {
 	var (
 		page       *agouti.Page
-		server     *webserver.WebServer
 		testServer *httptest.Server
 		zone1      *controller.Zone
 		zone2      *controller.Zone
 	)
 
 	BeforeEach(func() {
-		server = webserver.New(8080, "../templates")
+		ctrl := controller.New()
 
 		zone1 = controller.NewZone("one", output.Virtual("one"))
 		zone2 = controller.NewZone("two", output.Virtual("two"))
-		server.AddZone(zone1)
-		server.AddZone(zone2)
+		ctrl.AddZone(zone1)
+		ctrl.AddZone(zone2)
 
+		server := webserver.New(ctrl, 8080, "../templates")
 		testServer = httptest.NewServer(server)
 
 		var err error

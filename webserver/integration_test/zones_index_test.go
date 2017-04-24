@@ -16,14 +16,15 @@ import (
 var _ = Describe("viewing the index", func() {
 	var (
 		page       *agouti.Page
-		server     *webserver.WebServer
+		ctrl       *controller.Controller
 		testServer *httptest.Server
 	)
 
 	BeforeEach(func() {
 		var err error
 
-		server = webserver.New(8080, "../templates")
+		ctrl = controller.New()
+		server := webserver.New(ctrl, 8080, "../templates")
 		testServer = httptest.NewServer(server)
 
 		page, err = agoutiDriver.NewPage()
@@ -56,8 +57,8 @@ var _ = Describe("viewing the index", func() {
 			output2 = output.Virtual("two")
 			zone1 = controller.NewZone("one", output1)
 			zone2 = controller.NewZone("two", output2)
-			server.AddZone(zone1)
-			server.AddZone(zone2)
+			ctrl.AddZone(zone1)
+			ctrl.AddZone(zone2)
 		})
 
 		It("should return a list of zones with their current state", func() {

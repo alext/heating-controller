@@ -23,7 +23,7 @@ func (srv *WebServer) zonesIndex(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	var b bytes.Buffer
-	err = t.Execute(&b, srv.zones)
+	err = t.Execute(&b, srv.controller.Zones)
 	if err != nil {
 		log.Println("Error executing template:", err)
 		writeError(w, err)

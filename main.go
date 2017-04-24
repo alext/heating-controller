@@ -51,12 +51,13 @@ func main() {
 	}
 
 	setupDataDir(*dataDir)
-
-	srv := webserver.New(config.Port, filepath.FromSlash(*templateDir))
-	err = setupZones(config.Zones, srv)
+	ctrl := controller.New()
+	err = setupZones(config.Zones, ctrl)
 	if err != nil {
 		log.Fatalln("[main] Error setting up outputs:", err)
 	}
+
+	srv := webserver.New(ctrl, config.Port, filepath.FromSlash(*templateDir))
 	err = srv.Run()
 	if err != nil {
 		log.Fatalln("[main] Server.Run:", err)

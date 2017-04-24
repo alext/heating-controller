@@ -16,12 +16,13 @@ import (
 var _ = Describe("controlling the thermostat", func() {
 	var (
 		page       *agouti.Page
-		server     *webserver.WebServer
+		ctrl       *controller.Controller
 		testServer *httptest.Server
 	)
 
 	BeforeEach(func() {
-		server = webserver.New(8080, "../templates")
+		ctrl = controller.New()
+		server := webserver.New(ctrl, 8080, "../templates")
 		testServer = httptest.NewServer(server)
 
 		var err error
@@ -46,7 +47,7 @@ var _ = Describe("controlling the thermostat", func() {
 			sensor.Start()
 			zone1 = controller.NewZone("one", output.Virtual("one"))
 			zone1.SetupThermostat(sensor.URL, 19500)
-			server.AddZone(zone1)
+			ctrl.AddZone(zone1)
 		})
 
 		AfterEach(func() {
