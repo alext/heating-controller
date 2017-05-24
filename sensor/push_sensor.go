@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+const initialValue = 21000
+
 type pushSensor struct {
 	sensorID string
 
@@ -16,6 +18,7 @@ type pushSensor struct {
 func NewPushSensor(id string) SettableSensor {
 	return &pushSensor{
 		sensorID: id,
+		temp:     initialValue,
 	}
 }
 

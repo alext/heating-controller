@@ -9,6 +9,14 @@ import (
 
 var _ = Describe("a push sensor", func() {
 
+	It("has a reasonable initial value", func() {
+		s := NewPushSensor("something")
+		temp, updated := s.Read()
+		Expect(temp).To(BeEquivalentTo(initialValue))
+		var zeroTime time.Time
+		Expect(updated).To(Equal(zeroTime))
+	})
+
 	It("saves and returns the set temerature", func() {
 		s := &pushSensor{}
 		now := time.Now()
