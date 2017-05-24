@@ -37,6 +37,7 @@ func New(id string, url string, target sensor.Temperature, df demandFunc) Thermo
 		id:      id,
 		url:     url,
 		target:  target,
+		current: target + threshold, // Temporary workaround for bootup race with local sensor
 		demand:  df,
 		closeCh: make(chan struct{}),
 	}
