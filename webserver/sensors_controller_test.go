@@ -21,6 +21,8 @@ func (s *dummySensor) Read() (sensor.Temperature, time.Time) {
 	return s.temp, s.updateTime
 }
 
+func (s *dummySensor) Subscribe() <-chan sensor.Temperature { return nil }
+
 var _ = Describe("sensors controller", func() {
 	var (
 		ctrl   *controller.Controller

@@ -139,6 +139,20 @@ f6 ff 55 00 7f ff 0c 10 47 t=-625`
 
 			close(done)
 		})
+
+		It("allows subscribing to updates", func() {
+			<-tkrNotify
+
+			ch := sensor.Subscribe()
+			tkr.C <- time.Now()
+			<-tkrNotify
+			Eventually(ch).Should(Receive(Equal(Temperature(19437))))
+
+			populateValueFile(testDeviceID, sampleData2)
+			tkr.C <- time.Now()
+			<-tkrNotify
+			Eventually(ch).Should(Receive(Equal(Temperature(18062))))
+		})
 	})
 
 	Describe("closing a sensor", func() {

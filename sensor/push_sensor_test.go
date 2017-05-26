@@ -25,4 +25,30 @@ var _ = Describe("a push sensor", func() {
 		Expect(temp).To(BeEquivalentTo(1234))
 		Expect(updated).To(Equal(now))
 	})
+
+	Describe("subscribing to updates", func() {
+		It("allows subscribing to updates", func() {
+			s := NewPushSensor("something")
+			ch := s.Subscribe()
+
+			s.Set(1234, time.Now())
+			Eventually(ch).Should(Receive(Equal(Temperature(1234))))
+		})
+
+		It("allows multiple subscribers", func() {
+			s := NewPushSensor("something")
+			ch1 := s.Subscribe()
+			ch2 := s.Subscribe()
+
+			s.Set(1234, time.Now())
+			Eventually(ch1).Should(Receive(Equal(Temperature(1234))))
+			Eventually(ch2).Should(Receive(Equal(Temperature(1234))))
+
+			ch3 := s.Subscribe()
+			s.Set(12345, time.Now())
+			Eventually(ch1).Should(Receive(Equal(Temperature(12345))))
+			Eventually(ch2).Should(Receive(Equal(Temperature(12345))))
+			Eventually(ch3).Should(Receive(Equal(Temperature(12345))))
+		})
+	})
 })
