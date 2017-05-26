@@ -2,6 +2,7 @@ package integration_test
 
 import (
 	"net/http/httptest"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/output"
+	"github.com/alext/heating-controller/sensor"
 	"github.com/alext/heating-controller/webserver"
 )
 
@@ -38,22 +40,15 @@ var _ = Describe("controlling the thermostat", func() {
 
 	Describe("adjusting the thermostat", func() {
 		var (
-			sensor *mockSensor
-			zone1  *controller.Zone
+			zone1 *controller.Zone
 		)
 
 		BeforeEach(func() {
-			sensor = &mockSensor{temp: 18253}
-			sensor.Start()
+			sens := sensor.NewPushSensor("something")
+			sens.Set(18253, time.Now())
 			zone1 = controller.NewZone("one", output.Virtual("one"))
-			zone1.SetupThermostat(sensor.URL, 19500)
+			zone1.SetupThermostat(sens, 19500)
 			ctrl.AddZone(zone1)
-		})
-
-		AfterEach(func() {
-			if sensor != nil {
-				sensor.Close()
-			}
 		})
 
 		It("increments the target temperature and redirects back", func() {

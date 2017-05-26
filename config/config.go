@@ -27,7 +27,7 @@ type ZoneConfig struct {
 }
 
 type ThermostatConfig struct {
-	SensorURL     string             `json:"sensor_url"`
+	Sensor        string             `json:"sensor"`
 	DefaultTarget sensor.Temperature `json:"default_target"`
 }
 

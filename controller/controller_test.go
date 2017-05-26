@@ -10,6 +10,7 @@ import (
 
 	"github.com/alext/heating-controller/config"
 	"github.com/alext/heating-controller/output"
+	"github.com/alext/heating-controller/sensor"
 )
 
 var _ = Describe("Controller", func() {
@@ -58,20 +59,29 @@ var _ = Describe("Controller", func() {
 			Expect(ctrl.Zones["bar"].Out.Id()).To(Equal("bar"))
 		})
 
-		It("should add a thermostat when configured", func() {
-			cfg["foo"] = config.ZoneConfig{
-				Virtual: true,
-				Thermostat: &config.ThermostatConfig{
-					SensorURL:     "http://foo.example.com/foo",
-					DefaultTarget: 18500,
-				},
-			}
+		Describe("configuring a thermostat", func() {
+			BeforeEach(func() {
+				cfg["foo"] = config.ZoneConfig{
+					Virtual: true,
+					Thermostat: &config.ThermostatConfig{
+						Sensor:        "bar",
+						DefaultTarget: 18500,
+					},
+				}
+			})
+			It("should add a thermostat when configured", func() {
+				ctrl.AddSensor("bar", sensor.NewPushSensor("bar"))
 
-			Expect(ctrl.SetupZones(cfg)).To(Succeed())
-			Expect(ctrl.Zones).To(HaveLen(1))
-			Expect(ctrl.Zones).To(HaveKey("foo"))
+				Expect(ctrl.SetupZones(cfg)).To(Succeed())
+				Expect(ctrl.Zones).To(HaveLen(1))
+				Expect(ctrl.Zones).To(HaveKey("foo"))
 
-			Expect(ctrl.Zones["foo"].Thermostat).NotTo(BeNil())
+				Expect(ctrl.Zones["foo"].Thermostat).NotTo(BeNil())
+			})
+
+			It("errors when the given sensor doesn't exist", func() {
+				Expect(ctrl.SetupZones(cfg)).NotTo(Succeed())
+			})
 		})
 
 		It("Should restore the state of the zones", func() {

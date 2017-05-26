@@ -32,8 +32,8 @@ func NewZone(id string, out output.Output) *Zone {
 	return z
 }
 
-func (z *Zone) SetupThermostat(url string, initialTarget sensor.Temperature) {
-	z.Thermostat = thermostat.New(z.ID, url, initialTarget, z.thermostatDemand)
+func (z *Zone) SetupThermostat(source sensor.Sensor, initialTarget sensor.Temperature) {
+	z.Thermostat = thermostat.New(z.ID, source, initialTarget, z.thermostatDemand)
 }
 
 func (z *Zone) Active() (bool, error) {

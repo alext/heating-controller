@@ -66,7 +66,11 @@ func (c *Controller) SetupZones(zones map[string]config.ZoneConfig) error {
 		}
 		z := NewZone(id, out)
 		if config.Thermostat != nil {
-			z.SetupThermostat(config.Thermostat.SensorURL, config.Thermostat.DefaultTarget)
+			s, ok := c.Sensors[config.Thermostat.Sensor]
+			if !ok {
+				return fmt.Errorf("Non-existent sensor: '%s'", config.Thermostat.Sensor)
+			}
+			z.SetupThermostat(s, config.Thermostat.DefaultTarget)
 		}
 		z.Restore()
 		z.Scheduler.Start()

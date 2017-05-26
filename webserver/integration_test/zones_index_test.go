@@ -2,6 +2,7 @@ package integration_test
 
 import (
 	"net/http/httptest"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/output"
+	"github.com/alext/heating-controller/sensor"
 	"github.com/alext/heating-controller/webserver"
 )
 
@@ -77,19 +79,10 @@ var _ = Describe("viewing the index", func() {
 		})
 
 		Context("with a thermostat configured", func() {
-			var (
-				sensor *mockSensor
-			)
-
 			BeforeEach(func() {
-				sensor = &mockSensor{temp: 18253}
-				sensor.Start()
-				zone1.SetupThermostat(sensor.URL, 19500)
-			})
-			AfterEach(func() {
-				if sensor != nil {
-					sensor.Close()
-				}
+				sens := sensor.NewPushSensor("foo")
+				sens.Set(18253, time.Now())
+				zone1.SetupThermostat(sens, 19500)
 			})
 
 			It("should include details from the thermostat", func() {

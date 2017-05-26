@@ -112,7 +112,7 @@ var _ = Describe("Parsing the config data", func() {
 						"foo": map[string]interface{}{
 							"gpio_pin": 42,
 							"thermostat": map[string]interface{}{
-								"sensor_url":     "http://foo.example.com/sensors/foo",
+								"sensor":         "foo",
 								"default_target": 18000,
 							},
 						},
@@ -121,7 +121,7 @@ var _ = Describe("Parsing the config data", func() {
 
 				cfg, err := config.LoadConfig(configReader)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(cfg.Zones["foo"].Thermostat.SensorURL).To(Equal("http://foo.example.com/sensors/foo"))
+				Expect(cfg.Zones["foo"].Thermostat.Sensor).To(Equal("foo"))
 				Expect(cfg.Zones["foo"].Thermostat.DefaultTarget).To(BeNumerically("==", 18000))
 			})
 
