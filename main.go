@@ -9,8 +9,6 @@ import (
 
 	"github.com/alext/heating-controller/config"
 	"github.com/alext/heating-controller/controller"
-	"github.com/alext/heating-controller/output"
-	"github.com/alext/heating-controller/sensor"
 	"github.com/alext/heating-controller/webserver"
 )
 
@@ -54,14 +52,14 @@ func main() {
 	setupDataDir(*dataDir)
 	ctrl := controller.New()
 
-	err = setupSensors(config.Sensors, ctrl)
+	err = ctrl.SetupSensors(config.Sensors)
 	if err != nil {
 		log.Fatalln("[main] Error setting up sensors:", err)
 	}
 
-	err = setupZones(config.Zones, ctrl)
+	err = ctrl.SetupZones(config.Zones)
 	if err != nil {
-		log.Fatalln("[main] Error setting up outputs:", err)
+		log.Fatalln("[main] Error setting up zones:", err)
 	}
 
 	srv := webserver.New(ctrl, config.Port, filepath.FromSlash(*templateDir))
@@ -116,51 +114,4 @@ func setupDataDir(dir string) {
 	if !fi.IsDir() {
 		log.Fatalf("[main] Error, data dir '%s' is not a directory", dir)
 	}
-}
-
-func setupSensors(sensors map[string]config.SensorConfig, ctrl *controller.Controller) error {
-	for name, sensorConfig := range sensors {
-		var (
-			s   sensor.Sensor
-			err error
-		)
-		switch sensorConfig.Type {
-		case "w1":
-			s, err = sensor.NewW1Sensor(sensorConfig.ID)
-			if err != nil {
-				return err
-			}
-		case "push":
-			s = sensor.NewPushSensor(sensorConfig.ID)
-		default:
-			return fmt.Errorf("Unrecognised sensor type: '%s'", sensorConfig.Type)
-		}
-		ctrl.AddSensor(name, s)
-	}
-	return nil
-}
-
-var output_New = output.New // variable indirection to facilitate testing
-
-func setupZones(zones map[string]config.ZoneConfig, server ZoneAdder) error {
-	for id, config := range zones {
-		var out output.Output
-		if config.Virtual {
-			out = output.Virtual(id)
-		} else {
-			var err error
-			out, err = output_New(id, config.GPIOPin)
-			if err != nil {
-				return err
-			}
-		}
-		z := controller.NewZone(id, out)
-		if config.Thermostat != nil {
-			z.SetupThermostat(config.Thermostat.SensorURL, config.Thermostat.DefaultTarget)
-		}
-		z.Restore()
-		z.Scheduler.Start()
-		server.AddZone(z)
-	}
-	return nil
 }
