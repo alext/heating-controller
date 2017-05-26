@@ -1,11 +1,7 @@
 package thermostat
 
 import (
-	"encoding/json"
-	"log"
-	"net/http"
 	"sync"
-	"time"
 
 	"github.com/alext/heating-controller/sensor"
 )
@@ -20,10 +16,10 @@ type Thermostat interface {
 type demandFunc func(bool)
 
 type thermostat struct {
-	id      string
-	url     string
-	demand  demandFunc
-	closeCh chan struct{}
+	id       string
+	sourceCh <-chan sensor.Temperature
+	demand   demandFunc
+	closeCh  chan struct{}
 
 	lock    sync.RWMutex
 	target  sensor.Temperature
@@ -31,21 +27,21 @@ type thermostat struct {
 	active  bool
 }
 
-func New(id string, url string, target sensor.Temperature, df demandFunc) Thermostat {
-
+func New(id string, source sensor.Sensor, target sensor.Temperature, df demandFunc) Thermostat {
+	initial, _ := source.Read()
 	t := &thermostat{
-		id:      id,
-		url:     url,
-		target:  target,
-		current: target + threshold, // Temporary workaround for bootup race with local sensor
-		demand:  df,
-		closeCh: make(chan struct{}),
+		id:       id,
+		sourceCh: source.Subscribe(),
+		target:   target,
+		current:  initial,
+		demand:   df,
+		closeCh:  make(chan struct{}),
 	}
 
 	// Set active so that a new thermostat defaults to active when within the
 	// threshold.
 	t.active = true
-	t.readTemp()
+	t.trigger()
 
 	go t.readLoop()
 	return t
@@ -55,6 +51,13 @@ func (t *thermostat) Current() sensor.Temperature {
 	t.lock.RLock()
 	defer t.lock.RUnlock()
 	return t.current
+}
+
+func (t *thermostat) setCurrent(tmp sensor.Temperature) {
+	t.lock.Lock()
+	defer t.lock.Unlock()
+	t.current = tmp
+	t.trigger()
 }
 
 func (t *thermostat) Target() sensor.Temperature {
@@ -77,49 +80,14 @@ func (t *thermostat) Close() {
 }
 
 func (t *thermostat) readLoop() {
-	tkr := time.NewTicker(time.Minute)
-	defer tkr.Stop()
 	for {
 		select {
-		case <-tkr.C:
-			t.readTemp()
+		case tmp := <-t.sourceCh:
+			t.setCurrent(tmp)
 		case <-t.closeCh:
 			return
 		}
 	}
-}
-
-func (t *thermostat) readTemp() {
-	resp, err := http.Get(t.url)
-	if err != nil {
-		log.Printf("[Thermostat:%s] Error querying '%s': %s", t.id, t.url, err.Error())
-		return
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		log.Printf("[Thermostat:%s] Got %d querying '%s'", t.id, resp.StatusCode, t.url)
-		return
-	}
-
-	var d struct {
-		Temp *sensor.Temperature `json:"temperature"`
-	}
-	err = json.NewDecoder(resp.Body).Decode(&d)
-	if err != nil {
-		log.Printf("[Thermostat:%s] Error decoding JSON from '%s': %s", t.id, t.url, err.Error())
-		return
-	}
-
-	if d.Temp == nil {
-		log.Printf("[Thermostat:%s] Missing temperature field in data from '%s'", t.id, t.url)
-		return
-	}
-
-	t.lock.Lock()
-	defer t.lock.Unlock()
-	t.current = *d.Temp
-	t.trigger()
 }
 
 const threshold = 500

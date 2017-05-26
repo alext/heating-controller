@@ -1,11 +1,8 @@
 package thermostat
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"log"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -23,46 +20,34 @@ func TestThermostat(t *testing.T) {
 	RunSpecs(t, "Thermostat")
 }
 
-func temperatureHandler(value uint) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		data := map[string]interface{}{"temperature": value}
-		Expect(json.NewEncoder(w).Encode(&data)).To(Succeed())
-	})
-}
-
 var _ = Describe("A Thermostat", func() {
 	var (
-		t      *thermostat
-		server *httptest.Server
+		t    *thermostat
+		sens sensor.SettableSensor
 	)
 
 	BeforeEach(func() {
 		t = nil
+		sens = sensor.NewPushSensor("something")
+		sens.Set(19000, time.Now())
 	})
 
 	AfterEach(func() {
 		if t != nil {
 			t.Close()
 		}
-		if server != nil {
-			server.Close()
-		}
 	})
 
 	Describe("constructing a thermostat", func() {
-		BeforeEach(func() {
-			server = httptest.NewServer(temperatureHandler(19000))
-		})
-
 		It("builds one correctly", func() {
-			t = New("something", server.URL, 19000, func(b bool) {}).(*thermostat)
+			t = New("something", sens, 19000, func(b bool) {}).(*thermostat)
 			Expect(t.id).To(Equal("something"))
-			Expect(t.url).To(Equal(server.URL))
 			Expect(t.target).To(BeNumerically("==", 19000))
+			Expect(t.current).To(BeNumerically("==", 19000))
 		})
 
 		It("starts as active when current temp is within the threshold", func() {
-			t = New("something", server.URL, 19000, func(b bool) {}).(*thermostat)
+			t = New("something", sens, 19000, func(b bool) {}).(*thermostat)
 			Expect(t.active).To(BeTrue())
 		})
 	})
@@ -86,79 +71,28 @@ var _ = Describe("A Thermostat", func() {
 		})
 	})
 
-	Describe("reading the temperature from the source", func() {
-
-		Context("happy path", func() {
-			BeforeEach(func() {
-				server = httptest.NewServer(temperatureHandler(19000))
-				t = &thermostat{
-					url:     server.URL,
-					current: 17000,
-					target:  18000,
-					active:  true,
-				}
-			})
-
-			It("updates the current temperature", func() {
-				t.readTemp()
-				Expect(t.current).To(BeNumerically("==", 19000))
-			})
-
-			It("triggers the thermostat to update the demand state", func() {
-				t.readTemp()
-				Expect(t.active).To(BeFalse())
-			})
+	Describe("subscribing to sensor updates", func() {
+		BeforeEach(func() {
+			t = New("sonething", sens, 18000, func(b bool) {}).(*thermostat)
 		})
 
-		Describe("error handling", func() {
-			BeforeEach(func() {
-				server = httptest.NewServer(temperatureHandler(19000))
-				t = &thermostat{
-					url:     server.URL,
-					current: 18000,
-				}
-			})
+		It("should update the current value", func() {
+			Expect(t.Current()).To(BeEquivalentTo(19000))
 
-			Context("when the network connection fails", func() {
-				It("doesn't update the current temperature", func() {
-					server.Close()
-					t.readTemp()
-					Expect(t.current).To(BeNumerically("==", 18000))
-				})
-			})
+			sens.Set(21000, time.Now())
+			Eventually(t.Current).Should(BeEquivalentTo(21000))
 
-			Context("when the HTTP returns non-200 response", func() {
-				It("doesn't update the current temperature", func() {
-					server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-						w.WriteHeader(http.StatusInternalServerError)
-						data := map[string]interface{}{"temperature": 19000}
-						Expect(json.NewEncoder(w).Encode(&data)).To(Succeed())
-					})
-					t.readTemp()
-					Expect(t.current).To(BeNumerically("==", 18000))
-				})
-			})
+			sens.Set(1234, time.Now())
+			Eventually(t.Current).Should(BeEquivalentTo(1234))
+		})
 
-			Context("when the response isn't JSON", func() {
-				It("doesn't update the current temperature", func() {
-					server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-						w.Write([]byte("I'm not JSON..."))
-					})
-					t.readTemp()
-					Expect(t.current).To(BeNumerically("==", 18000))
-				})
-			})
+		It("triggers an update of the current state", func() {
+			Expect(t.active).To(BeFalse())
 
-			Context("when the response does not include a temperature field", func() {
-				It("doesn't update the current temperature", func() {
-					server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-						data := map[string]interface{}{"something": "else"}
-						Expect(json.NewEncoder(w).Encode(&data)).To(Succeed())
-					})
-					t.readTemp()
-					Expect(t.current).To(BeNumerically("==", 18000))
-				})
-			})
+			sens.Set(17000, time.Now())
+			Eventually(t.Current).Should(BeEquivalentTo(17000)) // Wait for async update
+
+			Expect(t.active).To(BeTrue())
 		})
 	})
 
