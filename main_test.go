@@ -11,6 +11,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/alext/heating-controller/config"
 	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/output"
 )
@@ -31,14 +32,14 @@ func (t *testZoneAdder) AddZone(z *controller.Zone) {
 
 var _ = Describe("Setting up zones from config file", func() {
 	var (
-		srv    *testZoneAdder
-		config map[string]zoneConfig
+		srv *testZoneAdder
+		cfg map[string]config.ZoneConfig
 	)
 
 	BeforeEach(func() {
 		controller.DataDir, _ = ioutil.TempDir("", "heating-controller-test")
 
-		config = make(map[string]zoneConfig)
+		cfg = make(map[string]config.ZoneConfig)
 		srv = &testZoneAdder{make(map[string]*controller.Zone)}
 		output_New = func(id string, pin int) (output.Output, error) {
 			out := output.Virtual(fmt.Sprintf("%s-gpio%d", id, pin))
@@ -53,16 +54,16 @@ var _ = Describe("Setting up zones from config file", func() {
 	})
 
 	It("Should do nothing with a blank list of zones", func() {
-		Expect(setupZones(config, srv)).To(Succeed())
+		Expect(setupZones(cfg, srv)).To(Succeed())
 
 		Expect(srv.Zones).To(HaveLen(0))
 	})
 
 	It("Should add zones with virtual outputs", func() {
-		config["foo"] = zoneConfig{Virtual: true}
-		config["bar"] = zoneConfig{Virtual: true}
+		cfg["foo"] = config.ZoneConfig{Virtual: true}
+		cfg["bar"] = config.ZoneConfig{Virtual: true}
 
-		Expect(setupZones(config, srv)).To(Succeed())
+		Expect(setupZones(cfg, srv)).To(Succeed())
 
 		Expect(srv.Zones).To(HaveLen(2))
 
@@ -73,15 +74,15 @@ var _ = Describe("Setting up zones from config file", func() {
 	})
 
 	It("should add a thermostat when configured", func() {
-		config["foo"] = zoneConfig{
+		cfg["foo"] = config.ZoneConfig{
 			Virtual: true,
-			Thermostat: &thermostatConfig{
+			Thermostat: &config.ThermostatConfig{
 				SensorURL:     "http://foo.example.com/foo",
 				DefaultTarget: 18500,
 			},
 		}
 
-		Expect(setupZones(config, srv)).To(Succeed())
+		Expect(setupZones(cfg, srv)).To(Succeed())
 		Expect(srv.Zones).To(HaveLen(1))
 		Expect(srv.Zones).To(HaveKey("foo"))
 
@@ -95,9 +96,9 @@ var _ = Describe("Setting up zones from config file", func() {
 				{"hour": 7, "min": 45, "action": "Off"},
 			},
 		})
-		config["ch"] = zoneConfig{Virtual: true}
+		cfg["ch"] = config.ZoneConfig{Virtual: true}
 
-		Expect(setupZones(config, srv)).To(Succeed())
+		Expect(setupZones(cfg, srv)).To(Succeed())
 
 		Expect(srv.Zones).To(HaveLen(1))
 		events := srv.Zones["ch"].Scheduler.ReadEvents()
@@ -105,8 +106,8 @@ var _ = Describe("Setting up zones from config file", func() {
 	})
 
 	It("Should start the scheduler for the zone", func() {
-		config["ch"] = zoneConfig{Virtual: true}
-		Expect(setupZones(config, srv)).To(Succeed())
+		cfg["ch"] = config.ZoneConfig{Virtual: true}
+		Expect(setupZones(cfg, srv)).To(Succeed())
 
 		Expect(srv.Zones).To(HaveLen(1))
 
@@ -114,10 +115,10 @@ var _ = Describe("Setting up zones from config file", func() {
 	})
 
 	It("Should add real outputs with correct pin", func() {
-		config["foo"] = zoneConfig{GPIOPin: 10}
-		config["bar"] = zoneConfig{GPIOPin: 47}
+		cfg["foo"] = config.ZoneConfig{GPIOPin: 10}
+		cfg["bar"] = config.ZoneConfig{GPIOPin: 47}
 
-		Expect(setupZones(config, srv)).To(Succeed())
+		Expect(setupZones(cfg, srv)).To(Succeed())
 
 		Expect(srv.Zones).To(HaveLen(2))
 

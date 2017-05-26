@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/alext/heating-controller/config"
 	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/sensor"
@@ -16,7 +17,6 @@ import (
 const (
 	defaultConfigFile  = "./config.json"
 	defaultDataDir     = "./data"
-	defaultPort        = 8080
 	defaultTemplateDir = "webserver/templates"
 )
 
@@ -46,7 +46,7 @@ func main() {
 	}
 	log.Println("[main] heating-controller starting")
 
-	config, err := loadConfig(*configFile)
+	config, err := loadConfigFile(*configFile)
 	if err != nil {
 		log.Fatalln("[main] Error reading config file:", err)
 	}
@@ -87,6 +87,20 @@ func setupLogging(destination string) error {
 	return nil
 }
 
+func loadConfigFile(filename string) (*config.Config, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		if os.IsNotExist(err) {
+			log.Printf("[main] Config file '%s' not found, ignoring", filename)
+			return config.New(), nil
+		}
+		return nil, err
+	}
+	defer file.Close()
+
+	return config.LoadConfig(file)
+}
+
 func setupDataDir(dir string) {
 	controller.DataDir = dir
 	fi, err := os.Stat(dir)
@@ -104,7 +118,7 @@ func setupDataDir(dir string) {
 	}
 }
 
-func setupSensors(sensors map[string]sensorConfig, ctrl *controller.Controller) error {
+func setupSensors(sensors map[string]config.SensorConfig, ctrl *controller.Controller) error {
 	for name, sensorConfig := range sensors {
 		var (
 			s   sensor.Sensor
@@ -128,7 +142,7 @@ func setupSensors(sensors map[string]sensorConfig, ctrl *controller.Controller) 
 
 var output_New = output.New // variable indirection to facilitate testing
 
-func setupZones(zones map[string]zoneConfig, server ZoneAdder) error {
+func setupZones(zones map[string]config.ZoneConfig, server ZoneAdder) error {
 	for id, config := range zones {
 		var out output.Output
 		if config.Virtual {
