@@ -23,8 +23,5 @@ func (s *pushSensor) Close() {
 }
 
 func (s *pushSensor) Set(temp Temperature, updatedAt time.Time) {
-	s.baseSensor.lock.Lock()
-	defer s.baseSensor.lock.Unlock()
-	s.baseSensor.temp = temp
-	s.baseSensor.updatedAt = updatedAt
+	s.baseSensor.set(temp, updatedAt)
 }

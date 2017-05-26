@@ -71,9 +71,5 @@ func (s *w1Sensor) readTemperature(updateTime time.Time) {
 		return
 	}
 
-	s.baseSensor.lock.Lock()
-	defer s.baseSensor.lock.Unlock()
-
-	s.baseSensor.temp = Temperature(temp)
-	s.baseSensor.updatedAt = updateTime
+	s.baseSensor.set(Temperature(temp), updateTime)
 }
