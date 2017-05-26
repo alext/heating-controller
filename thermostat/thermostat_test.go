@@ -35,6 +35,11 @@ var _ = Describe("A Thermostat", func() {
 		t      *thermostat
 		server *httptest.Server
 	)
+
+	BeforeEach(func() {
+		t = nil
+	})
+
 	AfterEach(func() {
 		if t != nil {
 			t.Close()
