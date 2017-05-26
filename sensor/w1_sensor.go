@@ -5,18 +5,15 @@ import (
 	"log"
 	"regexp"
 	"strconv"
-	"sync"
 	"time"
 )
 
 const w1DevicesPath = "/sys/bus/w1/devices/"
 
 type w1Sensor struct {
-	deviceID  string
-	mux       sync.RWMutex
-	temp      Temperature
-	updatedAt time.Time
-	closeCh   chan struct{}
+	baseSensor
+	deviceID string
+	closeCh  chan struct{}
 }
 
 func NewW1Sensor(deviceID string) (Sensor, error) {
@@ -41,12 +38,6 @@ func (s *w1Sensor) readLoop() {
 			return
 		}
 	}
-}
-
-func (s *w1Sensor) Read() (Temperature, time.Time) {
-	s.mux.RLock()
-	defer s.mux.RUnlock()
-	return s.temp, s.updatedAt
 }
 
 func (s *w1Sensor) Close() {
@@ -80,9 +71,9 @@ func (s *w1Sensor) readTemperature(updateTime time.Time) {
 		return
 	}
 
-	s.mux.Lock()
-	defer s.mux.Unlock()
+	s.baseSensor.lock.Lock()
+	defer s.baseSensor.lock.Unlock()
 
-	s.temp = Temperature(temp)
-	s.updatedAt = updateTime
+	s.baseSensor.temp = Temperature(temp)
+	s.baseSensor.updatedAt = updateTime
 }
