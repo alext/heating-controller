@@ -33,7 +33,9 @@ type ThermostatConfig struct {
 
 func New() *Config {
 	return &Config{
-		Port: DefaultPort,
+		Port:    DefaultPort,
+		Sensors: make(map[string]SensorConfig),
+		Zones:   make(map[string]ZoneConfig),
 	}
 }
 

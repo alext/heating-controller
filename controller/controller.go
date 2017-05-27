@@ -28,42 +28,40 @@ func (c *Controller) AddZone(z *Zone) {
 	c.Zones[z.ID] = z
 }
 
-func (c *Controller) SetupSensors(sensors map[string]config.SensorConfig) error {
-	for name, sensorConfig := range sensors {
+var outputNew = output.New // variable indirection to facilitate testing
+
+func (c *Controller) Setup(cfg *config.Config) error {
+	for name, sensorConfig := range cfg.Sensors {
 		s, err := sensor.New(sensorConfig)
 		if err != nil {
 			return err
 		}
 		c.AddSensor(name, s)
 	}
-	return nil
-}
 
-var outputNew = output.New // variable indirection to facilitate testing
-
-func (c *Controller) SetupZones(zones map[string]config.ZoneConfig) error {
-	for id, config := range zones {
+	for name, zoneConfig := range cfg.Zones {
 		var out output.Output
-		if config.Virtual {
-			out = output.Virtual(id)
+		if zoneConfig.Virtual {
+			out = output.Virtual(name)
 		} else {
 			var err error
-			out, err = outputNew(id, config.GPIOPin)
+			out, err = outputNew(name, zoneConfig.GPIOPin)
 			if err != nil {
 				return err
 			}
 		}
-		z := NewZone(id, out)
-		if config.Thermostat != nil {
-			s, ok := c.Sensors[config.Thermostat.Sensor]
+		z := NewZone(name, out)
+		if zoneConfig.Thermostat != nil {
+			s, ok := c.Sensors[zoneConfig.Thermostat.Sensor]
 			if !ok {
-				return fmt.Errorf("Non-existent sensor: '%s'", config.Thermostat.Sensor)
+				return fmt.Errorf("Non-existent sensor '%s' for zone '%s'", zoneConfig.Thermostat.Sensor, name)
 			}
-			z.SetupThermostat(s, config.Thermostat.DefaultTarget)
+			z.SetupThermostat(s, zoneConfig.Thermostat.DefaultTarget)
 		}
 		z.Restore()
 		z.Scheduler.Start()
 		c.AddZone(z)
 	}
+
 	return nil
 }

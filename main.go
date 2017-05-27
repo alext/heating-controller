@@ -52,14 +52,9 @@ func main() {
 	setupDataDir(*dataDir)
 	ctrl := controller.New()
 
-	err = ctrl.SetupSensors(config.Sensors)
+	err = ctrl.Setup(config)
 	if err != nil {
-		log.Fatalln("[main] Error setting up sensors:", err)
-	}
-
-	err = ctrl.SetupZones(config.Zones)
-	if err != nil {
-		log.Fatalln("[main] Error setting up zones:", err)
+		log.Fatalln("[main] Error setting up controller:", err)
 	}
 
 	srv := webserver.New(ctrl, config.Port, filepath.FromSlash(*templateDir))
