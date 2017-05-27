@@ -30,20 +30,9 @@ func (c *Controller) AddZone(z *Zone) {
 
 func (c *Controller) SetupSensors(sensors map[string]config.SensorConfig) error {
 	for name, sensorConfig := range sensors {
-		var (
-			s   sensor.Sensor
-			err error
-		)
-		switch sensorConfig.Type {
-		case "w1":
-			s, err = sensor.NewW1Sensor(sensorConfig.ID)
-			if err != nil {
-				return err
-			}
-		case "push":
-			s = sensor.NewPushSensor(sensorConfig.ID)
-		default:
-			return fmt.Errorf("Unrecognised sensor type: '%s'", sensorConfig.Type)
+		s, err := sensor.New(sensorConfig)
+		if err != nil {
+			return err
 		}
 		c.AddSensor(name, s)
 	}

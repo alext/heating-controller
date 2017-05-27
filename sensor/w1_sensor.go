@@ -18,14 +18,14 @@ type w1Sensor struct {
 	closeCh  chan struct{}
 }
 
-func NewW1Sensor(deviceID string) (Sensor, error) {
+func NewW1Sensor(deviceID string) Sensor {
 	s := &w1Sensor{
 		deviceID: deviceID,
 		closeCh:  make(chan struct{}),
 	}
 	s.readTemperature(time.Now())
 	go s.readLoop()
-	return s, nil
+	return s
 }
 
 func (s *w1Sensor) readLoop() {

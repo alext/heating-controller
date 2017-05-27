@@ -61,13 +61,11 @@ var _ = Describe("a w1 sensor", func() {
 	Describe("constructing a sensor", func() {
 		var (
 			sensor Sensor
-			err    error
 		)
 
 		BeforeEach(func() {
 			populateValueFile(testDeviceID, sampleData1)
-			sensor, err = NewW1Sensor(testDeviceID)
-			Expect(err).NotTo(HaveOccurred())
+			sensor = NewW1Sensor(testDeviceID)
 		})
 		AfterEach(func() {
 			if s, ok := sensor.(*w1Sensor); ok {
@@ -163,9 +161,7 @@ f6 ff 55 00 7f ff 0c 10 47 t=-625`
 
 		BeforeEach(func() {
 			populateValueFile(testDeviceID, sampleData1)
-			s, err := NewW1Sensor(testDeviceID)
-			Expect(err).NotTo(HaveOccurred())
-			sensor = s.(*w1Sensor)
+			sensor = NewW1Sensor(testDeviceID).(*w1Sensor)
 		})
 
 		It("should stop the ticker", func(done Done) {
