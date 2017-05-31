@@ -4,6 +4,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/alext/heating-controller/units"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -146,12 +147,12 @@ f6 ff 55 00 7f ff 0c 10 47 t=-625`
 			ch := sensor.Subscribe()
 			tkr.C <- time.Now()
 			<-tkrNotify
-			Eventually(ch).Should(Receive(Equal(Temperature(19437))))
+			Eventually(ch).Should(Receive(Equal(units.Temperature(19437))))
 
 			populateValueFile(testDeviceID, sampleData2)
 			tkr.C <- time.Now()
 			<-tkrNotify
-			Eventually(ch).Should(Receive(Equal(Temperature(18062))))
+			Eventually(ch).Should(Receive(Equal(units.Temperature(18062))))
 		})
 	})
 

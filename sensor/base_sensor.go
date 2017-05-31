@@ -3,30 +3,32 @@ package sensor
 import (
 	"sync"
 	"time"
+
+	"github.com/alext/heating-controller/units"
 )
 
 type baseSensor struct {
 	lock          sync.RWMutex
-	temp          Temperature
+	temp          units.Temperature
 	updatedAt     time.Time
-	subscriptions []chan Temperature
+	subscriptions []chan units.Temperature
 }
 
-func (s *baseSensor) Read() (Temperature, time.Time) {
+func (s *baseSensor) Read() (units.Temperature, time.Time) {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 	return s.temp, s.updatedAt
 }
 
-func (s *baseSensor) Subscribe() <-chan Temperature {
-	ch := make(chan Temperature, 1)
+func (s *baseSensor) Subscribe() <-chan units.Temperature {
+	ch := make(chan units.Temperature, 1)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	s.subscriptions = append(s.subscriptions, ch)
 	return ch
 }
 
-func (s *baseSensor) set(temp Temperature, updatedAt time.Time) {
+func (s *baseSensor) set(temp units.Temperature, updatedAt time.Time) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	s.temp = temp

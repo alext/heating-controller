@@ -1,6 +1,10 @@
 package sensor
 
-import "time"
+import (
+	"time"
+
+	"github.com/alext/heating-controller/units"
+)
 
 const initialValue = 21000
 
@@ -22,6 +26,6 @@ func (s *pushSensor) Close() {
 	// No-Op
 }
 
-func (s *pushSensor) Set(temp Temperature, updatedAt time.Time) {
+func (s *pushSensor) Set(temp units.Temperature, updatedAt time.Time) {
 	s.baseSensor.set(temp, updatedAt)
 }

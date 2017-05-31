@@ -1,18 +1,18 @@
-package sensor_test
+package units_test
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 
-	"github.com/alext/heating-controller/sensor"
+	"github.com/alext/heating-controller/units"
 )
 
 var _ = Describe("Temperature", func() {
 
 	DescribeTable("formatting as a string",
 		func(input int, expected string) {
-			temp := sensor.Temperature(input)
+			temp := units.Temperature(input)
 			Expect(temp.String()).To(Equal(expected))
 		},
 		Entry("returns temp in °C", 19500, "19.5°C"),

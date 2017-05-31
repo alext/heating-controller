@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/alext/heating-controller/sensor"
+	"github.com/alext/heating-controller/units"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
@@ -97,8 +98,8 @@ var _ = Describe("A Thermostat", func() {
 	})
 
 	type TriggeringCase struct {
-		Current            sensor.Temperature
-		Target             sensor.Temperature
+		Current            units.Temperature
+		Target             units.Temperature
 		CurrentlyActive    bool
 		ExpectedActive     bool
 		ExpectDemandCalled bool

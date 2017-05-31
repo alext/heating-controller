@@ -7,14 +7,14 @@ import (
 	"path/filepath"
 
 	"github.com/alext/heating-controller/scheduler"
-	"github.com/alext/heating-controller/sensor"
+	"github.com/alext/heating-controller/units"
 )
 
 var DataDir string
 
 type zoneData struct {
-	Events           []scheduler.Event   `json:"events"`
-	ThermostatTarget *sensor.Temperature `json:"thermostat_target,omitempty"`
+	Events           []scheduler.Event  `json:"events"`
+	ThermostatTarget *units.Temperature `json:"thermostat_target,omitempty"`
 }
 
 func (z *Zone) Restore() error {

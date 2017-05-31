@@ -4,12 +4,13 @@ import (
 	"sync"
 
 	"github.com/alext/heating-controller/sensor"
+	"github.com/alext/heating-controller/units"
 )
 
 type Thermostat interface {
-	Current() sensor.Temperature
-	Target() sensor.Temperature
-	Set(sensor.Temperature)
+	Current() units.Temperature
+	Target() units.Temperature
+	Set(units.Temperature)
 	Close()
 }
 
@@ -17,17 +18,17 @@ type demandFunc func(bool)
 
 type thermostat struct {
 	id       string
-	sourceCh <-chan sensor.Temperature
+	sourceCh <-chan units.Temperature
 	demand   demandFunc
 	closeCh  chan struct{}
 
 	lock    sync.RWMutex
-	target  sensor.Temperature
-	current sensor.Temperature
+	target  units.Temperature
+	current units.Temperature
 	active  bool
 }
 
-func New(id string, source sensor.Sensor, target sensor.Temperature, df demandFunc) Thermostat {
+func New(id string, source sensor.Sensor, target units.Temperature, df demandFunc) Thermostat {
 	initial, _ := source.Read()
 	t := &thermostat{
 		id:       id,
@@ -47,26 +48,26 @@ func New(id string, source sensor.Sensor, target sensor.Temperature, df demandFu
 	return t
 }
 
-func (t *thermostat) Current() sensor.Temperature {
+func (t *thermostat) Current() units.Temperature {
 	t.lock.RLock()
 	defer t.lock.RUnlock()
 	return t.current
 }
 
-func (t *thermostat) setCurrent(tmp sensor.Temperature) {
+func (t *thermostat) setCurrent(tmp units.Temperature) {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 	t.current = tmp
 	t.trigger()
 }
 
-func (t *thermostat) Target() sensor.Temperature {
+func (t *thermostat) Target() units.Temperature {
 	t.lock.RLock()
 	defer t.lock.RUnlock()
 	return t.target
 }
 
-func (t *thermostat) Set(tmp sensor.Temperature) {
+func (t *thermostat) Set(tmp units.Temperature) {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 	t.target = tmp

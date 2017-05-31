@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/alext/heating-controller/units"
 )
 
 const w1DevicesPath = "/sys/bus/w1/devices/"
@@ -71,5 +73,5 @@ func (s *w1Sensor) readTemperature(updateTime time.Time) {
 		return
 	}
 
-	s.baseSensor.set(Temperature(temp), updateTime)
+	s.baseSensor.set(units.Temperature(temp), updateTime)
 }

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/alext/heating-controller/sensor"
+	"github.com/alext/heating-controller/units"
 )
 
 const DefaultPort = 8080
@@ -27,8 +27,8 @@ type ZoneConfig struct {
 }
 
 type ThermostatConfig struct {
-	Sensor        string             `json:"sensor"`
-	DefaultTarget sensor.Temperature `json:"default_target"`
+	Sensor        string            `json:"sensor"`
+	DefaultTarget units.Temperature `json:"default_target"`
 }
 
 func New() *Config {

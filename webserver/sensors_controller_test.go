@@ -9,19 +9,20 @@ import (
 
 	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/sensor"
+	"github.com/alext/heating-controller/units"
 	"github.com/alext/heating-controller/webserver"
 )
 
 type dummySensor struct {
-	temp       sensor.Temperature
+	temp       units.Temperature
 	updateTime time.Time
 }
 
-func (s *dummySensor) Read() (sensor.Temperature, time.Time) {
+func (s *dummySensor) Read() (units.Temperature, time.Time) {
 	return s.temp, s.updateTime
 }
 
-func (s *dummySensor) Subscribe() <-chan sensor.Temperature { return nil }
+func (s *dummySensor) Subscribe() <-chan units.Temperature { return nil }
 
 var _ = Describe("sensors controller", func() {
 	var (

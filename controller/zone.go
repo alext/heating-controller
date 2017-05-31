@@ -8,6 +8,7 @@ import (
 	"github.com/alext/heating-controller/scheduler"
 	"github.com/alext/heating-controller/sensor"
 	"github.com/alext/heating-controller/thermostat"
+	"github.com/alext/heating-controller/units"
 )
 
 type Zone struct {
@@ -32,7 +33,7 @@ func NewZone(id string, out output.Output) *Zone {
 	return z
 }
 
-func (z *Zone) SetupThermostat(source sensor.Sensor, initialTarget sensor.Temperature) {
+func (z *Zone) SetupThermostat(source sensor.Sensor, initialTarget units.Temperature) {
 	z.Thermostat = thermostat.New(z.ID, source, initialTarget, z.thermostatDemand)
 }
 

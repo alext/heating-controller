@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/alext/heating-controller/sensor"
+	"github.com/alext/heating-controller/units"
 	"github.com/gorilla/mux"
 )
 
@@ -42,7 +43,7 @@ func (srv *WebServer) sensorPut(w http.ResponseWriter, req *http.Request) {
 	}
 
 	var data struct {
-		Temp *sensor.Temperature `json:"temperature"`
+		Temp *units.Temperature `json:"temperature"`
 	}
 	err := json.NewDecoder(req.Body).Decode(&data)
 	if err != nil {
@@ -60,8 +61,8 @@ func (srv *WebServer) sensorPut(w http.ResponseWriter, req *http.Request) {
 }
 
 type jsonSensor struct {
-	Temperature sensor.Temperature `json:"temperature"`
-	UpdatedAt   time.Time          `json:"updated_at"`
+	Temperature units.Temperature `json:"temperature"`
+	UpdatedAt   time.Time         `json:"updated_at"`
 }
 
 func newJSONSensor(s sensor.Sensor) *jsonSensor {

@@ -3,6 +3,7 @@ package sensor
 import (
 	"time"
 
+	"github.com/alext/heating-controller/units"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -32,7 +33,7 @@ var _ = Describe("a push sensor", func() {
 			ch := s.Subscribe()
 
 			s.Set(1234, time.Now())
-			Eventually(ch).Should(Receive(Equal(Temperature(1234))))
+			Eventually(ch).Should(Receive(Equal(units.Temperature(1234))))
 		})
 
 		It("allows multiple subscribers", func() {
@@ -41,14 +42,14 @@ var _ = Describe("a push sensor", func() {
 			ch2 := s.Subscribe()
 
 			s.Set(1234, time.Now())
-			Eventually(ch1).Should(Receive(Equal(Temperature(1234))))
-			Eventually(ch2).Should(Receive(Equal(Temperature(1234))))
+			Eventually(ch1).Should(Receive(Equal(units.Temperature(1234))))
+			Eventually(ch2).Should(Receive(Equal(units.Temperature(1234))))
 
 			ch3 := s.Subscribe()
 			s.Set(12345, time.Now())
-			Eventually(ch1).Should(Receive(Equal(Temperature(12345))))
-			Eventually(ch2).Should(Receive(Equal(Temperature(12345))))
-			Eventually(ch3).Should(Receive(Equal(Temperature(12345))))
+			Eventually(ch1).Should(Receive(Equal(units.Temperature(12345))))
+			Eventually(ch2).Should(Receive(Equal(units.Temperature(12345))))
+			Eventually(ch3).Should(Receive(Equal(units.Temperature(12345))))
 		})
 	})
 })
