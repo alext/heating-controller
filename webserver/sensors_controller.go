@@ -38,6 +38,7 @@ func (srv *WebServer) sensorPut(w http.ResponseWriter, req *http.Request) {
 	}
 	ss, ok := s.(sensor.SettableSensor)
 	if !ok {
+		w.Header().Set("Allow", "GET")
 		writeError(w, fmt.Errorf("Non-writable sensor %s", sensorID), http.StatusMethodNotAllowed)
 		return
 	}

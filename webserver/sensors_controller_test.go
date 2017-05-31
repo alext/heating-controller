@@ -140,6 +140,8 @@ var _ = Describe("sensors controller", func() {
 			}
 			resp := doJSONPutRequest(server, "/sensors/two", data)
 			Expect(resp.Code).To(Equal(405))
+			Expect(resp.Header().Get("Allow")).To(Equal("GET"))
+
 			temp, _ := s1.Read()
 			Expect(temp).To(BeEquivalentTo(12345))
 		})
