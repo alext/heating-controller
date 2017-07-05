@@ -73,6 +73,10 @@ var _ = Describe("a w1 sensor", func() {
 			}
 		})
 
+		It("returns the deviceID", func() {
+			Expect(sensor.DeviceId()).To(Equal(testDeviceID))
+		})
+
 		It("should read the initial temperature", func() {
 			temperature, _ := sensor.Read()
 			Expect(temperature).To(BeEquivalentTo(19437))

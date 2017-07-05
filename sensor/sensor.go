@@ -12,6 +12,7 @@ import (
 var fs afero.Fs = &afero.OsFs{}
 
 type Sensor interface {
+	DeviceId() string
 	Read() (units.Temperature, time.Time)
 	Subscribe() <-chan units.Temperature
 }

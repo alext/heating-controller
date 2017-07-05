@@ -10,6 +10,11 @@ import (
 
 var _ = Describe("a push sensor", func() {
 
+	It("returns the deviceID", func() {
+		s := NewPushSensor("something")
+		Expect(s.DeviceId()).To(Equal("something"))
+	})
+
 	It("has a reasonable initial value", func() {
 		s := NewPushSensor("something")
 		temp, updated := s.Read()

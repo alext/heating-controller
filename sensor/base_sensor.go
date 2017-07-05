@@ -8,10 +8,15 @@ import (
 )
 
 type baseSensor struct {
+	deviceID      string
 	lock          sync.RWMutex
 	temp          units.Temperature
 	updatedAt     time.Time
 	subscriptions []chan units.Temperature
+}
+
+func (s *baseSensor) DeviceId() string {
+	return s.deviceID
 }
 
 func (s *baseSensor) Read() (units.Temperature, time.Time) {

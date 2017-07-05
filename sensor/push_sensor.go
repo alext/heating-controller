@@ -10,14 +10,13 @@ const initialValue = 21000
 
 type pushSensor struct {
 	baseSensor
-	sensorID string
 }
 
 func NewPushSensor(id string) SettableSensor {
 	return &pushSensor{
-		sensorID: id,
 		baseSensor: baseSensor{
-			temp: initialValue,
+			deviceID: id,
+			temp:     initialValue,
 		},
 	}
 }

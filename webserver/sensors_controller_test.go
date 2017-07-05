@@ -14,6 +14,7 @@ import (
 )
 
 type dummySensor struct {
+	deviceID   string
 	temp       units.Temperature
 	updateTime time.Time
 }
@@ -21,7 +22,7 @@ type dummySensor struct {
 func (s *dummySensor) Read() (units.Temperature, time.Time) {
 	return s.temp, s.updateTime
 }
-
+func (s *dummySensor) DeviceId() string                    { return s.deviceID }
 func (s *dummySensor) Subscribe() <-chan units.Temperature { return nil }
 
 var _ = Describe("sensors controller", func() {
