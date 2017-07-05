@@ -13,6 +13,7 @@ func (srv *WebServer) buildRouter() http.Handler {
 	r.Methods("GET").Path("/").HandlerFunc(srv.zonesIndex)
 
 	r.Methods("GET").Path("/sensors").HandlerFunc(srv.sensorIndex)
+	r.Methods("PUT").Path("/sensors").HandlerFunc(srv.sensorBulkPut)
 	r.Methods("GET").Path("/sensors/{sensor_id}").HandlerFunc(srv.sensorGet)
 	r.Methods("PUT").Path("/sensors/{sensor_id}").HandlerFunc(srv.sensorPut)
 

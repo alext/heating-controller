@@ -9,19 +9,22 @@ import (
 )
 
 type Controller struct {
-	Sensors map[string]sensor.Sensor
-	Zones   map[string]*Zone
+	SensorsByName     map[string]sensor.Sensor
+	SensorsByDeviceID map[string]sensor.Sensor
+	Zones             map[string]*Zone
 }
 
 func New() *Controller {
 	return &Controller{
-		Sensors: make(map[string]sensor.Sensor),
-		Zones:   make(map[string]*Zone),
+		SensorsByName:     make(map[string]sensor.Sensor),
+		SensorsByDeviceID: make(map[string]sensor.Sensor),
+		Zones:             make(map[string]*Zone),
 	}
 }
 
 func (c *Controller) AddSensor(name string, s sensor.Sensor) {
-	c.Sensors[name] = s
+	c.SensorsByName[name] = s
+	c.SensorsByDeviceID[s.DeviceId()] = s
 }
 
 func (c *Controller) AddZone(z *Zone) {
@@ -52,7 +55,7 @@ func (c *Controller) Setup(cfg *config.Config) error {
 		}
 		z := NewZone(name, out)
 		if zoneConfig.Thermostat != nil {
-			s, ok := c.Sensors[zoneConfig.Thermostat.Sensor]
+			s, ok := c.SensorsByName[zoneConfig.Thermostat.Sensor]
 			if !ok {
 				return fmt.Errorf("Non-existent sensor '%s' for zone '%s'", zoneConfig.Thermostat.Sensor, name)
 			}

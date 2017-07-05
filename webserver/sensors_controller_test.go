@@ -65,6 +65,71 @@ var _ = Describe("sensors controller", func() {
 			Expect(data2["temperature"]).To(BeEquivalentTo(19542))
 		})
 	})
+
+	Describe("bulk updating sensors", func() {
+		var (
+			s1, s2 sensor.SettableSensor
+		)
+
+		BeforeEach(func() {
+			s1 = sensor.NewPushSensor("1234")
+			ctrl.AddSensor("one", s1)
+			s2 = sensor.NewPushSensor("2345")
+			ctrl.AddSensor("two", s2)
+		})
+
+		It("allows setting multiple sensors by their IDs", func() {
+			data := map[string]interface{}{
+				"temperatures": map[string]interface{}{
+					"1234": 15643,
+					"2345": 18793,
+				},
+			}
+			resp := doJSONPutRequest(server, "/sensors", data)
+			Expect(resp.Code).To(Equal(http.StatusOK))
+
+			temp, updated := s1.Read()
+			Expect(temp).To(BeEquivalentTo(15643))
+			Expect(updated).To(BeTemporally("~", time.Now(), 100*time.Millisecond))
+
+			temp, updated = s2.Read()
+			Expect(temp).To(BeEquivalentTo(18793))
+			Expect(updated).To(BeTemporally("~", time.Now(), 100*time.Millisecond))
+		})
+
+		It("ignores non-existent sensors in the input", func() {
+			data := map[string]interface{}{
+				"temperatures": map[string]interface{}{
+					"3456": 18793,
+					"1234": 15643,
+				},
+			}
+			resp := doJSONPutRequest(server, "/sensors", data)
+			Expect(resp.Code).To(Equal(http.StatusOK))
+
+			temp, updated := s1.Read()
+			Expect(temp).To(BeEquivalentTo(15643))
+			Expect(updated).To(BeTemporally("~", time.Now(), 100*time.Millisecond))
+		})
+
+		It("ignores attempts to set a non-settable sensor", func() {
+			s3 := &dummySensor{deviceID: "3456"}
+			ctrl.AddSensor("three", s3)
+			data := map[string]interface{}{
+				"temperatures": map[string]interface{}{
+					"3456": 18793,
+					"1234": 15643,
+				},
+			}
+			resp := doJSONPutRequest(server, "/sensors", data)
+			Expect(resp.Code).To(Equal(http.StatusOK))
+
+			temp, updated := s1.Read()
+			Expect(temp).To(BeEquivalentTo(15643))
+			Expect(updated).To(BeTemporally("~", time.Now(), 100*time.Millisecond))
+		})
+	})
+
 	Describe("reading a sensor", func() {
 		var (
 			sensor *dummySensor

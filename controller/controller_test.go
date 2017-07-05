@@ -42,7 +42,8 @@ var _ = Describe("Controller", func() {
 		It("should do nothing with no sensors or zones", func() {
 			Expect(ctrl.Setup(cfg)).To(Succeed())
 
-			Expect(ctrl.Sensors).To(HaveLen(0))
+			Expect(ctrl.SensorsByName).To(HaveLen(0))
+			Expect(ctrl.SensorsByDeviceID).To(HaveLen(0))
 			Expect(ctrl.Zones).To(HaveLen(0))
 		})
 
@@ -59,7 +60,8 @@ var _ = Describe("Controller", func() {
 
 				Expect(ctrl.Setup(cfg)).To(Succeed())
 
-				Expect(ctrl.Sensors).To(HaveLen(2))
+				Expect(ctrl.SensorsByName).To(HaveLen(2))
+				Expect(ctrl.SensorsByDeviceID).To(HaveLen(2))
 			})
 
 			It("should return an error if setting up a sensor fails", func() {
