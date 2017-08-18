@@ -1,0 +1,28 @@
+
+[[constraint]]
+  name = "github.com/alext/gpio"
+  branch = "master"
+
+[[constraint]]
+  name = "github.com/golang/mock"
+  version = "1.0.0"
+
+[[constraint]]
+  name = "github.com/gorilla/mux"
+  version = "1.4.0"
+
+[[constraint]]
+  name = "github.com/onsi/ginkgo"
+  version = "1.4.0"
+
+[[constraint]]
+  name = "github.com/onsi/gomega"
+  version = "1.2.0"
+
+[[constraint]]
+  name = "github.com/sclevine/agouti"
+  version = "2.0.0"
+
+[[constraint]]
+  name = "github.com/spf13/afero"
+  branch = "master"
