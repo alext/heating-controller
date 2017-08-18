@@ -4,9 +4,6 @@ BINARY := heating-controller
 IMPORT_BASE := github.com/alext
 IMPORT_PATH := $(IMPORT_BASE)/heating-controller
 
-GO15VENDOREXPERIMENT := 1
-export GO15VENDOREXPERIMENT
-
 ifdef RELEASE_VERSION
 VERSION := $(RELEASE_VERSION)
 else
