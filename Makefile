@@ -10,7 +10,7 @@ else
 VERSION := $(shell git describe --always --tags | tr -d '\n'; test -z "`git status --porcelain`" || echo '-dirty')
 endif
 
-build: Godeps/Godeps.json
+build:
 	go build -ldflags "-X main.version=$(VERSION)" -o $(BINARY)
 
 test: build
@@ -19,6 +19,3 @@ test: build
 
 clean:
 	rm -rf $(BINARY)
-
-save_deps:
-	godep save $$(go list ./... | grep -v '/vendor/')
