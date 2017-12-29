@@ -91,7 +91,7 @@ func (t *thermostat) readLoop() {
 	}
 }
 
-const threshold = 500
+const threshold = 250
 
 // Must be called with the lock held for writing.
 func (t *thermostat) trigger() {
