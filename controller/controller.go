@@ -35,7 +35,7 @@ var outputNew = output.New // variable indirection to facilitate testing
 
 func (c *Controller) Setup(cfg *config.Config) error {
 	for name, sensorConfig := range cfg.Sensors {
-		s, err := sensor.New(sensorConfig)
+		s, err := sensor.New(name, sensorConfig)
 		if err != nil {
 			return err
 		}

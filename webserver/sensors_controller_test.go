@@ -72,9 +72,9 @@ var _ = Describe("sensors controller", func() {
 		)
 
 		BeforeEach(func() {
-			s1 = sensor.NewPushSensor("1234")
+			s1 = sensor.NewPushSensor("one", "1234")
 			ctrl.AddSensor("one", s1)
-			s2 = sensor.NewPushSensor("2345")
+			s2 = sensor.NewPushSensor("two", "2345")
 			ctrl.AddSensor("two", s2)
 		})
 
@@ -167,7 +167,7 @@ var _ = Describe("sensors controller", func() {
 		)
 
 		BeforeEach(func() {
-			s1 = sensor.NewPushSensor("something")
+			s1 = sensor.NewPushSensor("one", "something")
 			s1.Set(12345, time.Now().Add(-1*time.Hour))
 			ctrl.AddSensor("one", s1)
 		})

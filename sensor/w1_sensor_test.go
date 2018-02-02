@@ -65,7 +65,7 @@ var _ = Describe("a w1 sensor", func() {
 
 		BeforeEach(func() {
 			populateValueFile(testDeviceID, sampleData1)
-			sensor = NewW1Sensor(testDeviceID)
+			sensor = NewW1Sensor("foo", testDeviceID)
 		})
 		AfterEach(func() {
 			if s, ok := sensor.(*w1Sensor); ok {
@@ -165,7 +165,7 @@ f6 ff 55 00 7f ff 0c 10 47 t=-625`
 
 		BeforeEach(func() {
 			populateValueFile(testDeviceID, sampleData1)
-			sensor = NewW1Sensor(testDeviceID).(*w1Sensor)
+			sensor = NewW1Sensor("foo", testDeviceID).(*w1Sensor)
 		})
 
 		It("should stop the ticker", func(done Done) {

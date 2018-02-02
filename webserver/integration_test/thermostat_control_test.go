@@ -44,7 +44,7 @@ var _ = Describe("controlling the thermostat", func() {
 		)
 
 		BeforeEach(func() {
-			sens := sensor.NewPushSensor("something")
+			sens := sensor.NewPushSensor("sens", "something")
 			sens.Set(18253, time.Now())
 			zone1 = controller.NewZone("one", output.Virtual("one"))
 			zone1.SetupThermostat(sens, 19500)

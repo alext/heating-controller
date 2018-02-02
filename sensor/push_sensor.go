@@ -12,9 +12,10 @@ type pushSensor struct {
 	baseSensor
 }
 
-func NewPushSensor(id string) SettableSensor {
+func NewPushSensor(name, id string) SettableSensor {
 	return &pushSensor{
 		baseSensor: baseSensor{
+			name:     name,
 			deviceID: id,
 			temp:     initialValue,
 		},

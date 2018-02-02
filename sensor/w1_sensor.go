@@ -17,9 +17,10 @@ type w1Sensor struct {
 	closeCh chan struct{}
 }
 
-func NewW1Sensor(deviceID string) Sensor {
+func NewW1Sensor(name, deviceID string) Sensor {
 	s := &w1Sensor{
 		baseSensor: baseSensor{
+			name:     name,
 			deviceID: deviceID,
 		},
 		closeCh: make(chan struct{}),

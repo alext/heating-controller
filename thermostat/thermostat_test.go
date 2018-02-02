@@ -29,7 +29,7 @@ var _ = Describe("A Thermostat", func() {
 
 	BeforeEach(func() {
 		t = nil
-		sens = sensor.NewPushSensor("something")
+		sens = sensor.NewPushSensor("foo", "something")
 		sens.Set(19000, time.Now())
 	})
 

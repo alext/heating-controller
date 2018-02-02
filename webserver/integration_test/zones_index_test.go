@@ -80,7 +80,7 @@ var _ = Describe("viewing the index", func() {
 
 		Context("with a thermostat configured", func() {
 			BeforeEach(func() {
-				sens := sensor.NewPushSensor("foo")
+				sens := sensor.NewPushSensor("sens", "foo")
 				sens.Set(18253, time.Now())
 				zone1.SetupThermostat(sens, 19500)
 			})

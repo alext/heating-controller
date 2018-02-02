@@ -8,6 +8,7 @@ import (
 )
 
 type baseSensor struct {
+	name          string
 	deviceID      string
 	lock          sync.RWMutex
 	temp          units.Temperature

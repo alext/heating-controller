@@ -11,12 +11,12 @@ import (
 var _ = Describe("a push sensor", func() {
 
 	It("returns the deviceID", func() {
-		s := NewPushSensor("something")
+		s := NewPushSensor("foo", "something")
 		Expect(s.DeviceId()).To(Equal("something"))
 	})
 
 	It("has a reasonable initial value", func() {
-		s := NewPushSensor("something")
+		s := NewPushSensor("foo", "something")
 		temp, updated := s.Read()
 		Expect(temp).To(BeEquivalentTo(initialValue))
 		var zeroTime time.Time
@@ -34,7 +34,7 @@ var _ = Describe("a push sensor", func() {
 
 	Describe("subscribing to updates", func() {
 		It("allows subscribing to updates", func() {
-			s := NewPushSensor("something")
+			s := NewPushSensor("foo", "something")
 			ch := s.Subscribe()
 
 			s.Set(1234, time.Now())
@@ -42,7 +42,7 @@ var _ = Describe("a push sensor", func() {
 		})
 
 		It("allows multiple subscribers", func() {
-			s := NewPushSensor("something")
+			s := NewPushSensor("foo", "something")
 			ch1 := s.Subscribe()
 			ch2 := s.Subscribe()
 
