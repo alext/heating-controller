@@ -1,6 +1,7 @@
 package sensor
 
 import (
+	"log"
 	"sync"
 	"time"
 
@@ -39,6 +40,7 @@ func (s *baseSensor) set(temp units.Temperature, updatedAt time.Time) {
 	defer s.lock.Unlock()
 	s.temp = temp
 	s.updatedAt = updatedAt
+	log.Printf("[Sensor:%s] updated to %s, (updatedAt: %s)", s.name, temp, updatedAt)
 	go s.notifySubscribers()
 }
 
