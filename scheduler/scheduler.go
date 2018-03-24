@@ -271,7 +271,7 @@ func (s *scheduler) setCurrentState() {
 
 func (s *scheduler) next(now time.Time) (at time.Time, e *Event) {
 	if len(s.events) < 1 {
-		return now.AddDate(0, 0, 1), nil
+		return now.Add(24 * time.Hour), nil
 	}
 	hour, min, _ := now.Clock()
 	for _, event := range s.events {

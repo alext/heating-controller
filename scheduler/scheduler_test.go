@@ -237,9 +237,11 @@ var _ = Describe("a basic scheduler", func() {
 			<-waitNotify
 			zone.ExpectState(TurnOff)
 
-			Expect(resetParam.String()).To(Equal("9h18m0s"))
+			nextAt := todayAt(6, 30, 0).AddDate(0, 0, 1)
 
-			mockNow = todayAt(6, 30, 0)
+			Expect(resetParam.String()).To(Equal(nextAt.Sub(mockNow).String()))
+
+			mockNow = nextAt
 			timerCh <- mockNow
 			<-waitNotify
 			zone.ExpectState(TurnOn)
