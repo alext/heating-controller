@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestSensot(t *testing.T) {
+func TestUnits(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Units")
 }
