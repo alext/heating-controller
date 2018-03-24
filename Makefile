@@ -11,7 +11,7 @@ VERSION := $(shell git describe --always --tags | tr -d '\n'; test -z "`git stat
 endif
 
 build:
-	go build -ldflags "-X main.version=$(VERSION)" -o $(BINARY)
+	go build -ldflags=$(IMPORT_PATH)="-X main.version=$(VERSION)" -o $(BINARY)
 
 test: build
 	go test -v ./...
