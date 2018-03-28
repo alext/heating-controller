@@ -42,8 +42,8 @@ var _ = Describe("schedule controller", func() {
 		BeforeEach(func() {
 			zone1 = controller.NewZone("one", output.Virtual("one"))
 			ctrl.AddZone(zone1)
-			zone1.Scheduler.AddEvent(scheduler.Event{Hour: 7, Min: 30, Action: scheduler.TurnOn})
-			zone1.Scheduler.AddEvent(scheduler.Event{Hour: 8, Min: 30, Action: scheduler.TurnOff})
+			zone1.AddEvent(scheduler.Event{Hour: 7, Min: 30, Action: scheduler.TurnOn})
+			zone1.AddEvent(scheduler.Event{Hour: 8, Min: 30, Action: scheduler.TurnOff})
 
 			values = url.Values{}
 			values.Set("hour", "10")
@@ -58,7 +58,7 @@ var _ = Describe("schedule controller", func() {
 			Expect(w.Code).To(Equal(302))
 			Expect(w.Header().Get("Location")).To(Equal("/zones/one/schedule"))
 
-			events := zone1.Scheduler.ReadEvents()
+			events := zone1.ReadEvents()
 			Expect(events).To(HaveLen(3))
 			Expect(events).To(ContainElement(scheduler.Event{Hour: 10, Min: 24, Action: scheduler.TurnOn}))
 		})
@@ -83,7 +83,7 @@ var _ = Describe("schedule controller", func() {
 				w := doRequestWithValues(server, "POST", "/zones/one/schedule", values)
 				Expect(w.Code).To(Equal(400))
 				Expect(w.Body.String()).To(ContainSubstring("hour must be a number"))
-				Expect(zone1.Scheduler.ReadEvents()).To(HaveLen(2))
+				Expect(zone1.ReadEvents()).To(HaveLen(2))
 			})
 
 			It("should return an error with a non-numeric minute", func() {
@@ -91,7 +91,7 @@ var _ = Describe("schedule controller", func() {
 				w := doRequestWithValues(server, "POST", "/zones/one/schedule", values)
 				Expect(w.Code).To(Equal(400))
 				Expect(w.Body.String()).To(ContainSubstring("minute must be a number"))
-				Expect(zone1.Scheduler.ReadEvents()).To(HaveLen(2))
+				Expect(zone1.ReadEvents()).To(HaveLen(2))
 			})
 
 			It("should return an error with a well-formed, but invalid event", func() {
@@ -99,7 +99,7 @@ var _ = Describe("schedule controller", func() {
 				w := doRequestWithValues(server, "POST", "/zones/one/schedule", values)
 				Expect(w.Code).To(Equal(400))
 				Expect(w.Body.String()).To(ContainSubstring("invalid event"))
-				Expect(zone1.Scheduler.ReadEvents()).To(HaveLen(2))
+				Expect(zone1.ReadEvents()).To(HaveLen(2))
 			})
 		})
 	})
@@ -112,8 +112,8 @@ var _ = Describe("schedule controller", func() {
 		BeforeEach(func() {
 			zone1 = controller.NewZone("one", output.Virtual("one"))
 			ctrl.AddZone(zone1)
-			zone1.Scheduler.AddEvent(scheduler.Event{Hour: 7, Min: 30, Action: scheduler.TurnOn})
-			zone1.Scheduler.AddEvent(scheduler.Event{Hour: 8, Min: 30, Action: scheduler.TurnOff})
+			zone1.AddEvent(scheduler.Event{Hour: 7, Min: 30, Action: scheduler.TurnOn})
+			zone1.AddEvent(scheduler.Event{Hour: 8, Min: 30, Action: scheduler.TurnOff})
 		})
 
 		It("should remove the matching event and redirect to the schedule", func() {
@@ -122,7 +122,7 @@ var _ = Describe("schedule controller", func() {
 			Expect(w.Code).To(Equal(302))
 			Expect(w.Header().Get("Location")).To(Equal("/zones/one/schedule"))
 
-			events := zone1.Scheduler.ReadEvents()
+			events := zone1.ReadEvents()
 			Expect(events).To(HaveLen(1))
 			Expect(events).NotTo(ContainElement(scheduler.Event{Hour: 7, Min: 30, Action: scheduler.TurnOn}))
 		})
@@ -145,7 +145,7 @@ var _ = Describe("schedule controller", func() {
 			Expect(w.Code).To(Equal(302))
 			Expect(w.Header().Get("Location")).To(Equal("/zones/one/schedule"))
 
-			Expect(zone1.Scheduler.ReadEvents()).To(HaveLen(2))
+			Expect(zone1.ReadEvents()).To(HaveLen(2))
 		})
 
 		It("should 404 for non-numerical times in URL", func() {

@@ -44,7 +44,7 @@ func (srv *WebServer) scheduleAddEvent(w http.ResponseWriter, req *http.Request,
 	if req.FormValue("action") == "on" {
 		e.Action = scheduler.TurnOn
 	}
-	err = z.Scheduler.AddEvent(e)
+	err = z.AddEvent(e)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -60,9 +60,9 @@ func (srv *WebServer) scheduleAddEvent(w http.ResponseWriter, req *http.Request,
 func (srv *WebServer) scheduleRemoveEvent(w http.ResponseWriter, req *http.Request, z *controller.Zone) {
 	hour, _ := strconv.Atoi(mux.Vars(req)["hour"])
 	min, _ := strconv.Atoi(mux.Vars(req)["min"])
-	for _, e := range z.Scheduler.ReadEvents() {
+	for _, e := range z.ReadEvents() {
 		if e.Hour == hour && e.Min == min {
-			z.Scheduler.RemoveEvent(e)
+			z.RemoveEvent(e)
 			break
 		}
 	}

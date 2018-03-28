@@ -33,6 +33,22 @@ func NewZone(id string, out output.Output) *Zone {
 	return z
 }
 
+func (z *Zone) AddEvent(e scheduler.Event) error {
+	return z.Scheduler.AddEvent(e)
+}
+
+func (z *Zone) RemoveEvent(e scheduler.Event) {
+	z.Scheduler.RemoveEvent(e)
+}
+
+func (z *Zone) NextEvent() *scheduler.Event {
+	return z.Scheduler.NextEvent()
+}
+
+func (z *Zone) ReadEvents() []scheduler.Event {
+	return z.Scheduler.ReadEvents()
+}
+
 func (z *Zone) SetupThermostat(source sensor.Sensor, initialTarget units.Temperature) {
 	z.Thermostat = thermostat.New(z.ID, source, initialTarget, z.thermostatDemand)
 }

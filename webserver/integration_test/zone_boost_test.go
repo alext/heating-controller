@@ -67,7 +67,7 @@ var _ = Describe("boosting a zone", func() {
 
 			Expect(zone1.Active()).To(Equal(true))
 
-			nextEvent := zone1.Scheduler.NextEvent()
+			nextEvent := zone1.NextEvent()
 			Expect(nextEvent).NotTo(BeNil())
 
 			Expect(nextEvent.Action).To(Equal(scheduler.TurnOff))
@@ -112,7 +112,7 @@ var _ = Describe("boosting a zone", func() {
 
 			Expect(zone1.Active()).To(Equal(false))
 
-			nextEvent := zone1.Scheduler.NextEvent()
+			nextEvent := zone1.NextEvent()
 			Expect(nextEvent).To(BeNil())
 
 			//Expect(nextEvent.Action).To(Equal(scheduler.TurnOff))

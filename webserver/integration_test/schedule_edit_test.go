@@ -57,10 +57,10 @@ var _ = Describe("Editing the schedule for a zone", func() {
 
 		Context("with some events", func() {
 			BeforeEach(func() {
-				zone1.Scheduler.AddEvent(scheduler.Event{Hour: 7, Min: 30, Action: scheduler.TurnOn})
-				zone1.Scheduler.AddEvent(scheduler.Event{Hour: 8, Min: 30, Action: scheduler.TurnOff})
-				zone1.Scheduler.AddEvent(scheduler.Event{Hour: 17, Min: 0, Action: scheduler.TurnOn})
-				zone1.Scheduler.AddEvent(scheduler.Event{Hour: 21, Min: 45, Action: scheduler.TurnOff})
+				zone1.AddEvent(scheduler.Event{Hour: 7, Min: 30, Action: scheduler.TurnOn})
+				zone1.AddEvent(scheduler.Event{Hour: 8, Min: 30, Action: scheduler.TurnOff})
+				zone1.AddEvent(scheduler.Event{Hour: 17, Min: 0, Action: scheduler.TurnOn})
+				zone1.AddEvent(scheduler.Event{Hour: 21, Min: 45, Action: scheduler.TurnOff})
 			})
 
 			It("should show the schedule", func() {
@@ -95,7 +95,7 @@ var _ = Describe("Editing the schedule for a zone", func() {
 				Expect(page).To(HaveURL(testServer.URL + "/zones/one/schedule"))
 				Expect(page.Find("h1")).To(HaveText("one schedule"))
 
-				events := zone1.Scheduler.ReadEvents()
+				events := zone1.ReadEvents()
 				Expect(events).To(HaveLen(5))
 				Expect(events).To(ContainElement(scheduler.Event{Hour: 14, Min: 42, Action: scheduler.TurnOn}))
 			})
@@ -110,7 +110,7 @@ var _ = Describe("Editing the schedule for a zone", func() {
 				Expect(page).To(HaveURL(testServer.URL + "/zones/one/schedule"))
 				Expect(page.Find("h1")).To(HaveText("one schedule"))
 
-				events := zone1.Scheduler.ReadEvents()
+				events := zone1.ReadEvents()
 				Expect(events).To(HaveLen(3))
 				Expect(events).NotTo(ContainElement(scheduler.Event{Hour: 8, Min: 30, Action: scheduler.TurnOff}))
 			})

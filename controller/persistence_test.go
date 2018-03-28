@@ -52,8 +52,8 @@ var _ = Describe("persisting a zone's state", func() {
 		})
 
 		It("should save the scheduler events to the file", func() {
-			z.Scheduler.AddEvent(scheduler.Event{Hour: 6, Min: 30, Action: scheduler.TurnOn})
-			z.Scheduler.AddEvent(scheduler.Event{Hour: 7, Min: 45, Action: scheduler.TurnOff})
+			z.AddEvent(scheduler.Event{Hour: 6, Min: 30, Action: scheduler.TurnOn})
+			z.AddEvent(scheduler.Event{Hour: 7, Min: 45, Action: scheduler.TurnOff})
 
 			Expect(z.Save()).To(Succeed())
 
@@ -80,7 +80,7 @@ var _ = Describe("persisting a zone's state", func() {
 			writeJSONToFile(filepath.Join(tempDataDir, "ch.json"), map[string]interface{}{"events": []interface{}{}})
 			Expect(z.Restore()).To(Succeed())
 
-			Expect(z.Scheduler.ReadEvents()).To(HaveLen(0))
+			Expect(z.ReadEvents()).To(HaveLen(0))
 		})
 
 		It("should load the scheduler events from the file", func() {
@@ -93,7 +93,7 @@ var _ = Describe("persisting a zone's state", func() {
 
 			Expect(z.Restore()).To(Succeed())
 
-			events := z.Scheduler.ReadEvents()
+			events := z.ReadEvents()
 			Expect(events).To(HaveLen(2))
 			Expect(events[0]).To(Equal(scheduler.Event{Hour: 6, Min: 30, Action: scheduler.TurnOn}))
 			Expect(events[1]).To(Equal(scheduler.Event{Hour: 7, Min: 45, Action: scheduler.TurnOff}))
@@ -102,7 +102,7 @@ var _ = Describe("persisting a zone's state", func() {
 		It("should treat a non-existent data file the same as a file with an empty scheduler event list", func() {
 			Expect(z.Restore()).To(Succeed())
 
-			Expect(z.Scheduler.ReadEvents()).To(HaveLen(0))
+			Expect(z.ReadEvents()).To(HaveLen(0))
 		})
 
 		It("should skip over any invalid scheduler events in the file", func() {
@@ -117,7 +117,7 @@ var _ = Describe("persisting a zone's state", func() {
 
 			Expect(z.Restore()).To(Succeed())
 
-			events := z.Scheduler.ReadEvents()
+			events := z.ReadEvents()
 			Expect(events).To(HaveLen(3))
 			Expect(events[0]).To(Equal(scheduler.Event{Hour: 6, Min: 30, Action: scheduler.TurnOn}))
 			Expect(events[1]).To(Equal(scheduler.Event{Hour: 16, Min: 30, Action: scheduler.TurnOn}))
