@@ -1,7 +1,9 @@
 package controller
 
 import (
+	"errors"
 	"log"
+	"sort"
 	"sync"
 
 	"github.com/alext/heating-controller/output"
@@ -11,12 +13,15 @@ import (
 	"github.com/alext/heating-controller/units"
 )
 
+var ErrInvalidEvent = errors.New("invalid event")
+
 type Zone struct {
 	ID         string
 	Scheduler  scheduler.Scheduler
 	Thermostat thermostat.Thermostat
 
 	lock          sync.RWMutex
+	events        eventList
 	Out           output.Output
 	schedDemand   bool
 	thermDemand   bool
@@ -26,6 +31,7 @@ type Zone struct {
 func NewZone(id string, out output.Output) *Zone {
 	z := &Zone{
 		ID:          id,
+		events:      make(eventList, 0),
 		Out:         out,
 		thermDemand: true, // always on until a thermostat is added
 	}
@@ -34,10 +40,30 @@ func NewZone(id string, out output.Output) *Zone {
 }
 
 func (z *Zone) AddEvent(e Event) error {
+	if !e.Valid() {
+		return ErrInvalidEvent
+	}
+	z.lock.Lock()
+	defer z.lock.Unlock()
+
+	z.events = append(z.events, e)
+	sort.Sort(z.events)
+
 	return z.Scheduler.AddEvent(e.toScheduler())
 }
 
 func (z *Zone) RemoveEvent(e Event) {
+	z.lock.Lock()
+	defer z.lock.Unlock()
+
+	newEvents := make(eventList, 0)
+	for _, ze := range z.events {
+		if ze != e {
+			newEvents = append(newEvents, ze)
+		}
+	}
+	z.events = newEvents
+
 	z.Scheduler.RemoveEvent(e.toScheduler())
 }
 
@@ -50,9 +76,12 @@ func (z *Zone) NextEvent() *Event {
 }
 
 func (z *Zone) ReadEvents() []Event {
-	events := make([]Event, 0)
-	for _, se := range z.Scheduler.ReadEvents() {
-		events = append(events, *eventFromScheduler(&se))
+	z.lock.RLock()
+	defer z.lock.RUnlock()
+
+	events := make([]Event, 0, len(z.events))
+	for _, e := range z.events {
+		events = append(events, e)
 	}
 	return events
 }

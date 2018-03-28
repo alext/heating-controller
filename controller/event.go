@@ -57,3 +57,12 @@ func eventFromScheduler(se *scheduler.Event) *Event {
 	} // TurnOff is zero value
 	return e
 }
+
+type eventList []Event
+
+func (el eventList) Len() int      { return len(el) }
+func (el eventList) Swap(i, j int) { el[i], el[j] = el[j], el[i] }
+func (el eventList) Less(i, j int) bool {
+	a, b := el[i], el[j]
+	return a.Hour < b.Hour || (a.Hour == b.Hour && a.Min < b.Min)
+}
