@@ -14,19 +14,6 @@ import (
 	"github.com/alext/heating-controller/thermostat/mock_thermostat"
 )
 
-type EventHolder struct {
-	events []scheduler.Event
-}
-
-func (eh *EventHolder) ReadEvents() []scheduler.Event {
-	return eh.events
-}
-
-func (eh *EventHolder) AddEvent(e scheduler.Event) error {
-	eh.events = append(eh.events, e)
-	return nil
-}
-
 var _ = Describe("persisting a zone's state", func() {
 	var (
 		tempDataDir string
