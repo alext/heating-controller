@@ -11,7 +11,6 @@ import (
 
 	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/output"
-	"github.com/alext/heating-controller/scheduler"
 	"github.com/alext/heating-controller/webserver"
 )
 
@@ -70,7 +69,7 @@ var _ = Describe("boosting a zone", func() {
 			nextEvent := zone1.NextEvent()
 			Expect(nextEvent).NotTo(BeNil())
 
-			Expect(nextEvent.Action).To(Equal(scheduler.TurnOff))
+			Expect(nextEvent.Action).To(Equal(controller.TurnOff))
 
 			eventTime := nextEvent.NextOccurance()
 			expected := time.Now().Local().Add(30 * time.Minute)

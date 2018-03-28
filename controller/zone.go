@@ -33,20 +33,28 @@ func NewZone(id string, out output.Output) *Zone {
 	return z
 }
 
-func (z *Zone) AddEvent(e scheduler.Event) error {
-	return z.Scheduler.AddEvent(e)
+func (z *Zone) AddEvent(e Event) error {
+	return z.Scheduler.AddEvent(e.toScheduler())
 }
 
-func (z *Zone) RemoveEvent(e scheduler.Event) {
-	z.Scheduler.RemoveEvent(e)
+func (z *Zone) RemoveEvent(e Event) {
+	z.Scheduler.RemoveEvent(e.toScheduler())
 }
 
-func (z *Zone) NextEvent() *scheduler.Event {
-	return z.Scheduler.NextEvent()
+func (z *Zone) NextEvent() *Event {
+	e := eventFromScheduler(z.Scheduler.NextEvent())
+	if e == nil {
+		return nil
+	}
+	return e
 }
 
-func (z *Zone) ReadEvents() []scheduler.Event {
-	return z.Scheduler.ReadEvents()
+func (z *Zone) ReadEvents() []Event {
+	events := make([]Event, 0)
+	for _, se := range z.Scheduler.ReadEvents() {
+		events = append(events, *eventFromScheduler(&se))
+	}
+	return events
 }
 
 func (z *Zone) SetupThermostat(source sensor.Sensor, initialTarget units.Temperature) {

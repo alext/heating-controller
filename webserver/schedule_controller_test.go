@@ -11,7 +11,6 @@ import (
 
 	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/output"
-	"github.com/alext/heating-controller/scheduler"
 	"github.com/alext/heating-controller/webserver"
 )
 
@@ -42,8 +41,8 @@ var _ = Describe("schedule controller", func() {
 		BeforeEach(func() {
 			zone1 = controller.NewZone("one", output.Virtual("one"))
 			ctrl.AddZone(zone1)
-			zone1.AddEvent(scheduler.Event{Hour: 7, Min: 30, Action: scheduler.TurnOn})
-			zone1.AddEvent(scheduler.Event{Hour: 8, Min: 30, Action: scheduler.TurnOff})
+			zone1.AddEvent(controller.Event{Hour: 7, Min: 30, Action: controller.TurnOn})
+			zone1.AddEvent(controller.Event{Hour: 8, Min: 30, Action: controller.TurnOff})
 
 			values = url.Values{}
 			values.Set("hour", "10")
@@ -60,7 +59,7 @@ var _ = Describe("schedule controller", func() {
 
 			events := zone1.ReadEvents()
 			Expect(events).To(HaveLen(3))
-			Expect(events).To(ContainElement(scheduler.Event{Hour: 10, Min: 24, Action: scheduler.TurnOn}))
+			Expect(events).To(ContainElement(controller.Event{Hour: 10, Min: 24, Action: controller.TurnOn}))
 		})
 
 		It("should save the zone state", func() {
@@ -112,8 +111,8 @@ var _ = Describe("schedule controller", func() {
 		BeforeEach(func() {
 			zone1 = controller.NewZone("one", output.Virtual("one"))
 			ctrl.AddZone(zone1)
-			zone1.AddEvent(scheduler.Event{Hour: 7, Min: 30, Action: scheduler.TurnOn})
-			zone1.AddEvent(scheduler.Event{Hour: 8, Min: 30, Action: scheduler.TurnOff})
+			zone1.AddEvent(controller.Event{Hour: 7, Min: 30, Action: controller.TurnOn})
+			zone1.AddEvent(controller.Event{Hour: 8, Min: 30, Action: controller.TurnOff})
 		})
 
 		It("should remove the matching event and redirect to the schedule", func() {
@@ -124,7 +123,7 @@ var _ = Describe("schedule controller", func() {
 
 			events := zone1.ReadEvents()
 			Expect(events).To(HaveLen(1))
-			Expect(events).NotTo(ContainElement(scheduler.Event{Hour: 7, Min: 30, Action: scheduler.TurnOn}))
+			Expect(events).NotTo(ContainElement(controller.Event{Hour: 7, Min: 30, Action: controller.TurnOn}))
 		})
 
 		It("should save the zone state", func() {

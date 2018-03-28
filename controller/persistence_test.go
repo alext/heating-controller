@@ -10,7 +10,6 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/heating-controller/output"
-	"github.com/alext/heating-controller/scheduler"
 	"github.com/alext/heating-controller/thermostat/mock_thermostat"
 )
 
@@ -39,8 +38,8 @@ var _ = Describe("persisting a zone's state", func() {
 		})
 
 		It("should save the scheduler events to the file", func() {
-			z.AddEvent(scheduler.Event{Hour: 6, Min: 30, Action: scheduler.TurnOn})
-			z.AddEvent(scheduler.Event{Hour: 7, Min: 45, Action: scheduler.TurnOff})
+			z.AddEvent(Event{Hour: 6, Min: 30, Action: TurnOn})
+			z.AddEvent(Event{Hour: 7, Min: 45, Action: TurnOff})
 
 			Expect(z.Save()).To(Succeed())
 
@@ -82,8 +81,8 @@ var _ = Describe("persisting a zone's state", func() {
 
 			events := z.ReadEvents()
 			Expect(events).To(HaveLen(2))
-			Expect(events[0]).To(Equal(scheduler.Event{Hour: 6, Min: 30, Action: scheduler.TurnOn}))
-			Expect(events[1]).To(Equal(scheduler.Event{Hour: 7, Min: 45, Action: scheduler.TurnOff}))
+			Expect(events[0]).To(Equal(Event{Hour: 6, Min: 30, Action: TurnOn}))
+			Expect(events[1]).To(Equal(Event{Hour: 7, Min: 45, Action: TurnOff}))
 		})
 
 		It("should treat a non-existent data file the same as a file with an empty scheduler event list", func() {
@@ -106,9 +105,9 @@ var _ = Describe("persisting a zone's state", func() {
 
 			events := z.ReadEvents()
 			Expect(events).To(HaveLen(3))
-			Expect(events[0]).To(Equal(scheduler.Event{Hour: 6, Min: 30, Action: scheduler.TurnOn}))
-			Expect(events[1]).To(Equal(scheduler.Event{Hour: 16, Min: 30, Action: scheduler.TurnOn}))
-			Expect(events[2]).To(Equal(scheduler.Event{Hour: 18, Min: 40, Action: scheduler.TurnOff}))
+			Expect(events[0]).To(Equal(Event{Hour: 6, Min: 30, Action: TurnOn}))
+			Expect(events[1]).To(Equal(Event{Hour: 16, Min: 30, Action: TurnOn}))
+			Expect(events[2]).To(Equal(Event{Hour: 18, Min: 40, Action: TurnOff}))
 		})
 
 		It("should restore the thermostat target", func() {

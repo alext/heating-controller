@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	"github.com/alext/heating-controller/controller"
-	"github.com/alext/heating-controller/scheduler"
 	"github.com/gorilla/mux"
 )
 
@@ -30,7 +29,7 @@ func (srv *WebServer) scheduleEdit(w http.ResponseWriter, req *http.Request, z *
 
 func (srv *WebServer) scheduleAddEvent(w http.ResponseWriter, req *http.Request, z *controller.Zone) {
 	var err error
-	e := scheduler.Event{}
+	e := controller.Event{}
 	e.Hour, err = strconv.Atoi(req.FormValue("hour"))
 	if err != nil {
 		http.Error(w, "hour must be a number: "+err.Error(), http.StatusBadRequest)
@@ -42,7 +41,7 @@ func (srv *WebServer) scheduleAddEvent(w http.ResponseWriter, req *http.Request,
 		return
 	}
 	if req.FormValue("action") == "on" {
-		e.Action = scheduler.TurnOn
+		e.Action = controller.TurnOn
 	}
 	err = z.AddEvent(e)
 	if err != nil {
