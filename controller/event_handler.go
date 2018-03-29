@@ -22,11 +22,11 @@ type EventHandler interface {
 type eventHandler struct {
 	lock   sync.RWMutex
 	events eventList
-	demand func(bool)
+	demand func(Event)
 	sched  scheduler.Scheduler
 }
 
-func NewEventHandler(s scheduler.Scheduler, demand func(bool)) EventHandler {
+func NewEventHandler(s scheduler.Scheduler, demand func(Event)) EventHandler {
 	return &eventHandler{
 		sched:  s,
 		demand: demand,
@@ -94,12 +94,12 @@ func (eh *eventHandler) Boosted() bool {
 
 func (eh *eventHandler) Boost(d time.Duration) {
 	eh.sched.Boost(d, func() {
-		eh.demand(true)
+		eh.demand(Event{Action: TurnOn})
 	})
 }
 
 func (eh *eventHandler) CancelBoost() {
 	eh.sched.CancelBoost()
 	// FIXME: restore previous state
-	eh.demand(false)
+	eh.demand(Event{Action: TurnOff})
 }

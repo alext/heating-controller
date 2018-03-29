@@ -15,7 +15,7 @@ var _ = Describe("EventHandler", func() {
 		)
 
 		BeforeEach(func() {
-			eh = controller.NewEventHandler(scheduler.New("something"), func(bool) {})
+			eh = controller.NewEventHandler(scheduler.New("something"), func(controller.Event) {})
 		})
 
 		It("should allow adding and reading events", func() {
