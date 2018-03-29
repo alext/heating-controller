@@ -41,12 +41,12 @@ func (_mr *_MockSchedulerRecorder) AddEvent(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddEvent", arg0)
 }
 
-func (_m *MockScheduler) Boost(_param0 time.Duration) {
-	_m.ctrl.Call(_m, "Boost", _param0)
+func (_m *MockScheduler) Boost(_param0 time.Duration, _param1 func()) {
+	_m.ctrl.Call(_m, "Boost", _param0, _param1)
 }
 
-func (_mr *_MockSchedulerRecorder) Boost(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "Boost", arg0)
+func (_mr *_MockSchedulerRecorder) Boost(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Boost", arg0, arg1)
 }
 
 func (_m *MockScheduler) Boosted() bool {

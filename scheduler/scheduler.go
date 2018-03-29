@@ -20,17 +20,14 @@ type Scheduler interface {
 	AddEvent(Event) error
 	RemoveEvent(Event)
 	Boosted() bool
-	Boost(time.Duration)
+	Boost(time.Duration, func())
 	CancelBoost()
 	NextEvent() *Event
 	ReadEvents() []Event
 }
 
-type demandFunc func(Action)
-
 type scheduler struct {
 	id        string
-	demand    demandFunc
 	events    eventList
 	running   bool
 	boosted   bool
@@ -42,10 +39,9 @@ type scheduler struct {
 	tmr       timer
 }
 
-func New(zoneID string, df demandFunc) Scheduler {
+func New(id string) Scheduler {
 	return &scheduler{
-		id:        zoneID,
-		demand:    df,
+		id:        id,
 		events:    make(eventList, 0),
 		commandCh: make(chan func()),
 	}
@@ -89,10 +85,7 @@ func (s *scheduler) AddEvent(event Event) error {
 	if s.running {
 		s.commandCh <- func() {
 			s.addEvent(&event)
-			if _, e := s.next(time_Now().Local()); *e == event {
-				// let the new event be picked up by the run loop
-				s.nextEvent = nil
-			}
+			s.nextEvent = nil // cause the next event to be recalculated
 		}
 	} else {
 		s.addEvent(&event)
@@ -106,10 +99,7 @@ func (s *scheduler) RemoveEvent(event Event) {
 	if s.running {
 		s.commandCh <- func() {
 			s.removeEvent(&event)
-			if event == *s.nextEvent {
-				// let the new event be picked up by the run loop
-				s.nextEvent = nil
-			}
+			s.nextEvent = nil // cause the next event to be recalculated
 		}
 	} else {
 		s.removeEvent(&event)
@@ -130,7 +120,7 @@ func (s *scheduler) Boosted() bool {
 	return <-retCh
 }
 
-func (s *scheduler) Boost(d time.Duration) {
+func (s *scheduler) Boost(d time.Duration, action func()) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	if !s.running {
@@ -138,25 +128,25 @@ func (s *scheduler) Boost(d time.Duration) {
 	}
 
 	s.commandCh <- func() {
-		go s.demand(TurnOn)
+		go action()
 		s.boosted = true
 		if d == 0 && len(s.events) == 0 {
 			d = time.Hour
 		}
+		if d == 0 {
+			log.Printf("[Scheduler:%s] Boosting until next event", s.id)
+			return
+		}
 		now := time_Now().Local()
 		endTime := now.Add(d)
-		if d != 0 && (s.nextEvent == nil || s.nextEvent.Action == TurnOff || endTime.Before(s.nextAt)) {
-			s.nextAt = endTime
-			s.nextEvent = &Event{
-				Hour:   endTime.Hour(),
-				Min:    endTime.Minute(),
-				Action: TurnOff,
-			}
-			s.tmr.Reset(s.nextAt.Sub(now))
-			log.Printf("[Scheduler:%s] Boosting until %v", s.id, s.nextAt)
-		} else {
-			log.Printf("[Scheduler:%s] Boosting until next event", s.id)
+		s.nextAt = endTime
+		s.nextEvent = &Event{
+			Hour:   endTime.Hour(),
+			Min:    endTime.Minute(),
+			Action: func() { s.commandCh <- s.setCurrentState },
 		}
+		s.tmr.Reset(s.nextAt.Sub(now))
+		log.Printf("[Scheduler:%s] Boosting until %v", s.id, s.nextAt)
 	}
 }
 
@@ -222,7 +212,7 @@ func (s *scheduler) run() {
 		select {
 		case <-s.tmr.Channel():
 			if s.nextEvent != nil {
-				go s.demand(s.nextEvent.Action)
+				go s.nextEvent.Action()
 				s.nextEvent = nil
 			}
 		case f := <-s.commandCh:
@@ -243,7 +233,7 @@ func (s *scheduler) addEvent(e *Event) {
 func (s *scheduler) removeEvent(event *Event) {
 	newEvents := make(eventList, 0)
 	for _, e := range s.events {
-		if *e != *event {
+		if e.Hour != event.Hour || e.Min != event.Min || e.Label != event.Label {
 			newEvents = append(newEvents, e)
 		}
 	}
@@ -252,7 +242,6 @@ func (s *scheduler) removeEvent(event *Event) {
 
 func (s *scheduler) setCurrentState() {
 	if len(s.events) < 1 {
-		s.demand(TurnOff)
 		return
 	}
 	hour, min, _ := time_Now().Local().Clock()
@@ -266,7 +255,7 @@ func (s *scheduler) setCurrentState() {
 	if previous == nil {
 		previous = s.events[len(s.events)-1]
 	}
-	s.demand(previous.Action)
+	go previous.Action()
 }
 
 func (s *scheduler) next(now time.Time) (at time.Time, e *Event) {

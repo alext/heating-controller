@@ -6,9 +6,10 @@ import (
 )
 
 type Event struct {
-	Hour   int    `json:"hour"`
-	Min    int    `json:"min"`
-	Action Action `json:"action"`
+	Hour   int
+	Min    int
+	Label  string
+	Action func()
 }
 
 func (e Event) NextOccurance() time.Time {
@@ -33,7 +34,7 @@ func (e Event) after(hour, min int) bool {
 }
 
 func (e Event) String() string {
-	return fmt.Sprintf("%d:%02d %s", e.Hour, e.Min, e.Action)
+	return fmt.Sprintf("%d:%02d %s", e.Hour, e.Min, e.Label)
 }
 
 type eventList []*Event
