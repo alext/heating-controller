@@ -3,9 +3,7 @@ package controller
 import (
 	"errors"
 	"log"
-	"sort"
 	"sync"
-	"time"
 
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/scheduler"
@@ -20,9 +18,9 @@ type Zone struct {
 	ID         string
 	Scheduler  scheduler.Scheduler
 	Thermostat thermostat.Thermostat
+	EventHandler
 
 	lock          sync.RWMutex
-	events        eventList
 	Out           output.Output
 	schedDemand   bool
 	thermDemand   bool
@@ -32,82 +30,12 @@ type Zone struct {
 func NewZone(id string, out output.Output) *Zone {
 	z := &Zone{
 		ID:          id,
-		events:      make(eventList, 0),
 		Out:         out,
 		thermDemand: true, // always on until a thermostat is added
 	}
 	z.Scheduler = scheduler.New(z.ID)
+	z.EventHandler = NewEventHandler(z.Scheduler, z.schedulerDemand)
 	return z
-}
-
-func (z *Zone) AddEvent(e Event) error {
-	if !e.Valid() {
-		return ErrInvalidEvent
-	}
-	z.lock.Lock()
-	defer z.lock.Unlock()
-
-	z.events = append(z.events, e)
-	sort.Sort(z.events)
-
-	return z.Scheduler.AddEvent(e.buildSchedulerEvent(z.schedulerDemand))
-}
-
-func (z *Zone) RemoveEvent(e Event) {
-	z.lock.Lock()
-	defer z.lock.Unlock()
-
-	newEvents := make(eventList, 0)
-	for _, ze := range z.events {
-		if ze != e {
-			newEvents = append(newEvents, ze)
-		}
-	}
-	z.events = newEvents
-
-	z.Scheduler.RemoveEvent(e.buildSchedulerEvent(z.schedulerDemand))
-}
-
-func (z *Zone) NextEvent() *Event {
-	se := z.Scheduler.NextEvent()
-	if se == nil {
-		return nil
-	}
-	e := &Event{
-		Hour: se.Hour,
-		Min:  se.Min,
-	}
-	if se.Label == "On" {
-		e.Action = TurnOn
-	}
-	return e
-}
-
-func (z *Zone) ReadEvents() []Event {
-	z.lock.RLock()
-	defer z.lock.RUnlock()
-
-	events := make([]Event, 0, len(z.events))
-	for _, e := range z.events {
-		events = append(events, e)
-	}
-	return events
-}
-
-func (z *Zone) Boosted() bool {
-	return z.Scheduler.Boosted()
-}
-
-func (z *Zone) Boost(d time.Duration) {
-	z.Scheduler.Boost(d, func() {
-		z.schedulerDemand(true)
-	})
-}
-
-func (z *Zone) CancelBoost() {
-	z.Scheduler.CancelBoost()
-	// FIXME: restore previous state
-	z.schedulerDemand(false)
 }
 
 func (z *Zone) SetupThermostat(source sensor.Sensor, initialTarget units.Temperature) {
