@@ -471,6 +471,7 @@ var _ = Describe("a basic scheduler", func() {
 				theScheduler.Start()
 
 				<-waitNotify
+				thing.ExpectState(false)
 
 				mockNow = todayAt(14, 30, 0)
 				theScheduler.Boost(40*time.Minute, thing.TurnOn)
@@ -492,6 +493,7 @@ var _ = Describe("a basic scheduler", func() {
 				mockNow = todayAt(14, 0, 0)
 				theScheduler.Start()
 				<-waitNotify
+				thing.ExpectState(false)
 
 				mockNow = todayAt(14, 30, 0)
 				theScheduler.Boost(40*time.Minute, thing.TurnOn)
@@ -513,6 +515,7 @@ var _ = Describe("a basic scheduler", func() {
 					theScheduler.Start()
 
 					<-waitNotify
+					thing.ExpectState(false)
 
 					mockNow = todayAt(14, 30, 0)
 					theScheduler.Boost(0, thing.TurnOn)
@@ -536,6 +539,7 @@ var _ = Describe("a basic scheduler", func() {
 					mockNow = todayAt(16, 0, 0)
 					theScheduler.Start()
 					<-waitNotify
+					thing.ExpectState(false)
 				})
 
 				It("should overlap an upcoming event, returning to the overlapped event state after the boost", func() {
