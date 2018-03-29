@@ -128,7 +128,7 @@ var _ = Describe("zones controller", func() {
 				mockScheduler := mock_scheduler.NewMockScheduler(mockCtrl)
 				zone1.Scheduler = mockScheduler
 
-				mockScheduler.EXPECT().Boost(42 * time.Minute)
+				mockScheduler.EXPECT().Boost(42*time.Minute, gomock.Any())
 
 				doFakeRequestWithValues(server, "PUT", "/zones/one/boost", url.Values{"duration": {"42m"}})
 			})

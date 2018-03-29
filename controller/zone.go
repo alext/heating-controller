@@ -36,7 +36,7 @@ func NewZone(id string, out output.Output) *Zone {
 		Out:         out,
 		thermDemand: true, // always on until a thermostat is added
 	}
-	z.Scheduler = scheduler.New(z.ID, z.schedulerDemand)
+	z.Scheduler = scheduler.New(z.ID)
 	return z
 }
 
@@ -50,7 +50,7 @@ func (z *Zone) AddEvent(e Event) error {
 	z.events = append(z.events, e)
 	sort.Sort(z.events)
 
-	return z.Scheduler.AddEvent(e.toScheduler())
+	return z.Scheduler.AddEvent(e.buildSchedulerEvent(z.schedulerDemand))
 }
 
 func (z *Zone) RemoveEvent(e Event) {
@@ -65,13 +65,20 @@ func (z *Zone) RemoveEvent(e Event) {
 	}
 	z.events = newEvents
 
-	z.Scheduler.RemoveEvent(e.toScheduler())
+	z.Scheduler.RemoveEvent(e.buildSchedulerEvent(z.schedulerDemand))
 }
 
 func (z *Zone) NextEvent() *Event {
-	e := eventFromScheduler(z.Scheduler.NextEvent())
-	if e == nil {
+	se := z.Scheduler.NextEvent()
+	if se == nil {
 		return nil
+	}
+	e := &Event{
+		Hour: se.Hour,
+		Min:  se.Min,
+	}
+	if se.Label == "On" {
+		e.Action = TurnOn
 	}
 	return e
 }
@@ -92,11 +99,15 @@ func (z *Zone) Boosted() bool {
 }
 
 func (z *Zone) Boost(d time.Duration) {
-	z.Scheduler.Boost(d)
+	z.Scheduler.Boost(d, func() {
+		z.schedulerDemand(true)
+	})
 }
 
 func (z *Zone) CancelBoost() {
 	z.Scheduler.CancelBoost()
+	// FIXME: restore previous state
+	z.schedulerDemand(false)
 }
 
 func (z *Zone) SetupThermostat(source sensor.Sensor, initialTarget units.Temperature) {
@@ -121,10 +132,10 @@ func (z *Zone) TDemand() bool {
 	return z.thermDemand
 }
 
-func (z *Zone) schedulerDemand(a scheduler.Action) {
+func (z *Zone) schedulerDemand(demand bool) {
 	z.lock.Lock()
 	defer z.lock.Unlock()
-	z.schedDemand = a == scheduler.TurnOn
+	z.schedDemand = demand
 	log.Printf("[Zone:%s] received scheduler demand : %t", z.ID, z.schedDemand)
 	z.updateDemand()
 }

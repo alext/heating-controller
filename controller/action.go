@@ -1,10 +1,6 @@
 package controller
 
-import (
-	"fmt"
-
-	"github.com/alext/heating-controller/scheduler"
-)
+import "fmt"
 
 type Action int8
 
@@ -34,12 +30,4 @@ func (a *Action) UnmarshalText(data []byte) error {
 		return fmt.Errorf("Unrecognised action value '%s'", data)
 	}
 	return nil
-}
-
-// FIXME: temp function to ease refactoring
-func (a Action) toScheduler() scheduler.Action {
-	if a == TurnOn {
-		return scheduler.TurnOn
-	}
-	return scheduler.TurnOff
 }

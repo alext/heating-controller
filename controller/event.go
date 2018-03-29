@@ -34,28 +34,13 @@ func (e Event) String() string {
 	return fmt.Sprintf("%d:%02d %s", e.Hour, e.Min, e.Action)
 }
 
-// FIXME: temp function to ease refactoring
-func (e Event) toScheduler() scheduler.Event {
+func (e Event) buildSchedulerEvent(demand func(bool)) scheduler.Event {
 	return scheduler.Event{
 		Hour:   e.Hour,
 		Min:    e.Min,
-		Action: e.Action.toScheduler(),
+		Label:  e.Action.String(),
+		Action: func() { demand(e.Action == TurnOn) },
 	}
-}
-
-// FIXME: temp function to ease refactoring
-func eventFromScheduler(se *scheduler.Event) *Event {
-	if se == nil {
-		return nil
-	}
-	e := &Event{
-		Hour: se.Hour,
-		Min:  se.Min,
-	}
-	if se.Action == scheduler.TurnOn {
-		e.Action = TurnOn
-	} // TurnOff is zero value
-	return e
 }
 
 type eventList []Event

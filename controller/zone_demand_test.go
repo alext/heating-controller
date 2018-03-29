@@ -6,7 +6,6 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/heating-controller/output"
-	"github.com/alext/heating-controller/scheduler"
 )
 
 var _ = Describe("Zone demand handling", func() {
@@ -27,7 +26,7 @@ var _ = Describe("Zone demand handling", func() {
 				out.Deactivate()
 				z.schedDemand = false
 
-				z.schedulerDemand(scheduler.TurnOn)
+				z.schedulerDemand(true)
 			})
 
 			It("should update the demand state", func() {
@@ -45,7 +44,7 @@ var _ = Describe("Zone demand handling", func() {
 				z.schedDemand = true
 				z.currentDemand = true // force the output to be updated
 
-				z.schedulerDemand(scheduler.TurnOff)
+				z.schedulerDemand(false)
 			})
 
 			It("should update the demand state", func() {
