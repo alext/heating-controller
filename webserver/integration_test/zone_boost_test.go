@@ -114,12 +114,6 @@ var _ = Describe("boosting a zone", func() {
 			nextEvent := zone1.NextEvent()
 			Expect(nextEvent).To(BeNil())
 
-			//Expect(nextEvent.Action).To(Equal(scheduler.TurnOff))
-
-			//eventTime := nextEvent.NextOccurance()
-			//expected := time.Now().Local().Add(30 * time.Minute)
-			//Expect(eventTime).To(BeTemporally("~", expected, 65*time.Second)) // allow for minute tickover.
-
 			cell = boostCell(page, "one")
 			Expect(cell.Find("input[value=Boost]")).To(BeFound())
 		})
