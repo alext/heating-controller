@@ -18,7 +18,7 @@
     <tr>
       <td>Boost</td>
       <td>
-        {{ if .Scheduler.Boosted }}
+        {{ if .Boosted }}
           Boosted
           <form action="/zones/{{ .ID }}/boost" method="post" class="single-button">
             <input type="hidden" name="_method" value="DELETE">

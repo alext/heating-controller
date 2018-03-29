@@ -5,6 +5,7 @@ import (
 	"log"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/scheduler"
@@ -84,6 +85,18 @@ func (z *Zone) ReadEvents() []Event {
 		events = append(events, e)
 	}
 	return events
+}
+
+func (z *Zone) Boosted() bool {
+	return z.Scheduler.Boosted()
+}
+
+func (z *Zone) Boost(d time.Duration) {
+	z.Scheduler.Boost(d)
+}
+
+func (z *Zone) CancelBoost() {
+	z.Scheduler.CancelBoost()
 }
 
 func (z *Zone) SetupThermostat(source sensor.Sensor, initialTarget units.Temperature) {

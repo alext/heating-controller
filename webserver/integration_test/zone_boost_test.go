@@ -91,7 +91,7 @@ var _ = Describe("boosting a zone", func() {
 			zone1 = controller.NewZone("one", output1)
 			ctrl.AddZone(zone1)
 			zone1.Scheduler.Start()
-			zone1.Scheduler.Boost(23 * time.Minute)
+			zone1.Boost(23 * time.Minute)
 		})
 
 		AfterEach(func() {
