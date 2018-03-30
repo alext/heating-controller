@@ -9,6 +9,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	gomegatypes "github.com/onsi/gomega/types"
 )
 
 func TestScheduler(t *testing.T) {
@@ -68,6 +69,16 @@ var _ = Describe("a basic scheduler", func() {
 		nowCount     int
 		theScheduler Scheduler
 		thing        *statefulThing
+
+		HaveNextEventLabeled = func(label string) gomegatypes.GomegaMatcher {
+			return WithTransform(func(s Scheduler) string {
+				e := s.NextEvent()
+				if s.Running() {
+					<-waitNotify
+				}
+				return e.Label
+			}, Equal(label))
+		}
 	)
 
 	BeforeEach(func() {
@@ -325,17 +336,17 @@ var _ = Describe("a basic scheduler", func() {
 			It("should return the next event", func() {
 				mockNow = todayAt(6, 0, 0)
 
-				Expect(theScheduler.NextEvent().Label).To(Equal("alpha"))
+				Expect(theScheduler).To(HaveNextEventLabeled("alpha"))
 
 				mockNow = todayAt(7, 30, 0)
 
-				Expect(theScheduler.NextEvent().Label).To(Equal("charlie"))
+				Expect(theScheduler).To(HaveNextEventLabeled("charlie"))
 			})
 
 			It("should handle the wrap around at the end of the day", func() {
 				mockNow = todayAt(21, 30, 0)
 
-				Expect(theScheduler.NextEvent().Label).To(Equal("alpha"))
+				Expect(theScheduler).To(HaveNextEventLabeled("alpha"))
 			})
 
 			Context("with a running timer", func() {
@@ -346,7 +357,7 @@ var _ = Describe("a basic scheduler", func() {
 				})
 
 				It("should return the next event", func() {
-					Expect(theScheduler.NextEvent().Label).To(Equal("bravo"))
+					Expect(theScheduler).To(HaveNextEventLabeled("bravo"))
 				})
 
 				It("should return the temporary boost end event when boosted", func() {
@@ -523,7 +534,7 @@ var _ = Describe("a basic scheduler", func() {
 					<-waitNotify
 					thing.ExpectState(true)
 					Expect(theScheduler.Boosted()).To(BeTrue())
-					Expect(theScheduler.NextEvent().Label).To(Equal("charlie"))
+					Expect(theScheduler).To(HaveNextEventLabeled("charlie"))
 
 					mockNow = todayAt(17, 33, 0)
 					timerCh <- mockNow
