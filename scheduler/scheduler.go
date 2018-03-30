@@ -24,6 +24,8 @@ type Scheduler interface {
 	CancelBoost()
 	NextEvent() *Event
 	ReadEvents() []Event
+	Override(Event)
+	CancelOverride()
 }
 
 type scheduler struct {
@@ -197,6 +199,22 @@ func (s *scheduler) ReadEvents() []Event {
 		}
 	}
 	return result
+}
+
+func (s *scheduler) Override(e Event) {
+	s.commandCh <- func() {
+		now := time_Now().Local()
+		s.nextAt = e.nextOccuranceAfter(now)
+		s.nextEvent = &e
+		s.tmr.Reset(s.nextAt.Sub(now))
+		log.Printf("[Scheduler:%s] Override job at %v - %v", s.id, s.nextAt, s.nextEvent)
+	}
+}
+
+func (s *scheduler) CancelOverride() {
+	s.commandCh <- func() {
+		s.nextEvent = nil
+	}
 }
 
 func (s *scheduler) run() {

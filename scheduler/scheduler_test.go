@@ -464,7 +464,91 @@ var _ = Describe("a basic scheduler", func() {
 				Expect(resetParam.String()).To(Equal("6h12m0s"))
 			})
 		})
+	})
 
+	Describe("override function", func() {
+		BeforeEach(func() {
+			theScheduler.AddEvent(Event{Hour: 6, Min: 30, Action: thing.TurnOn, Label: "alpha"})
+			theScheduler.AddEvent(Event{Hour: 7, Min: 45, Action: thing.TurnOff, Label: "bravo"})
+			theScheduler.AddEvent(Event{Hour: 17, Min: 33, Action: thing.TurnOn, Label: "charlie"})
+			theScheduler.AddEvent(Event{Hour: 21, Min: 12, Action: thing.TurnOff, Label: "delta"})
+
+			mockNow = todayAt(14, 0, 0)
+			theScheduler.Start()
+			<-waitNotify
+			thing.ExpectState(false)
+			Expect(theScheduler).To(HaveNextEventLabeled("charlie"))
+		})
+
+		It("schedules the given event as the next one", func() {
+			mockNow = todayAt(15, 30, 0)
+			theScheduler.Override(Event{Hour: 16, Min: 30, Action: thing.TurnOn, Label: "override"})
+
+			<-waitNotify
+			thing.ExpectState(false)
+			Expect(resetParam.String()).To(Equal("1h0m0s"))
+			Expect(theScheduler).To(HaveNextEventLabeled("override"))
+
+			mockNow = todayAt(16, 30, 0)
+			timerCh <- mockNow
+			<-waitNotify
+			thing.ExpectState(true)
+			Expect(resetParam.String()).To(Equal("1h3m0s"))
+			Expect(theScheduler).To(HaveNextEventLabeled("charlie"))
+
+			Expect(theScheduler.ReadEvents()).To(HaveLen(4))
+		})
+
+		It("skips any existing events in between", func() {
+			mockNow = todayAt(17, 0, 0)
+			theScheduler.Override(Event{Hour: 17, Min: 45, Action: thing.TurnOn, Label: "override"})
+
+			<-waitNotify
+			thing.ExpectState(false)
+			Expect(resetParam.String()).To(Equal("45m0s"))
+			Expect(theScheduler).To(HaveNextEventLabeled("override"))
+
+			mockNow = todayAt(17, 45, 0)
+			timerCh <- mockNow
+			<-waitNotify
+			thing.ExpectState(true)
+			Expect(resetParam.String()).To(Equal("3h27m0s"))
+			Expect(theScheduler).To(HaveNextEventLabeled("delta"))
+
+			Expect(theScheduler.ReadEvents()).To(HaveLen(4))
+		})
+
+		Describe("cancelling the override", func() {
+			BeforeEach(func() {
+				mockNow = todayAt(16, 0, 0)
+				theScheduler.Override(Event{Hour: 18, Min: 30, Action: thing.TurnOn, Label: "override"})
+
+				<-waitNotify
+				thing.ExpectState(false)
+				Expect(resetParam.String()).To(Equal("2h30m0s"))
+				Expect(theScheduler).To(HaveNextEventLabeled("override"))
+			})
+
+			It("cancelling the override contines with the next scheduled event", func() {
+				mockNow = todayAt(16, 30, 0)
+				theScheduler.CancelOverride()
+
+				<-waitNotify
+				thing.ExpectState(false)
+				Expect(resetParam.String()).To(Equal("1h3m0s"))
+				Expect(theScheduler).To(HaveNextEventLabeled("charlie"))
+			})
+
+			It("ignores any events that have been skipped in the meantime", func() {
+				mockNow = todayAt(17, 45, 0)
+				theScheduler.CancelOverride()
+
+				<-waitNotify
+				thing.ExpectState(false)
+				Expect(resetParam.String()).To(Equal("3h27m0s"))
+				Expect(theScheduler).To(HaveNextEventLabeled("delta"))
+			})
+		})
 	})
 
 	Describe("boost function", func() {
