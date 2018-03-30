@@ -5,7 +5,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/heating-controller/controller"
-	"github.com/alext/heating-controller/scheduler"
+	"github.com/alext/heating-controller/scheduler/schedulerfakes"
 )
 
 var _ = Describe("EventHandler", func() {
@@ -15,7 +15,7 @@ var _ = Describe("EventHandler", func() {
 		)
 
 		BeforeEach(func() {
-			eh = controller.NewEventHandler(scheduler.New("something"), func(controller.Event) {})
+			eh = controller.NewEventHandler(&schedulerfakes.FakeScheduler{}, func(controller.Event) {})
 		})
 
 		It("should allow adding and reading events", func() {

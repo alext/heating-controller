@@ -13,6 +13,7 @@ var time_Now = time.Now
 
 var ErrInvalidEvent = errors.New("invalid event")
 
+//go:generate counterfeiter . Scheduler
 type Scheduler interface {
 	Start()
 	Stop()
