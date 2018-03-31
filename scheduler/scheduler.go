@@ -20,9 +20,6 @@ type Scheduler interface {
 	Running() bool
 	AddEvent(Event) error
 	RemoveEvent(Event)
-	Boosted() bool
-	Boost(time.Duration, func())
-	CancelBoost()
 	NextEvent() *Event
 	ReadEvents() []Event
 	Override(Event)
@@ -33,7 +30,6 @@ type scheduler struct {
 	id        string
 	events    eventList
 	running   bool
-	boosted   bool
 	lock      sync.Mutex
 	commandCh chan func()
 
@@ -109,62 +105,6 @@ func (s *scheduler) RemoveEvent(event Event) {
 	}
 }
 
-func (s *scheduler) Boosted() bool {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-	if !s.running {
-		return false
-	}
-
-	retCh := make(chan bool, 1)
-	s.commandCh <- func() {
-		retCh <- s.boosted
-	}
-	return <-retCh
-}
-
-func (s *scheduler) Boost(d time.Duration, action func()) {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-	if !s.running {
-		return
-	}
-
-	s.commandCh <- func() {
-		go action()
-		s.boosted = true
-		if d == 0 && len(s.events) == 0 {
-			d = time.Hour
-		}
-		if d == 0 {
-			log.Printf("[Scheduler:%s] Boosting until next event", s.id)
-			return
-		}
-		now := time_Now().Local()
-		endTime := now.Add(d)
-		s.nextAt = endTime
-		s.nextEvent = &Event{
-			Hour:   endTime.Hour(),
-			Min:    endTime.Minute(),
-			Action: func() { s.commandCh <- s.setCurrentState },
-		}
-		s.tmr.Reset(s.nextAt.Sub(now))
-		log.Printf("[Scheduler:%s] Boosting until %v", s.id, s.nextAt)
-	}
-}
-
-func (s *scheduler) CancelBoost() {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-	if s.running {
-		s.commandCh <- func() {
-			log.Printf("[Scheduler:%s] Cancelling boost", s.id)
-			s.setCurrentState()
-			s.nextEvent = nil
-		}
-	}
-}
-
 func (s *scheduler) NextEvent() *Event {
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -225,7 +165,6 @@ func (s *scheduler) run() {
 			now := time_Now().Local()
 			s.nextAt, s.nextEvent = s.next(now)
 			s.tmr.Reset(s.nextAt.Sub(now))
-			s.boosted = false
 			log.Printf("[Scheduler:%s] Next event at %v - %v", s.id, s.nextAt, s.nextEvent)
 		}
 		select {

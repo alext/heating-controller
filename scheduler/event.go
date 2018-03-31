@@ -12,10 +12,6 @@ type Event struct {
 	Action func()
 }
 
-func (e Event) NextOccurance() time.Time {
-	return e.nextOccuranceAfter(time_Now().Local())
-}
-
 func (e Event) Valid() bool {
 	return e.Hour >= 0 && e.Hour < 24 && e.Min >= 0 && e.Min < 60
 }

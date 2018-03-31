@@ -3,7 +3,6 @@ package schedulerfakes
 
 import (
 	"sync"
-	"time"
 
 	"github.com/alext/heating-controller/scheduler"
 )
@@ -40,28 +39,10 @@ type FakeScheduler struct {
 	removeEventArgsForCall []struct {
 		arg1 scheduler.Event
 	}
-	BoostedStub        func() bool
-	boostedMutex       sync.RWMutex
-	boostedArgsForCall []struct{}
-	boostedReturns     struct {
-		result1 bool
-	}
-	boostedReturnsOnCall map[int]struct {
-		result1 bool
-	}
-	BoostStub        func(time.Duration, func())
-	boostMutex       sync.RWMutex
-	boostArgsForCall []struct {
-		arg1 time.Duration
-		arg2 func()
-	}
-	CancelBoostStub        func()
-	cancelBoostMutex       sync.RWMutex
-	cancelBoostArgsForCall []struct{}
-	NextEventStub          func() *scheduler.Event
-	nextEventMutex         sync.RWMutex
-	nextEventArgsForCall   []struct{}
-	nextEventReturns       struct {
+	NextEventStub        func() *scheduler.Event
+	nextEventMutex       sync.RWMutex
+	nextEventArgsForCall []struct{}
+	nextEventReturns     struct {
 		result1 *scheduler.Event
 	}
 	nextEventReturnsOnCall map[int]struct {
@@ -232,87 +213,6 @@ func (fake *FakeScheduler) RemoveEventArgsForCall(i int) scheduler.Event {
 	return fake.removeEventArgsForCall[i].arg1
 }
 
-func (fake *FakeScheduler) Boosted() bool {
-	fake.boostedMutex.Lock()
-	ret, specificReturn := fake.boostedReturnsOnCall[len(fake.boostedArgsForCall)]
-	fake.boostedArgsForCall = append(fake.boostedArgsForCall, struct{}{})
-	fake.recordInvocation("Boosted", []interface{}{})
-	fake.boostedMutex.Unlock()
-	if fake.BoostedStub != nil {
-		return fake.BoostedStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.boostedReturns.result1
-}
-
-func (fake *FakeScheduler) BoostedCallCount() int {
-	fake.boostedMutex.RLock()
-	defer fake.boostedMutex.RUnlock()
-	return len(fake.boostedArgsForCall)
-}
-
-func (fake *FakeScheduler) BoostedReturns(result1 bool) {
-	fake.BoostedStub = nil
-	fake.boostedReturns = struct {
-		result1 bool
-	}{result1}
-}
-
-func (fake *FakeScheduler) BoostedReturnsOnCall(i int, result1 bool) {
-	fake.BoostedStub = nil
-	if fake.boostedReturnsOnCall == nil {
-		fake.boostedReturnsOnCall = make(map[int]struct {
-			result1 bool
-		})
-	}
-	fake.boostedReturnsOnCall[i] = struct {
-		result1 bool
-	}{result1}
-}
-
-func (fake *FakeScheduler) Boost(arg1 time.Duration, arg2 func()) {
-	fake.boostMutex.Lock()
-	fake.boostArgsForCall = append(fake.boostArgsForCall, struct {
-		arg1 time.Duration
-		arg2 func()
-	}{arg1, arg2})
-	fake.recordInvocation("Boost", []interface{}{arg1, arg2})
-	fake.boostMutex.Unlock()
-	if fake.BoostStub != nil {
-		fake.BoostStub(arg1, arg2)
-	}
-}
-
-func (fake *FakeScheduler) BoostCallCount() int {
-	fake.boostMutex.RLock()
-	defer fake.boostMutex.RUnlock()
-	return len(fake.boostArgsForCall)
-}
-
-func (fake *FakeScheduler) BoostArgsForCall(i int) (time.Duration, func()) {
-	fake.boostMutex.RLock()
-	defer fake.boostMutex.RUnlock()
-	return fake.boostArgsForCall[i].arg1, fake.boostArgsForCall[i].arg2
-}
-
-func (fake *FakeScheduler) CancelBoost() {
-	fake.cancelBoostMutex.Lock()
-	fake.cancelBoostArgsForCall = append(fake.cancelBoostArgsForCall, struct{}{})
-	fake.recordInvocation("CancelBoost", []interface{}{})
-	fake.cancelBoostMutex.Unlock()
-	if fake.CancelBoostStub != nil {
-		fake.CancelBoostStub()
-	}
-}
-
-func (fake *FakeScheduler) CancelBoostCallCount() int {
-	fake.cancelBoostMutex.RLock()
-	defer fake.cancelBoostMutex.RUnlock()
-	return len(fake.cancelBoostArgsForCall)
-}
-
 func (fake *FakeScheduler) NextEvent() *scheduler.Event {
 	fake.nextEventMutex.Lock()
 	ret, specificReturn := fake.nextEventReturnsOnCall[len(fake.nextEventArgsForCall)]
@@ -446,12 +346,6 @@ func (fake *FakeScheduler) Invocations() map[string][][]interface{} {
 	defer fake.addEventMutex.RUnlock()
 	fake.removeEventMutex.RLock()
 	defer fake.removeEventMutex.RUnlock()
-	fake.boostedMutex.RLock()
-	defer fake.boostedMutex.RUnlock()
-	fake.boostMutex.RLock()
-	defer fake.boostMutex.RUnlock()
-	fake.cancelBoostMutex.RLock()
-	defer fake.cancelBoostMutex.RUnlock()
 	fake.nextEventMutex.RLock()
 	defer fake.nextEventMutex.RUnlock()
 	fake.readEventsMutex.RLock()
