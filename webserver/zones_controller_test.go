@@ -8,33 +8,26 @@ import (
 	"os"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/controller/controllerfakes"
 	"github.com/alext/heating-controller/output"
-	"github.com/alext/heating-controller/output/mock_output"
+	"github.com/alext/heating-controller/output/outputfakes"
 	"github.com/alext/heating-controller/thermostat/mock_thermostat"
 	"github.com/alext/heating-controller/webserver"
 )
 
 var _ = Describe("zones controller", func() {
 	var (
-		mockCtrl *gomock.Controller
-		ctrl     *controller.Controller
-		server   *webserver.WebServer
+		ctrl   *controller.Controller
+		server *webserver.WebServer
 	)
 
 	BeforeEach(func() {
-		mockCtrl = gomock.NewController(GinkgoT())
 		ctrl = controller.New()
 		server = webserver.New(ctrl, 8080, "")
-	})
-
-	AfterEach(func() {
-		mockCtrl.Finish()
 	})
 
 	Describe("changing an output state", func() {
@@ -65,11 +58,11 @@ var _ = Describe("zones controller", func() {
 			})
 
 			It("should show an error if activating fails", func() {
-				mockOutput := mock_output.NewMockOutput(mockCtrl)
-				ctrl.AddZone(controller.NewZone("mock", mockOutput))
+				fakeOutput := new(outputfakes.FakeOutput)
+				ctrl.AddZone(controller.NewZone("mock", fakeOutput))
 
 				err := errors.New("Computer says no!")
-				mockOutput.EXPECT().Activate().Return(err)
+				fakeOutput.ActivateReturns(err)
 
 				w := doFakePutRequest(server, "/zones/mock/activate")
 
@@ -97,11 +90,11 @@ var _ = Describe("zones controller", func() {
 			})
 
 			It("should show an error if activating fails", func() {
-				mockOutput := mock_output.NewMockOutput(mockCtrl)
-				ctrl.AddZone(controller.NewZone("mock", mockOutput))
+				fakeOutput := new(outputfakes.FakeOutput)
+				ctrl.AddZone(controller.NewZone("mock", fakeOutput))
 
 				err := errors.New("Computer says no!")
-				mockOutput.EXPECT().Deactivate().Return(err)
+				fakeOutput.DeactivateReturns(err)
 
 				w := doFakePutRequest(server, "/zones/mock/deactivate")
 
