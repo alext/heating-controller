@@ -13,7 +13,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/heating-controller/controller"
-	"github.com/alext/heating-controller/controller/mock_event_handler"
+	"github.com/alext/heating-controller/controller/controllerfakes"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/output/mock_output"
 	"github.com/alext/heating-controller/thermostat/mock_thermostat"
@@ -125,12 +125,13 @@ var _ = Describe("zones controller", func() {
 
 		Describe("setting the boost", func() {
 			It("should boost the zone's scheduler", func() {
-				mockEventHandler := mock_event_handler.NewMockEventHandler(mockCtrl)
-				zone1.EventHandler = mockEventHandler
-
-				mockEventHandler.EXPECT().Boost(42 * time.Minute)
+				fakeEventHandler := new(controllerfakes.FakeEventHandler)
+				zone1.EventHandler = fakeEventHandler
 
 				doFakeRequestWithValues(server, "PUT", "/zones/one/boost", url.Values{"duration": {"42m"}})
+
+				Expect(fakeEventHandler.BoostCallCount()).To(Equal(1))
+				Expect(fakeEventHandler.BoostArgsForCall(0)).To(Equal(42 * time.Minute))
 			})
 
 			It("should redirect to the index", func() {
@@ -153,12 +154,12 @@ var _ = Describe("zones controller", func() {
 
 		Describe("cancelling the boost", func() {
 			It("should boost the zone's scheduler", func() {
-				mockEventHandler := mock_event_handler.NewMockEventHandler(mockCtrl)
-				zone1.EventHandler = mockEventHandler
-
-				mockEventHandler.EXPECT().CancelBoost()
+				fakeEventHandler := new(controllerfakes.FakeEventHandler)
+				zone1.EventHandler = fakeEventHandler
 
 				doFakeDeleteRequest(server, "/zones/one/boost")
+
+				Expect(fakeEventHandler.CancelBoostCallCount()).To(Equal(1))
 			})
 
 			It("should redirect to the index", func() {

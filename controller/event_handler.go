@@ -8,6 +8,7 @@ import (
 	"github.com/alext/heating-controller/scheduler"
 )
 
+//go:generate counterfeiter . EventHandler
 type EventHandler interface {
 	AddEvent(Event) error
 	RemoveEvent(Event)
