@@ -18,7 +18,7 @@ func (e Event) Valid() bool {
 }
 
 func (e Event) NextOccurance() time.Time {
-	return e.nextOccuranceAfter(time.Now().Local())
+	return e.nextOccuranceAfter(timeNow().Local())
 }
 
 func (e Event) nextOccuranceAfter(current time.Time) time.Time {
@@ -28,6 +28,10 @@ func (e Event) nextOccuranceAfter(current time.Time) time.Time {
 		next = time.Date(current.Year(), current.Month(), current.Day(), e.Hour, e.Min, 0, 0, time.Local)
 	}
 	return next
+}
+
+func (e Event) after(hour, min int) bool {
+	return e.Hour > hour || (e.Hour == hour && e.Min > min)
 }
 
 func (e Event) String() string {

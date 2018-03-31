@@ -21,10 +21,11 @@ type EventHandler interface {
 }
 
 type eventHandler struct {
-	lock   sync.RWMutex
-	events eventList
-	demand func(Event)
-	sched  scheduler.Scheduler
+	lock    sync.RWMutex
+	events  eventList
+	demand  func(Event)
+	sched   scheduler.Scheduler
+	boosted bool
 }
 
 func NewEventHandler(s scheduler.Scheduler, demand func(Event)) EventHandler {
@@ -33,6 +34,44 @@ func NewEventHandler(s scheduler.Scheduler, demand func(Event)) EventHandler {
 		demand: demand,
 		events: make(eventList, 0),
 	}
+}
+
+func (eh *eventHandler) trigger(e Event) {
+	eh.lock.Lock()
+	defer eh.lock.Unlock()
+	eh.boosted = false
+	eh.demand(e)
+}
+
+// nextEvent returns the next regular event, ignoring any overrides. This is
+// different from NextEvent, which queries the scheduler.
+func (eh *eventHandler) nextEvent() *Event {
+	if len(eh.events) < 1 {
+		return nil
+	}
+	hour, min, _ := timeNow().Local().Clock()
+	for _, e := range eh.events {
+		if e.after(hour, min) {
+			return &e
+		}
+	}
+	return &eh.events[0]
+}
+
+func (eh *eventHandler) previousEvent() *Event {
+	if len(eh.events) < 1 {
+		return nil
+	}
+	hour, min, _ := timeNow().Local().Clock()
+	for i, e := range eh.events {
+		if e.after(hour, min) {
+			if i > 0 {
+				return &eh.events[i-1]
+			}
+			break
+		}
+	}
+	return &eh.events[len(eh.events)-1]
 }
 
 func (eh *eventHandler) AddEvent(e Event) error {
@@ -45,7 +84,7 @@ func (eh *eventHandler) AddEvent(e Event) error {
 	eh.events = append(eh.events, e)
 	sort.Sort(eh.events)
 
-	return eh.sched.AddEvent(e.buildSchedulerEvent(eh.demand))
+	return eh.sched.AddEvent(e.buildSchedulerEvent(eh.trigger))
 }
 
 func (eh *eventHandler) RemoveEvent(e Event) {
@@ -90,17 +129,48 @@ func (eh *eventHandler) ReadEvents() []Event {
 }
 
 func (eh *eventHandler) Boosted() bool {
-	return eh.sched.Boosted()
+	eh.lock.RLock()
+	defer eh.lock.RUnlock()
+	return eh.boosted
 }
 
 func (eh *eventHandler) Boost(d time.Duration) {
-	eh.sched.Boost(d, func() {
-		eh.demand(Event{Action: TurnOn})
-	})
+	eh.lock.Lock()
+	defer eh.lock.Unlock()
+	eh.boosted = true
+	eh.demand(Event{Action: TurnOn})
+
+	if d == 0 {
+		return
+	}
+
+	endTime := timeNow().Local().Add(d)
+	endEvent := Event{
+		Hour:   endTime.Hour(),
+		Min:    endTime.Minute(),
+		Action: TurnOff,
+	}
+
+	nextEvent := eh.nextEvent()
+
+	if nextEvent == nil || endEvent.NextOccurance().Before(nextEvent.NextOccurance()) {
+		eh.sched.Override(endEvent.buildSchedulerEvent(eh.trigger))
+	}
 }
 
 func (eh *eventHandler) CancelBoost() {
-	eh.sched.CancelBoost()
-	// FIXME: restore previous state
-	eh.demand(Event{Action: TurnOff})
+	eh.lock.Lock()
+	defer eh.lock.Unlock()
+	if !eh.boosted {
+		return
+	}
+	eh.boosted = false
+	eh.sched.CancelOverride()
+
+	previous := eh.previousEvent()
+	if previous != nil {
+		eh.demand(*previous)
+	} else {
+		eh.demand(Event{Action: TurnOff})
+	}
 }
