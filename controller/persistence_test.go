@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/heating-controller/output"
-	"github.com/alext/heating-controller/thermostat/mock_thermostat"
+	"github.com/alext/heating-controller/thermostat/thermostatfakes"
 )
 
 var _ = Describe("persisting a zone's state", func() {
@@ -54,7 +54,9 @@ var _ = Describe("persisting a zone's state", func() {
 		})
 
 		It("should save the thermostat target", func() {
-			z.Thermostat = mock_thermostat.New(18500)
+			t := new(thermostatfakes.FakeThermostat)
+			t.TargetReturns(18500)
+			z.Thermostat = t
 			Expect(z.Save()).To(Succeed())
 			data := readFile(filepath.Join(tempDataDir, "ch.json"))
 			Expect(data).To(MatchJSON(`{"events":[],"thermostat_target":18500}`))
@@ -111,23 +113,26 @@ var _ = Describe("persisting a zone's state", func() {
 		})
 
 		It("should restore the thermostat target", func() {
-			z.Thermostat = mock_thermostat.New(18500)
+			t := new(thermostatfakes.FakeThermostat)
+			z.Thermostat = t
 			writeJSONToFile(filepath.Join(tempDataDir, "ch.json"), map[string]interface{}{
 				"thermostat_target": 19000,
 			})
 
 			Expect(z.Restore()).To(Succeed())
 
-			Expect(z.Thermostat.Target()).To(BeNumerically("==", 19000))
+			Expect(t.SetCallCount()).To(Equal(1))
+			Expect(t.SetArgsForCall(0)).To(BeNumerically("==", 19000))
 		})
 
 		It("should leave the thermostat target unchanged if not present in the file", func() {
-			z.Thermostat = mock_thermostat.New(18500)
+			t := new(thermostatfakes.FakeThermostat)
+			z.Thermostat = t
 			writeJSONToFile(filepath.Join(tempDataDir, "ch.json"), map[string]interface{}{})
 
 			Expect(z.Restore()).To(Succeed())
 
-			Expect(z.Thermostat.Target()).To(BeNumerically("==", 18500))
+			Expect(t.SetCallCount()).To(Equal(0))
 		})
 
 		It("should ignore a thermostat target in the file for a zone with no thermostat configured", func() {

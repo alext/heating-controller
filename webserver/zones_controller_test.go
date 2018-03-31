@@ -15,7 +15,7 @@ import (
 	"github.com/alext/heating-controller/controller/controllerfakes"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/output/outputfakes"
-	"github.com/alext/heating-controller/thermostat/mock_thermostat"
+	"github.com/alext/heating-controller/thermostat/thermostatfakes"
 	"github.com/alext/heating-controller/webserver"
 )
 
@@ -182,8 +182,14 @@ var _ = Describe("zones controller", func() {
 		})
 
 		Context("for a zone with a thermostat configured", func() {
+			var (
+				ts *thermostatfakes.FakeThermostat
+			)
+
 			BeforeEach(func() {
-				zone1.Thermostat = mock_thermostat.New(19000)
+				ts = new(thermostatfakes.FakeThermostat)
+				ts.TargetReturns(19000)
+				zone1.Thermostat = ts
 			})
 
 			It("increments the target and redirects back", func() {
@@ -192,7 +198,8 @@ var _ = Describe("zones controller", func() {
 				Expect(w.Code).To(Equal(302))
 				Expect(w.Header().Get("Location")).To(Equal("/"))
 
-				Expect(zone1.Thermostat.Target()).To(BeNumerically("==", 19500))
+				Expect(ts.SetCallCount()).To(Equal(1))
+				Expect(ts.SetArgsForCall(0)).To(BeNumerically("==", 19500))
 			})
 
 			It("decrements the target and redirects back", func() {
@@ -201,10 +208,13 @@ var _ = Describe("zones controller", func() {
 				Expect(w.Code).To(Equal(302))
 				Expect(w.Header().Get("Location")).To(Equal("/"))
 
-				Expect(zone1.Thermostat.Target()).To(BeNumerically("==", 18500))
+				Expect(ts.SetCallCount()).To(Equal(1))
+				Expect(ts.SetArgsForCall(0)).To(BeNumerically("==", 18500))
 			})
 
 			It("saves the zone state", func() {
+				ts.TargetReturns(19500)
+
 				doRequest(server, "POST", "/zones/one/thermostat/increment")
 
 				file, err := os.Open(controller.DataDir + "/one.json")
