@@ -106,21 +106,21 @@ var _ = Describe("zones controller", func() {
 
 	Describe("boosting", func() {
 		var (
-			output1 output.Output
-			zone1   *controller.Zone
+			output1          output.Output
+			zone1            *controller.Zone
+			fakeEventHandler *controllerfakes.FakeEventHandler
 		)
 
 		BeforeEach(func() {
+			fakeEventHandler = new(controllerfakes.FakeEventHandler)
 			output1 = output.Virtual("one")
 			zone1 = controller.NewZone("one", output1)
+			zone1.EventHandler = fakeEventHandler
 			ctrl.AddZone(zone1)
 		})
 
 		Describe("setting the boost", func() {
 			It("should boost the zone's scheduler", func() {
-				fakeEventHandler := new(controllerfakes.FakeEventHandler)
-				zone1.EventHandler = fakeEventHandler
-
 				doFakeRequestWithValues(server, "PUT", "/zones/one/boost", url.Values{"duration": {"42m"}})
 
 				Expect(fakeEventHandler.BoostCallCount()).To(Equal(1))
@@ -147,9 +147,6 @@ var _ = Describe("zones controller", func() {
 
 		Describe("cancelling the boost", func() {
 			It("should boost the zone's scheduler", func() {
-				fakeEventHandler := new(controllerfakes.FakeEventHandler)
-				zone1.EventHandler = fakeEventHandler
-
 				doFakeDeleteRequest(server, "/zones/one/boost")
 
 				Expect(fakeEventHandler.CancelBoostCallCount()).To(Equal(1))
