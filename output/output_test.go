@@ -1,15 +1,18 @@
 package output
 
+// Workaround for https://github.com/maxbrunsfeld/counterfeiter/issues/75
+//go:generate counterfeiter -o gpiofakes/fake_pin.go ../vendor/github.com/alext/gpio Pin
+//go:generate perl -i -pe "s|github.com/alext/heating-controller/vendor/||" gpiofakes/fake_pin.go
+
 import (
 	"errors"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/gpio"
-	"github.com/alext/gpio/mock_gpio"
+	"github.com/alext/heating-controller/output/gpiofakes"
 )
 
 func TestOutput(t *testing.T) {
@@ -18,23 +21,12 @@ func TestOutput(t *testing.T) {
 }
 
 var _ = Describe("constructing the gpio instance", func() {
-	var (
-		mockCtrl *gomock.Controller
-	)
-
-	BeforeEach(func() {
-		mockCtrl = gomock.NewController(GinkgoT())
-	})
-
-	AfterEach(func() {
-		mockCtrl.Finish()
-	})
 
 	It("should open the given gpio pin in out mode", func() {
 		pinOpener = func(pin int, mode gpio.Mode) (gpio.Pin, error) {
 			Expect(pin).To(Equal(12))
 			Expect(mode).To(Equal(gpio.ModeOutput))
-			return mock_gpio.NewMockPin(mockCtrl), nil
+			return new(gpiofakes.FakePin), nil
 		}
 		_, err := New("foo", 12)
 		Expect(err).To(BeNil())
@@ -52,21 +44,15 @@ var _ = Describe("constructing the gpio instance", func() {
 
 var _ = Describe("Heating control output", func() {
 	var (
-		mockCtrl *gomock.Controller
-		mockPin  *mock_gpio.MockPin
-		output   Output
+		fakePin *gpiofakes.FakePin
+		output  Output
 	)
 
 	BeforeEach(func() {
-		mockCtrl = gomock.NewController(GinkgoT())
-		mockPin = mock_gpio.NewMockPin(mockCtrl)
+		fakePin = new(gpiofakes.FakePin)
 		pinOpener = func(pin int, mode gpio.Mode) (gpio.Pin, error) {
-			return mockPin, nil
+			return fakePin, nil
 		}
-	})
-
-	AfterEach(func() {
-		mockCtrl.Finish()
 	})
 
 	JustBeforeEach(func() {
@@ -79,7 +65,7 @@ var _ = Describe("Heating control output", func() {
 
 	Describe("reading the output state", func() {
 		It("should return true if the gpio value is 1", func() {
-			mockPin.EXPECT().Get().Return(true, nil)
+			fakePin.GetReturns(true, nil)
 
 			a, e := output.Active()
 			Expect(a).To(BeTrue())
@@ -87,7 +73,7 @@ var _ = Describe("Heating control output", func() {
 		})
 
 		It("should return false otherwise", func() {
-			mockPin.EXPECT().Get().Return(false, nil)
+			fakePin.GetReturns(false, nil)
 
 			a, e := output.Active()
 			Expect(a).To(BeFalse())
@@ -96,7 +82,7 @@ var _ = Describe("Heating control output", func() {
 
 		It("should handle errors", func() {
 			err := errors.New("computer says no")
-			mockPin.EXPECT().Get().Return(false, err)
+			fakePin.GetReturns(false, err)
 
 			_, e := output.Active()
 			Expect(e).To(Equal(err))
@@ -105,14 +91,14 @@ var _ = Describe("Heating control output", func() {
 
 	Describe("Activating the output", func() {
 		It("should set the gpio pin", func() {
-			mockPin.EXPECT().Set().Return(nil)
-
 			Expect(output.Activate()).To(BeNil())
+
+			Expect(fakePin.SetCallCount()).To(Equal(1))
 		})
 
 		It("should handle errors", func() {
 			err := errors.New("computer says no")
-			mockPin.EXPECT().Set().Return(err)
+			fakePin.SetReturns(err)
 
 			Expect(output.Activate()).To(Equal(err))
 		})
@@ -120,14 +106,14 @@ var _ = Describe("Heating control output", func() {
 
 	Describe("De-activating the output", func() {
 		It("should clear the gpio pin", func() {
-			mockPin.EXPECT().Clear().Return(nil)
-
 			Expect(output.Deactivate()).To(BeNil())
+
+			Expect(fakePin.ClearCallCount()).To(Equal(1))
 		})
 
 		It("should handle errors", func() {
 			err := errors.New("computer says no")
-			mockPin.EXPECT().Clear().Return(err)
+			fakePin.ClearReturns(err)
 
 			Expect(output.Deactivate()).To(Equal(err))
 		})
@@ -135,14 +121,14 @@ var _ = Describe("Heating control output", func() {
 
 	Describe("closing the output", func() {
 		It("should close the gpio pin", func() {
-			mockPin.EXPECT().Close().Return(nil)
-
 			Expect(output.Close()).To(BeNil())
+
+			Expect(fakePin.CloseCallCount()).To(Equal(1))
 		})
 
 		It("should return any error received closing the gpio pin", func() {
 			err := errors.New("Boom!")
-			mockPin.EXPECT().Close().Return(err)
+			fakePin.CloseReturns(err)
 
 			Expect(output.Close()).To(Equal(err))
 		})
