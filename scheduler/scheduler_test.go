@@ -70,9 +70,9 @@ var _ = Describe("a basic scheduler", func() {
 		theScheduler Scheduler
 		thing        *statefulThing
 
-		HaveNextEventLabeled = func(label string) gomegatypes.GomegaMatcher {
+		HaveNextJobLabelled = func(label string) gomegatypes.GomegaMatcher {
 			return WithTransform(func(s Scheduler) string {
-				e := s.NextEvent()
+				e := s.NextJob()
 				if s.Running() {
 					<-waitNotify
 				}
@@ -136,10 +136,10 @@ var _ = Describe("a basic scheduler", func() {
 		Describe("setting the initial output state", func() {
 			Context("with some entries", func() {
 				BeforeEach(func() {
-					theScheduler.AddEvent(Event{Hour: 6, Min: 30, Action: thing.TurnOn})
-					theScheduler.AddEvent(Event{Hour: 7, Min: 45, Action: thing.TurnOff})
-					theScheduler.AddEvent(Event{Hour: 17, Min: 33, Action: thing.TurnOn})
-					theScheduler.AddEvent(Event{Hour: 21, Min: 12, Action: thing.TurnOff})
+					theScheduler.AddJob(Job{Hour: 6, Min: 30, Action: thing.TurnOn})
+					theScheduler.AddJob(Job{Hour: 7, Min: 45, Action: thing.TurnOff})
+					theScheduler.AddJob(Job{Hour: 17, Min: 33, Action: thing.TurnOn})
+					theScheduler.AddJob(Job{Hour: 21, Min: 12, Action: thing.TurnOff})
 				})
 
 				It("should apply the previous entry's state on starting", func() {
@@ -188,16 +188,16 @@ var _ = Describe("a basic scheduler", func() {
 		Expect(resetParam.String()).To(Equal("24h0m0s"))
 	})
 
-	Describe("firing events as scheduled", func() {
+	Describe("firing jobs as scheduled", func() {
 
 		BeforeEach(func() {
-			theScheduler.AddEvent(Event{Hour: 6, Min: 30, Action: thing.TurnOn})
-			theScheduler.AddEvent(Event{Hour: 7, Min: 45, Action: thing.TurnOff})
-			theScheduler.AddEvent(Event{Hour: 17, Min: 33, Action: thing.TurnOn})
-			theScheduler.AddEvent(Event{Hour: 21, Min: 12, Action: thing.TurnOff})
+			theScheduler.AddJob(Job{Hour: 6, Min: 30, Action: thing.TurnOn})
+			theScheduler.AddJob(Job{Hour: 7, Min: 45, Action: thing.TurnOff})
+			theScheduler.AddJob(Job{Hour: 17, Min: 33, Action: thing.TurnOn})
+			theScheduler.AddJob(Job{Hour: 21, Min: 12, Action: thing.TurnOff})
 		})
 
-		It("should fire the given events in order", func() {
+		It("should fire the given jobs in order", func() {
 			mockNow = todayAt(6, 20, 0)
 
 			theScheduler.Start()
@@ -250,9 +250,9 @@ var _ = Describe("a basic scheduler", func() {
 			thing.ExpectState(true)
 		})
 
-		It("should handle events added in a non-sequential order", func() {
-			theScheduler.AddEvent(Event{Hour: 13, Min: 00, Action: thing.TurnOff})
-			theScheduler.AddEvent(Event{Hour: 11, Min: 30, Action: thing.TurnOn})
+		It("should handle jobs added in a non-sequential order", func() {
+			theScheduler.AddJob(Job{Hour: 13, Min: 00, Action: thing.TurnOff})
+			theScheduler.AddJob(Job{Hour: 11, Min: 30, Action: thing.TurnOn})
 
 			mockNow = todayAt(7, 30, 0)
 
@@ -284,7 +284,7 @@ var _ = Describe("a basic scheduler", func() {
 			Expect(resetParam.String()).To(Equal("4h33m0s"))
 		})
 
-		It("should handle events added after the scheduler has been started", func() {
+		It("should handle jobs added after the scheduler has been started", func() {
 			mockNow = todayAt(7, 30, 0)
 
 			theScheduler.Start()
@@ -301,7 +301,7 @@ var _ = Describe("a basic scheduler", func() {
 			Expect(resetParam.String()).To(Equal("9h48m0s"))
 
 			mockNow = todayAt(9, 30, 0)
-			theScheduler.AddEvent(Event{Hour: 11, Min: 30, Action: thing.TurnOn})
+			theScheduler.AddJob(Job{Hour: 11, Min: 30, Action: thing.TurnOn})
 			<-waitNotify
 
 			Expect(resetParam.String()).To(Equal("2h0m0s"))
@@ -313,40 +313,40 @@ var _ = Describe("a basic scheduler", func() {
 		})
 	})
 
-	It("should return an error when adding an invalid event", func() {
-		err := theScheduler.AddEvent(Event{Min: -1})
-		Expect(err).To(MatchError(ErrInvalidEvent))
-		Expect(theScheduler.ReadEvents()).To(HaveLen(0))
+	It("should return an error when adding an invalid job", func() {
+		err := theScheduler.AddJob(Job{Min: -1})
+		Expect(err).To(MatchError(ErrInvalidJob))
+		Expect(theScheduler.ReadJobs()).To(HaveLen(0))
 	})
 
-	Describe("querying the next event", func() {
+	Describe("querying the next job", func() {
 
-		It("should return nil with no events", func() {
-			Expect(theScheduler.NextEvent()).To(BeNil())
+		It("should return nil with no jobs", func() {
+			Expect(theScheduler.NextJob()).To(BeNil())
 		})
 
-		Context("with some events", func() {
+		Context("with some jobs", func() {
 			BeforeEach(func() {
-				theScheduler.AddEvent(Event{Hour: 6, Min: 30, Action: thing.TurnOn, Label: "alpha"})
-				theScheduler.AddEvent(Event{Hour: 17, Min: 33, Action: thing.TurnOn, Label: "bravo"})
-				theScheduler.AddEvent(Event{Hour: 7, Min: 45, Action: thing.TurnOff, Label: "charlie"})
-				theScheduler.AddEvent(Event{Hour: 21, Min: 12, Action: thing.TurnOff, Label: "delta"})
+				theScheduler.AddJob(Job{Hour: 6, Min: 30, Action: thing.TurnOn, Label: "alpha"})
+				theScheduler.AddJob(Job{Hour: 17, Min: 33, Action: thing.TurnOn, Label: "bravo"})
+				theScheduler.AddJob(Job{Hour: 7, Min: 45, Action: thing.TurnOff, Label: "charlie"})
+				theScheduler.AddJob(Job{Hour: 21, Min: 12, Action: thing.TurnOff, Label: "delta"})
 			})
 
-			It("should return the next event", func() {
+			It("should return the next job", func() {
 				mockNow = todayAt(6, 0, 0)
 
-				Expect(theScheduler).To(HaveNextEventLabeled("alpha"))
+				Expect(theScheduler).To(HaveNextJobLabelled("alpha"))
 
 				mockNow = todayAt(7, 30, 0)
 
-				Expect(theScheduler).To(HaveNextEventLabeled("charlie"))
+				Expect(theScheduler).To(HaveNextJobLabelled("charlie"))
 			})
 
 			It("should handle the wrap around at the end of the day", func() {
 				mockNow = todayAt(21, 30, 0)
 
-				Expect(theScheduler).To(HaveNextEventLabeled("alpha"))
+				Expect(theScheduler).To(HaveNextJobLabelled("alpha"))
 			})
 
 			Context("with a running timer", func() {
@@ -356,15 +356,15 @@ var _ = Describe("a basic scheduler", func() {
 					<-waitNotify
 				})
 
-				It("should return the next event", func() {
-					Expect(theScheduler).To(HaveNextEventLabeled("bravo"))
+				It("should return the next job", func() {
+					Expect(theScheduler).To(HaveNextJobLabelled("bravo"))
 				})
 
-				It("should return the override event when boosted", func() {
-					theScheduler.Override(Event{Hour: 14, Min: 30, Action: thing.TurnOn})
+				It("should return the override job when boosted", func() {
+					theScheduler.Override(Job{Hour: 14, Min: 30, Action: thing.TurnOn})
 					<-waitNotify
 
-					e := theScheduler.NextEvent()
+					e := theScheduler.NextJob()
 					Expect(e.Hour).To(Equal(14))
 					Expect(e.Min).To(Equal(30))
 				})
@@ -374,66 +374,66 @@ var _ = Describe("a basic scheduler", func() {
 
 	Describe("reading the current schedule", func() {
 
-		It("should return an empty list for a stopped scheduler with no events", func() {
-			Expect(theScheduler.ReadEvents()).To(BeEmpty())
+		It("should return an empty list for a stopped scheduler with no jobs", func() {
+			Expect(theScheduler.ReadJobs()).To(BeEmpty())
 		})
 
-		It("should return an empty list for a running scheduler with no events", func() {
+		It("should return an empty list for a running scheduler with no jobs", func() {
 			theScheduler.Start()
 			<-waitNotify
 
-			Expect(theScheduler.ReadEvents()).To(BeEmpty())
+			Expect(theScheduler.ReadJobs()).To(BeEmpty())
 		})
 
-		Context("with some events", func() {
+		Context("with some jobs", func() {
 			BeforeEach(func() {
-				theScheduler.AddEvent(Event{Hour: 6, Min: 30, Action: thing.TurnOn, Label: "alpha"})
-				theScheduler.AddEvent(Event{Hour: 17, Min: 33, Action: thing.TurnOn, Label: "bravo"})
-				theScheduler.AddEvent(Event{Hour: 7, Min: 45, Action: thing.TurnOff, Label: "charlie"})
-				theScheduler.AddEvent(Event{Hour: 21, Min: 12, Action: thing.TurnOff, Label: "delta"})
+				theScheduler.AddJob(Job{Hour: 6, Min: 30, Action: thing.TurnOn, Label: "alpha"})
+				theScheduler.AddJob(Job{Hour: 17, Min: 33, Action: thing.TurnOn, Label: "bravo"})
+				theScheduler.AddJob(Job{Hour: 7, Min: 45, Action: thing.TurnOff, Label: "charlie"})
+				theScheduler.AddJob(Job{Hour: 21, Min: 12, Action: thing.TurnOff, Label: "delta"})
 			})
 
-			It("should return the current event list", func() {
-				events := theScheduler.ReadEvents()
+			It("should return the current job list", func() {
+				jobs := theScheduler.ReadJobs()
 
-				Expect(events).To(HaveLen(4))
-				Expect(events[0].Label).To(Equal("alpha"))
-				Expect(events[3].Label).To(Equal("delta"))
+				Expect(jobs).To(HaveLen(4))
+				Expect(jobs[0].Label).To(Equal("alpha"))
+				Expect(jobs[3].Label).To(Equal("delta"))
 			})
 
-			It("should return the current event list from a running scheduler", func() {
+			It("should return the current job list from a running scheduler", func() {
 				theScheduler.Start()
 				<-waitNotify
 
-				events := theScheduler.ReadEvents()
+				jobs := theScheduler.ReadJobs()
 
-				Expect(events).To(HaveLen(4))
-				Expect(events[0].Label).To(Equal("alpha"))
-				Expect(events[3].Label).To(Equal("delta"))
+				Expect(jobs).To(HaveLen(4))
+				Expect(jobs[0].Label).To(Equal("alpha"))
+				Expect(jobs[3].Label).To(Equal("delta"))
 			})
 		})
 
 	})
 
-	Describe("removing an event", func() {
+	Describe("removing a job", func() {
 		BeforeEach(func() {
-			theScheduler.AddEvent(Event{Hour: 6, Min: 30, Action: thing.TurnOn, Label: "alpha"})
-			theScheduler.AddEvent(Event{Hour: 17, Min: 33, Action: thing.TurnOn, Label: "bravo"})
-			theScheduler.AddEvent(Event{Hour: 7, Min: 45, Action: thing.TurnOff, Label: "charlie"})
-			theScheduler.AddEvent(Event{Hour: 21, Min: 12, Action: thing.TurnOff, Label: "delta"})
+			theScheduler.AddJob(Job{Hour: 6, Min: 30, Action: thing.TurnOn, Label: "alpha"})
+			theScheduler.AddJob(Job{Hour: 17, Min: 33, Action: thing.TurnOn, Label: "bravo"})
+			theScheduler.AddJob(Job{Hour: 7, Min: 45, Action: thing.TurnOff, Label: "charlie"})
+			theScheduler.AddJob(Job{Hour: 21, Min: 12, Action: thing.TurnOff, Label: "delta"})
 		})
 
 		Context("with a stopped timer", func() {
-			It("should remove the corresponding event from the list", func() {
-				theScheduler.RemoveEvent(Event{Hour: 7, Min: 45, Action: thing.TurnOff, Label: "charlie"})
+			It("should remove the corresponding job from the list", func() {
+				theScheduler.RemoveJob(Job{Hour: 7, Min: 45, Action: thing.TurnOff, Label: "charlie"})
 
-				Expect(theScheduler.ReadEvents()).To(HaveLen(3))
+				Expect(theScheduler.ReadJobs()).To(HaveLen(3))
 			})
 
-			It("should do nothing if the event isn't in the scheduler", func() {
-				theScheduler.RemoveEvent(Event{Hour: 7, Min: 50, Action: thing.TurnOn, Label: "foo"})
+			It("should do nothing if the job isn't in the scheduler", func() {
+				theScheduler.RemoveJob(Job{Hour: 7, Min: 50, Action: thing.TurnOn, Label: "foo"})
 
-				Expect(theScheduler.ReadEvents()).To(HaveLen(4))
+				Expect(theScheduler.ReadJobs()).To(HaveLen(4))
 			})
 		})
 
@@ -444,21 +444,21 @@ var _ = Describe("a basic scheduler", func() {
 				<-waitNotify
 			})
 
-			It("should remove the event from the list", func() {
-				theScheduler.RemoveEvent(Event{Hour: 7, Min: 45, Action: thing.TurnOff, Label: "charlie"})
+			It("should remove the job from the list", func() {
+				theScheduler.RemoveJob(Job{Hour: 7, Min: 45, Action: thing.TurnOff, Label: "charlie"})
 
-				Expect(theScheduler.ReadEvents()).To(HaveLen(3))
+				Expect(theScheduler.ReadJobs()).To(HaveLen(3))
 			})
 
-			It("should do nothing if the event isn't in the scheduler", func() {
-				theScheduler.RemoveEvent(Event{Hour: 7, Min: 50, Action: thing.TurnOn, Label: "foo"})
+			It("should do nothing if the job isn't in the scheduler", func() {
+				theScheduler.RemoveJob(Job{Hour: 7, Min: 50, Action: thing.TurnOn, Label: "foo"})
 
-				Expect(theScheduler.ReadEvents()).To(HaveLen(4))
+				Expect(theScheduler.ReadJobs()).To(HaveLen(4))
 			})
 
-			It("should reschedule if the removed event was the next event", func() {
+			It("should reschedule if the removed job was the next job", func() {
 				mockNow = todayAt(15, 0, 0)
-				theScheduler.RemoveEvent(Event{Hour: 17, Min: 33, Action: thing.TurnOn, Label: "bravo"})
+				theScheduler.RemoveJob(Job{Hour: 17, Min: 33, Action: thing.TurnOn, Label: "bravo"})
 
 				<-waitNotify
 				Expect(resetParam.String()).To(Equal("6h12m0s"))
@@ -468,85 +468,85 @@ var _ = Describe("a basic scheduler", func() {
 
 	Describe("override function", func() {
 		BeforeEach(func() {
-			theScheduler.AddEvent(Event{Hour: 6, Min: 30, Action: thing.TurnOn, Label: "alpha"})
-			theScheduler.AddEvent(Event{Hour: 7, Min: 45, Action: thing.TurnOff, Label: "bravo"})
-			theScheduler.AddEvent(Event{Hour: 17, Min: 33, Action: thing.TurnOn, Label: "charlie"})
-			theScheduler.AddEvent(Event{Hour: 21, Min: 12, Action: thing.TurnOff, Label: "delta"})
+			theScheduler.AddJob(Job{Hour: 6, Min: 30, Action: thing.TurnOn, Label: "alpha"})
+			theScheduler.AddJob(Job{Hour: 7, Min: 45, Action: thing.TurnOff, Label: "bravo"})
+			theScheduler.AddJob(Job{Hour: 17, Min: 33, Action: thing.TurnOn, Label: "charlie"})
+			theScheduler.AddJob(Job{Hour: 21, Min: 12, Action: thing.TurnOff, Label: "delta"})
 
 			mockNow = todayAt(14, 0, 0)
 			theScheduler.Start()
 			<-waitNotify
 			thing.ExpectState(false)
-			Expect(theScheduler).To(HaveNextEventLabeled("charlie"))
+			Expect(theScheduler).To(HaveNextJobLabelled("charlie"))
 		})
 
-		It("schedules the given event as the next one", func() {
+		It("schedules the given job as the next one", func() {
 			mockNow = todayAt(15, 30, 0)
-			theScheduler.Override(Event{Hour: 16, Min: 30, Action: thing.TurnOn, Label: "override"})
+			theScheduler.Override(Job{Hour: 16, Min: 30, Action: thing.TurnOn, Label: "override"})
 
 			<-waitNotify
 			thing.ExpectState(false)
 			Expect(resetParam.String()).To(Equal("1h0m0s"))
-			Expect(theScheduler).To(HaveNextEventLabeled("override"))
+			Expect(theScheduler).To(HaveNextJobLabelled("override"))
 
 			mockNow = todayAt(16, 30, 0)
 			timerCh <- mockNow
 			<-waitNotify
 			thing.ExpectState(true)
 			Expect(resetParam.String()).To(Equal("1h3m0s"))
-			Expect(theScheduler).To(HaveNextEventLabeled("charlie"))
+			Expect(theScheduler).To(HaveNextJobLabelled("charlie"))
 
-			Expect(theScheduler.ReadEvents()).To(HaveLen(4))
+			Expect(theScheduler.ReadJobs()).To(HaveLen(4))
 		})
 
-		It("skips any existing events in between", func() {
+		It("skips any existing jobs in between", func() {
 			mockNow = todayAt(17, 0, 0)
-			theScheduler.Override(Event{Hour: 17, Min: 45, Action: thing.TurnOn, Label: "override"})
+			theScheduler.Override(Job{Hour: 17, Min: 45, Action: thing.TurnOn, Label: "override"})
 
 			<-waitNotify
 			thing.ExpectState(false)
 			Expect(resetParam.String()).To(Equal("45m0s"))
-			Expect(theScheduler).To(HaveNextEventLabeled("override"))
+			Expect(theScheduler).To(HaveNextJobLabelled("override"))
 
 			mockNow = todayAt(17, 45, 0)
 			timerCh <- mockNow
 			<-waitNotify
 			thing.ExpectState(true)
 			Expect(resetParam.String()).To(Equal("3h27m0s"))
-			Expect(theScheduler).To(HaveNextEventLabeled("delta"))
+			Expect(theScheduler).To(HaveNextJobLabelled("delta"))
 
-			Expect(theScheduler.ReadEvents()).To(HaveLen(4))
+			Expect(theScheduler.ReadJobs()).To(HaveLen(4))
 		})
 
 		Describe("cancelling the override", func() {
 			BeforeEach(func() {
 				mockNow = todayAt(16, 0, 0)
-				theScheduler.Override(Event{Hour: 18, Min: 30, Action: thing.TurnOn, Label: "override"})
+				theScheduler.Override(Job{Hour: 18, Min: 30, Action: thing.TurnOn, Label: "override"})
 
 				<-waitNotify
 				thing.ExpectState(false)
 				Expect(resetParam.String()).To(Equal("2h30m0s"))
-				Expect(theScheduler).To(HaveNextEventLabeled("override"))
+				Expect(theScheduler).To(HaveNextJobLabelled("override"))
 			})
 
-			It("cancelling the override contines with the next scheduled event", func() {
+			It("cancelling the override contines with the next scheduled job", func() {
 				mockNow = todayAt(16, 30, 0)
 				theScheduler.CancelOverride()
 
 				<-waitNotify
 				thing.ExpectState(false)
 				Expect(resetParam.String()).To(Equal("1h3m0s"))
-				Expect(theScheduler).To(HaveNextEventLabeled("charlie"))
+				Expect(theScheduler).To(HaveNextJobLabelled("charlie"))
 			})
 
-			It("ignores any events that have been skipped in the meantime", func() {
+			It("ignores any jobs that have been skipped in the meantime", func() {
 				mockNow = todayAt(17, 45, 0)
 				theScheduler.CancelOverride()
 
 				<-waitNotify
 				thing.ExpectState(false)
 				Expect(resetParam.String()).To(Equal("3h27m0s"))
-				Expect(theScheduler).To(HaveNextEventLabeled("delta"))
+				Expect(theScheduler).To(HaveNextJobLabelled("delta"))
 			})
 		})
 	})

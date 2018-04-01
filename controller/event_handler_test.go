@@ -130,10 +130,10 @@ var _ = Describe("EventHandler", func() {
 				Expect(activations[0].Action).To(Equal(TurnOn))
 
 				Expect(sched.OverrideCallCount()).To(Equal(1))
-				se := sched.OverrideArgsForCall(0)
-				Expect(se.Hour).To(Equal(9))
-				Expect(se.Min).To(Equal(30))
-				se.Action()
+				j := sched.OverrideArgsForCall(0)
+				Expect(j.Hour).To(Equal(9))
+				Expect(j.Min).To(Equal(30))
+				j.Action()
 				Expect(activations).To(HaveLen(2))
 				Expect(activations[1].Action).To(Equal(TurnOff))
 			})
@@ -235,9 +235,9 @@ var _ = Describe("EventHandler", func() {
 				eh.Boost(45 * time.Minute)
 
 				mockNow = todayAt(15, 30, 0)
-				Expect(sched.AddEventCallCount()).To(Equal(4)) // From BeforeEach
-				nextEvent := sched.AddEventArgsForCall(2)
-				nextEvent.Action()
+				Expect(sched.AddJobCallCount()).To(Equal(4)) // From BeforeEach
+				nextJob := sched.AddJobArgsForCall(2)
+				nextJob.Action()
 
 				Expect(eh.Boosted()).To(BeFalse())
 			})

@@ -84,7 +84,7 @@ func (eh *eventHandler) AddEvent(e Event) error {
 	eh.events = append(eh.events, e)
 	sort.Sort(eh.events)
 
-	return eh.sched.AddEvent(e.buildSchedulerEvent(eh.trigger))
+	return eh.sched.AddJob(e.buildSchedulerJob(eh.trigger))
 }
 
 func (eh *eventHandler) RemoveEvent(e Event) {
@@ -99,19 +99,19 @@ func (eh *eventHandler) RemoveEvent(e Event) {
 	}
 	eh.events = newEvents
 
-	eh.sched.RemoveEvent(e.buildSchedulerEvent(eh.demand))
+	eh.sched.RemoveJob(e.buildSchedulerJob(eh.demand))
 }
 
 func (eh *eventHandler) NextEvent() *Event {
-	se := eh.sched.NextEvent()
-	if se == nil {
+	j := eh.sched.NextJob()
+	if j == nil {
 		return nil
 	}
 	e := &Event{
-		Hour: se.Hour,
-		Min:  se.Min,
+		Hour: j.Hour,
+		Min:  j.Min,
 	}
-	if se.Label == "On" {
+	if j.Label == "On" {
 		e.Action = TurnOn
 	}
 	return e
@@ -154,7 +154,7 @@ func (eh *eventHandler) Boost(d time.Duration) {
 	nextEvent := eh.nextEvent()
 
 	if nextEvent == nil || endEvent.NextOccurance().Before(nextEvent.NextOccurance()) {
-		eh.sched.Override(endEvent.buildSchedulerEvent(eh.trigger))
+		eh.sched.Override(endEvent.buildSchedulerJob(eh.trigger))
 	}
 }
 

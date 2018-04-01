@@ -11,37 +11,37 @@ import (
 // variable indirection to enable testing
 var time_Now = time.Now
 
-var ErrInvalidEvent = errors.New("invalid event")
+var ErrInvalidJob = errors.New("invalid job")
 
 //go:generate counterfeiter . Scheduler
 type Scheduler interface {
 	Start()
 	Stop()
 	Running() bool
-	AddEvent(Event) error
-	RemoveEvent(Event)
-	NextEvent() *Event
-	ReadEvents() []Event
-	Override(Event)
+	AddJob(Job) error
+	RemoveJob(Job)
+	NextJob() *Job
+	ReadJobs() []Job
+	Override(Job)
 	CancelOverride()
 }
 
 type scheduler struct {
 	id        string
-	events    eventList
+	jobs      jobList
 	running   bool
 	lock      sync.Mutex
 	commandCh chan func()
 
-	nextEvent *Event
-	nextAt    time.Time
-	tmr       timer
+	nextJob *Job
+	nextAt  time.Time
+	tmr     timer
 }
 
 func New(id string) Scheduler {
 	return &scheduler{
 		id:        id,
-		events:    make(eventList, 0),
+		jobs:      make(jobList, 0),
 		commandCh: make(chan func()),
 	}
 }
@@ -74,53 +74,53 @@ func (s *scheduler) Running() bool {
 	return s.running
 }
 
-func (s *scheduler) AddEvent(event Event) error {
-	if !event.Valid() {
-		return ErrInvalidEvent
+func (s *scheduler) AddJob(job Job) error {
+	if !job.Valid() {
+		return ErrInvalidJob
 	}
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	log.Printf("[Scheduler:%s] Adding event: %v", s.id, event)
+	log.Printf("[Scheduler:%s] Adding job: %v", s.id, job)
 	if s.running {
 		s.commandCh <- func() {
-			s.addEvent(&event)
-			s.nextEvent = nil // cause the next event to be recalculated
+			s.addJob(&job)
+			s.nextJob = nil // cause the next job to be recalculated
 		}
 	} else {
-		s.addEvent(&event)
+		s.addJob(&job)
 	}
 	return nil
 }
 
-func (s *scheduler) RemoveEvent(event Event) {
+func (s *scheduler) RemoveJob(job Job) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	if s.running {
 		s.commandCh <- func() {
-			s.removeEvent(&event)
-			s.nextEvent = nil // cause the next event to be recalculated
+			s.removeJob(&job)
+			s.nextJob = nil // cause the next job to be recalculated
 		}
 	} else {
-		s.removeEvent(&event)
+		s.removeJob(&job)
 	}
 }
 
-func (s *scheduler) NextEvent() *Event {
+func (s *scheduler) NextJob() *Job {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	if s.running {
-		retCh := make(chan *Event, 1)
+		retCh := make(chan *Job, 1)
 		s.commandCh <- func() {
-			retCh <- s.nextEvent
+			retCh <- s.nextJob
 		}
 		return <-retCh
 	}
-	_, nextEvent := s.next(time_Now().Local())
-	return nextEvent
+	_, nextJob := s.next(time_Now().Local())
+	return nextJob
 }
 
-func (s *scheduler) ReadEvents() []Event {
-	result := make([]Event, 0)
+func (s *scheduler) ReadJobs() []Job {
+	result := make([]Job, 0)
 
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -128,50 +128,50 @@ func (s *scheduler) ReadEvents() []Event {
 		var wg sync.WaitGroup
 		wg.Add(1)
 		s.commandCh <- func() {
-			for _, e := range s.events {
-				result = append(result, *e)
+			for _, j := range s.jobs {
+				result = append(result, *j)
 			}
 			wg.Done()
 		}
 		wg.Wait()
 	} else {
-		for _, e := range s.events {
-			result = append(result, *e)
+		for _, j := range s.jobs {
+			result = append(result, *j)
 		}
 	}
 	return result
 }
 
-func (s *scheduler) Override(e Event) {
+func (s *scheduler) Override(j Job) {
 	s.commandCh <- func() {
 		now := time_Now().Local()
-		s.nextAt = e.nextOccuranceAfter(now)
-		s.nextEvent = &e
+		s.nextAt = j.nextOccuranceAfter(now)
+		s.nextJob = &j
 		s.tmr.Reset(s.nextAt.Sub(now))
-		log.Printf("[Scheduler:%s] Override job at %v - %v", s.id, s.nextAt, s.nextEvent)
+		log.Printf("[Scheduler:%s] Override job at %v - %v", s.id, s.nextAt, s.nextJob)
 	}
 }
 
 func (s *scheduler) CancelOverride() {
 	s.commandCh <- func() {
-		s.nextEvent = nil
+		s.nextJob = nil
 	}
 }
 
 func (s *scheduler) run() {
 	s.setCurrentState()
 	for {
-		if s.nextEvent == nil {
+		if s.nextJob == nil {
 			now := time_Now().Local()
-			s.nextAt, s.nextEvent = s.next(now)
+			s.nextAt, s.nextJob = s.next(now)
 			s.tmr.Reset(s.nextAt.Sub(now))
-			log.Printf("[Scheduler:%s] Next event at %v - %v", s.id, s.nextAt, s.nextEvent)
+			log.Printf("[Scheduler:%s] Next job at %v - %v", s.id, s.nextAt, s.nextJob)
 		}
 		select {
 		case <-s.tmr.Channel():
-			if s.nextEvent != nil {
-				go s.nextEvent.Action()
-				s.nextEvent = nil
+			if s.nextJob != nil {
+				go s.nextJob.Action()
+				s.nextJob = nil
 			}
 		case f := <-s.commandCh:
 			if f == nil {
@@ -183,48 +183,48 @@ func (s *scheduler) run() {
 	}
 }
 
-func (s *scheduler) addEvent(e *Event) {
-	s.events = append(s.events, e)
-	sort.Sort(s.events)
+func (s *scheduler) addJob(j *Job) {
+	s.jobs = append(s.jobs, j)
+	sort.Sort(s.jobs)
 }
 
-func (s *scheduler) removeEvent(event *Event) {
-	newEvents := make(eventList, 0)
-	for _, e := range s.events {
-		if e.Hour != event.Hour || e.Min != event.Min || e.Label != event.Label {
-			newEvents = append(newEvents, e)
+func (s *scheduler) removeJob(job *Job) {
+	newJobs := make(jobList, 0)
+	for _, j := range s.jobs {
+		if j.Hour != job.Hour || j.Min != job.Min || j.Label != job.Label {
+			newJobs = append(newJobs, j)
 		}
 	}
-	s.events = newEvents
+	s.jobs = newJobs
 }
 
 func (s *scheduler) setCurrentState() {
-	if len(s.events) < 1 {
+	if len(s.jobs) < 1 {
 		return
 	}
 	hour, min, _ := time_Now().Local().Clock()
-	var previous *Event
-	for _, e := range s.events {
-		if e.after(hour, min) {
+	var previous *Job
+	for _, j := range s.jobs {
+		if j.after(hour, min) {
 			break
 		}
-		previous = e
+		previous = j
 	}
 	if previous == nil {
-		previous = s.events[len(s.events)-1]
+		previous = s.jobs[len(s.jobs)-1]
 	}
 	go previous.Action()
 }
 
-func (s *scheduler) next(now time.Time) (at time.Time, e *Event) {
-	if len(s.events) < 1 {
+func (s *scheduler) next(now time.Time) (time.Time, *Job) {
+	if len(s.jobs) < 1 {
 		return now.Add(24 * time.Hour), nil
 	}
 	hour, min, _ := now.Clock()
-	for _, event := range s.events {
-		if event.after(hour, min) {
-			return event.nextOccuranceAfter(now), event
+	for _, job := range s.jobs {
+		if job.after(hour, min) {
+			return job.nextOccuranceAfter(now), job
 		}
 	}
-	return s.events[0].nextOccuranceAfter(now), s.events[0]
+	return s.jobs[0].nextOccuranceAfter(now), s.jobs[0]
 }

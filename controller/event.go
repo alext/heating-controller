@@ -38,8 +38,8 @@ func (e Event) String() string {
 	return fmt.Sprintf("%d:%02d %s", e.Hour, e.Min, e.Action)
 }
 
-func (e Event) buildSchedulerEvent(demand func(Event)) scheduler.Event {
-	return scheduler.Event{
+func (e Event) buildSchedulerJob(demand func(Event)) scheduler.Job {
+	return scheduler.Job{
 		Hour:   e.Hour,
 		Min:    e.Min,
 		Label:  e.Action.String(),

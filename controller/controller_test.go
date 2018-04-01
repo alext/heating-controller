@@ -129,7 +129,7 @@ var _ = Describe("Controller", func() {
 				Expect(ctrl.Setup(cfg)).To(Succeed())
 
 				Expect(ctrl.Zones).To(HaveLen(1))
-				events := ctrl.Zones["ch"].Scheduler.ReadEvents()
+				events := ctrl.Zones["ch"].ReadEvents()
 				Expect(events).To(HaveLen(2))
 			})
 

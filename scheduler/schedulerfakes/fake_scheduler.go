@@ -23,44 +23,44 @@ type FakeScheduler struct {
 	runningReturnsOnCall map[int]struct {
 		result1 bool
 	}
-	AddEventStub        func(scheduler.Event) error
-	addEventMutex       sync.RWMutex
-	addEventArgsForCall []struct {
-		arg1 scheduler.Event
+	AddJobStub        func(scheduler.Job) error
+	addJobMutex       sync.RWMutex
+	addJobArgsForCall []struct {
+		arg1 scheduler.Job
 	}
-	addEventReturns struct {
+	addJobReturns struct {
 		result1 error
 	}
-	addEventReturnsOnCall map[int]struct {
+	addJobReturnsOnCall map[int]struct {
 		result1 error
 	}
-	RemoveEventStub        func(scheduler.Event)
-	removeEventMutex       sync.RWMutex
-	removeEventArgsForCall []struct {
-		arg1 scheduler.Event
+	RemoveJobStub        func(scheduler.Job)
+	removeJobMutex       sync.RWMutex
+	removeJobArgsForCall []struct {
+		arg1 scheduler.Job
 	}
-	NextEventStub        func() *scheduler.Event
-	nextEventMutex       sync.RWMutex
-	nextEventArgsForCall []struct{}
-	nextEventReturns     struct {
-		result1 *scheduler.Event
+	NextJobStub        func() *scheduler.Job
+	nextJobMutex       sync.RWMutex
+	nextJobArgsForCall []struct{}
+	nextJobReturns     struct {
+		result1 *scheduler.Job
 	}
-	nextEventReturnsOnCall map[int]struct {
-		result1 *scheduler.Event
+	nextJobReturnsOnCall map[int]struct {
+		result1 *scheduler.Job
 	}
-	ReadEventsStub        func() []scheduler.Event
-	readEventsMutex       sync.RWMutex
-	readEventsArgsForCall []struct{}
-	readEventsReturns     struct {
-		result1 []scheduler.Event
+	ReadJobsStub        func() []scheduler.Job
+	readJobsMutex       sync.RWMutex
+	readJobsArgsForCall []struct{}
+	readJobsReturns     struct {
+		result1 []scheduler.Job
 	}
-	readEventsReturnsOnCall map[int]struct {
-		result1 []scheduler.Event
+	readJobsReturnsOnCall map[int]struct {
+		result1 []scheduler.Job
 	}
-	OverrideStub        func(scheduler.Event)
+	OverrideStub        func(scheduler.Job)
 	overrideMutex       sync.RWMutex
 	overrideArgsForCall []struct {
-		arg1 scheduler.Event
+		arg1 scheduler.Job
 	}
 	CancelOverrideStub        func()
 	cancelOverrideMutex       sync.RWMutex
@@ -141,162 +141,162 @@ func (fake *FakeScheduler) RunningReturnsOnCall(i int, result1 bool) {
 	}{result1}
 }
 
-func (fake *FakeScheduler) AddEvent(arg1 scheduler.Event) error {
-	fake.addEventMutex.Lock()
-	ret, specificReturn := fake.addEventReturnsOnCall[len(fake.addEventArgsForCall)]
-	fake.addEventArgsForCall = append(fake.addEventArgsForCall, struct {
-		arg1 scheduler.Event
+func (fake *FakeScheduler) AddJob(arg1 scheduler.Job) error {
+	fake.addJobMutex.Lock()
+	ret, specificReturn := fake.addJobReturnsOnCall[len(fake.addJobArgsForCall)]
+	fake.addJobArgsForCall = append(fake.addJobArgsForCall, struct {
+		arg1 scheduler.Job
 	}{arg1})
-	fake.recordInvocation("AddEvent", []interface{}{arg1})
-	fake.addEventMutex.Unlock()
-	if fake.AddEventStub != nil {
-		return fake.AddEventStub(arg1)
+	fake.recordInvocation("AddJob", []interface{}{arg1})
+	fake.addJobMutex.Unlock()
+	if fake.AddJobStub != nil {
+		return fake.AddJobStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.addEventReturns.result1
+	return fake.addJobReturns.result1
 }
 
-func (fake *FakeScheduler) AddEventCallCount() int {
-	fake.addEventMutex.RLock()
-	defer fake.addEventMutex.RUnlock()
-	return len(fake.addEventArgsForCall)
+func (fake *FakeScheduler) AddJobCallCount() int {
+	fake.addJobMutex.RLock()
+	defer fake.addJobMutex.RUnlock()
+	return len(fake.addJobArgsForCall)
 }
 
-func (fake *FakeScheduler) AddEventArgsForCall(i int) scheduler.Event {
-	fake.addEventMutex.RLock()
-	defer fake.addEventMutex.RUnlock()
-	return fake.addEventArgsForCall[i].arg1
+func (fake *FakeScheduler) AddJobArgsForCall(i int) scheduler.Job {
+	fake.addJobMutex.RLock()
+	defer fake.addJobMutex.RUnlock()
+	return fake.addJobArgsForCall[i].arg1
 }
 
-func (fake *FakeScheduler) AddEventReturns(result1 error) {
-	fake.AddEventStub = nil
-	fake.addEventReturns = struct {
+func (fake *FakeScheduler) AddJobReturns(result1 error) {
+	fake.AddJobStub = nil
+	fake.addJobReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeScheduler) AddEventReturnsOnCall(i int, result1 error) {
-	fake.AddEventStub = nil
-	if fake.addEventReturnsOnCall == nil {
-		fake.addEventReturnsOnCall = make(map[int]struct {
+func (fake *FakeScheduler) AddJobReturnsOnCall(i int, result1 error) {
+	fake.AddJobStub = nil
+	if fake.addJobReturnsOnCall == nil {
+		fake.addJobReturnsOnCall = make(map[int]struct {
 			result1 error
 		})
 	}
-	fake.addEventReturnsOnCall[i] = struct {
+	fake.addJobReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeScheduler) RemoveEvent(arg1 scheduler.Event) {
-	fake.removeEventMutex.Lock()
-	fake.removeEventArgsForCall = append(fake.removeEventArgsForCall, struct {
-		arg1 scheduler.Event
+func (fake *FakeScheduler) RemoveJob(arg1 scheduler.Job) {
+	fake.removeJobMutex.Lock()
+	fake.removeJobArgsForCall = append(fake.removeJobArgsForCall, struct {
+		arg1 scheduler.Job
 	}{arg1})
-	fake.recordInvocation("RemoveEvent", []interface{}{arg1})
-	fake.removeEventMutex.Unlock()
-	if fake.RemoveEventStub != nil {
-		fake.RemoveEventStub(arg1)
+	fake.recordInvocation("RemoveJob", []interface{}{arg1})
+	fake.removeJobMutex.Unlock()
+	if fake.RemoveJobStub != nil {
+		fake.RemoveJobStub(arg1)
 	}
 }
 
-func (fake *FakeScheduler) RemoveEventCallCount() int {
-	fake.removeEventMutex.RLock()
-	defer fake.removeEventMutex.RUnlock()
-	return len(fake.removeEventArgsForCall)
+func (fake *FakeScheduler) RemoveJobCallCount() int {
+	fake.removeJobMutex.RLock()
+	defer fake.removeJobMutex.RUnlock()
+	return len(fake.removeJobArgsForCall)
 }
 
-func (fake *FakeScheduler) RemoveEventArgsForCall(i int) scheduler.Event {
-	fake.removeEventMutex.RLock()
-	defer fake.removeEventMutex.RUnlock()
-	return fake.removeEventArgsForCall[i].arg1
+func (fake *FakeScheduler) RemoveJobArgsForCall(i int) scheduler.Job {
+	fake.removeJobMutex.RLock()
+	defer fake.removeJobMutex.RUnlock()
+	return fake.removeJobArgsForCall[i].arg1
 }
 
-func (fake *FakeScheduler) NextEvent() *scheduler.Event {
-	fake.nextEventMutex.Lock()
-	ret, specificReturn := fake.nextEventReturnsOnCall[len(fake.nextEventArgsForCall)]
-	fake.nextEventArgsForCall = append(fake.nextEventArgsForCall, struct{}{})
-	fake.recordInvocation("NextEvent", []interface{}{})
-	fake.nextEventMutex.Unlock()
-	if fake.NextEventStub != nil {
-		return fake.NextEventStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.nextEventReturns.result1
-}
-
-func (fake *FakeScheduler) NextEventCallCount() int {
-	fake.nextEventMutex.RLock()
-	defer fake.nextEventMutex.RUnlock()
-	return len(fake.nextEventArgsForCall)
-}
-
-func (fake *FakeScheduler) NextEventReturns(result1 *scheduler.Event) {
-	fake.NextEventStub = nil
-	fake.nextEventReturns = struct {
-		result1 *scheduler.Event
-	}{result1}
-}
-
-func (fake *FakeScheduler) NextEventReturnsOnCall(i int, result1 *scheduler.Event) {
-	fake.NextEventStub = nil
-	if fake.nextEventReturnsOnCall == nil {
-		fake.nextEventReturnsOnCall = make(map[int]struct {
-			result1 *scheduler.Event
-		})
-	}
-	fake.nextEventReturnsOnCall[i] = struct {
-		result1 *scheduler.Event
-	}{result1}
-}
-
-func (fake *FakeScheduler) ReadEvents() []scheduler.Event {
-	fake.readEventsMutex.Lock()
-	ret, specificReturn := fake.readEventsReturnsOnCall[len(fake.readEventsArgsForCall)]
-	fake.readEventsArgsForCall = append(fake.readEventsArgsForCall, struct{}{})
-	fake.recordInvocation("ReadEvents", []interface{}{})
-	fake.readEventsMutex.Unlock()
-	if fake.ReadEventsStub != nil {
-		return fake.ReadEventsStub()
+func (fake *FakeScheduler) NextJob() *scheduler.Job {
+	fake.nextJobMutex.Lock()
+	ret, specificReturn := fake.nextJobReturnsOnCall[len(fake.nextJobArgsForCall)]
+	fake.nextJobArgsForCall = append(fake.nextJobArgsForCall, struct{}{})
+	fake.recordInvocation("NextJob", []interface{}{})
+	fake.nextJobMutex.Unlock()
+	if fake.NextJobStub != nil {
+		return fake.NextJobStub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.readEventsReturns.result1
+	return fake.nextJobReturns.result1
 }
 
-func (fake *FakeScheduler) ReadEventsCallCount() int {
-	fake.readEventsMutex.RLock()
-	defer fake.readEventsMutex.RUnlock()
-	return len(fake.readEventsArgsForCall)
+func (fake *FakeScheduler) NextJobCallCount() int {
+	fake.nextJobMutex.RLock()
+	defer fake.nextJobMutex.RUnlock()
+	return len(fake.nextJobArgsForCall)
 }
 
-func (fake *FakeScheduler) ReadEventsReturns(result1 []scheduler.Event) {
-	fake.ReadEventsStub = nil
-	fake.readEventsReturns = struct {
-		result1 []scheduler.Event
+func (fake *FakeScheduler) NextJobReturns(result1 *scheduler.Job) {
+	fake.NextJobStub = nil
+	fake.nextJobReturns = struct {
+		result1 *scheduler.Job
 	}{result1}
 }
 
-func (fake *FakeScheduler) ReadEventsReturnsOnCall(i int, result1 []scheduler.Event) {
-	fake.ReadEventsStub = nil
-	if fake.readEventsReturnsOnCall == nil {
-		fake.readEventsReturnsOnCall = make(map[int]struct {
-			result1 []scheduler.Event
+func (fake *FakeScheduler) NextJobReturnsOnCall(i int, result1 *scheduler.Job) {
+	fake.NextJobStub = nil
+	if fake.nextJobReturnsOnCall == nil {
+		fake.nextJobReturnsOnCall = make(map[int]struct {
+			result1 *scheduler.Job
 		})
 	}
-	fake.readEventsReturnsOnCall[i] = struct {
-		result1 []scheduler.Event
+	fake.nextJobReturnsOnCall[i] = struct {
+		result1 *scheduler.Job
 	}{result1}
 }
 
-func (fake *FakeScheduler) Override(arg1 scheduler.Event) {
+func (fake *FakeScheduler) ReadJobs() []scheduler.Job {
+	fake.readJobsMutex.Lock()
+	ret, specificReturn := fake.readJobsReturnsOnCall[len(fake.readJobsArgsForCall)]
+	fake.readJobsArgsForCall = append(fake.readJobsArgsForCall, struct{}{})
+	fake.recordInvocation("ReadJobs", []interface{}{})
+	fake.readJobsMutex.Unlock()
+	if fake.ReadJobsStub != nil {
+		return fake.ReadJobsStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.readJobsReturns.result1
+}
+
+func (fake *FakeScheduler) ReadJobsCallCount() int {
+	fake.readJobsMutex.RLock()
+	defer fake.readJobsMutex.RUnlock()
+	return len(fake.readJobsArgsForCall)
+}
+
+func (fake *FakeScheduler) ReadJobsReturns(result1 []scheduler.Job) {
+	fake.ReadJobsStub = nil
+	fake.readJobsReturns = struct {
+		result1 []scheduler.Job
+	}{result1}
+}
+
+func (fake *FakeScheduler) ReadJobsReturnsOnCall(i int, result1 []scheduler.Job) {
+	fake.ReadJobsStub = nil
+	if fake.readJobsReturnsOnCall == nil {
+		fake.readJobsReturnsOnCall = make(map[int]struct {
+			result1 []scheduler.Job
+		})
+	}
+	fake.readJobsReturnsOnCall[i] = struct {
+		result1 []scheduler.Job
+	}{result1}
+}
+
+func (fake *FakeScheduler) Override(arg1 scheduler.Job) {
 	fake.overrideMutex.Lock()
 	fake.overrideArgsForCall = append(fake.overrideArgsForCall, struct {
-		arg1 scheduler.Event
+		arg1 scheduler.Job
 	}{arg1})
 	fake.recordInvocation("Override", []interface{}{arg1})
 	fake.overrideMutex.Unlock()
@@ -311,7 +311,7 @@ func (fake *FakeScheduler) OverrideCallCount() int {
 	return len(fake.overrideArgsForCall)
 }
 
-func (fake *FakeScheduler) OverrideArgsForCall(i int) scheduler.Event {
+func (fake *FakeScheduler) OverrideArgsForCall(i int) scheduler.Job {
 	fake.overrideMutex.RLock()
 	defer fake.overrideMutex.RUnlock()
 	return fake.overrideArgsForCall[i].arg1
@@ -342,14 +342,14 @@ func (fake *FakeScheduler) Invocations() map[string][][]interface{} {
 	defer fake.stopMutex.RUnlock()
 	fake.runningMutex.RLock()
 	defer fake.runningMutex.RUnlock()
-	fake.addEventMutex.RLock()
-	defer fake.addEventMutex.RUnlock()
-	fake.removeEventMutex.RLock()
-	defer fake.removeEventMutex.RUnlock()
-	fake.nextEventMutex.RLock()
-	defer fake.nextEventMutex.RUnlock()
-	fake.readEventsMutex.RLock()
-	defer fake.readEventsMutex.RUnlock()
+	fake.addJobMutex.RLock()
+	defer fake.addJobMutex.RUnlock()
+	fake.removeJobMutex.RLock()
+	defer fake.removeJobMutex.RUnlock()
+	fake.nextJobMutex.RLock()
+	defer fake.nextJobMutex.RUnlock()
+	fake.readJobsMutex.RLock()
+	defer fake.readJobsMutex.RUnlock()
 	fake.overrideMutex.RLock()
 	defer fake.overrideMutex.RUnlock()
 	fake.cancelOverrideMutex.RLock()
