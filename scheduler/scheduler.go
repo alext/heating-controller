@@ -3,7 +3,6 @@ package scheduler
 import (
 	"errors"
 	"log"
-	"sort"
 	"sync"
 	"time"
 )
@@ -28,7 +27,7 @@ type Scheduler interface {
 
 type scheduler struct {
 	id        string
-	jobs      jobList
+	jobs      []*Job
 	running   bool
 	lock      sync.Mutex
 	commandCh chan func()
@@ -41,7 +40,7 @@ type scheduler struct {
 func New(id string) Scheduler {
 	return &scheduler{
 		id:        id,
-		jobs:      make(jobList, 0),
+		jobs:      make([]*Job, 0),
 		commandCh: make(chan func()),
 	}
 }
@@ -185,11 +184,11 @@ func (s *scheduler) run() {
 
 func (s *scheduler) addJob(j *Job) {
 	s.jobs = append(s.jobs, j)
-	sort.Sort(s.jobs)
+	sortJobs(s.jobs)
 }
 
 func (s *scheduler) removeJob(job *Job) {
-	newJobs := make(jobList, 0)
+	newJobs := make([]*Job, 0)
 	for _, j := range s.jobs {
 		if j.Hour != job.Hour || j.Min != job.Min || j.Label != job.Label {
 			newJobs = append(newJobs, j)

@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/alext/heating-controller/scheduler"
@@ -47,11 +48,9 @@ func (e Event) buildSchedulerJob(demand func(Event)) scheduler.Job {
 	}
 }
 
-type eventList []Event
-
-func (el eventList) Len() int      { return len(el) }
-func (el eventList) Swap(i, j int) { el[i], el[j] = el[j], el[i] }
-func (el eventList) Less(i, j int) bool {
-	a, b := el[i], el[j]
-	return a.Hour < b.Hour || (a.Hour == b.Hour && a.Min < b.Min)
+func sortEvents(events []Event) {
+	sort.Slice(events, func(i, j int) bool {
+		a, b := events[i], events[j]
+		return a.Hour < b.Hour || (a.Hour == b.Hour && a.Min < b.Min)
+	})
 }

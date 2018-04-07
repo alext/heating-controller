@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"sort"
 	"sync"
 	"time"
 
@@ -22,7 +21,7 @@ type EventHandler interface {
 
 type eventHandler struct {
 	lock    sync.RWMutex
-	events  eventList
+	events  []Event
 	demand  func(Event)
 	sched   scheduler.Scheduler
 	boosted bool
@@ -32,7 +31,7 @@ func NewEventHandler(s scheduler.Scheduler, demand func(Event)) EventHandler {
 	return &eventHandler{
 		sched:  s,
 		demand: demand,
-		events: make(eventList, 0),
+		events: make([]Event, 0),
 	}
 }
 
@@ -82,7 +81,7 @@ func (eh *eventHandler) AddEvent(e Event) error {
 	defer eh.lock.Unlock()
 
 	eh.events = append(eh.events, e)
-	sort.Sort(eh.events)
+	sortEvents(eh.events)
 
 	return eh.sched.AddJob(e.buildSchedulerJob(eh.trigger))
 }
@@ -91,7 +90,7 @@ func (eh *eventHandler) RemoveEvent(e Event) {
 	eh.lock.Lock()
 	defer eh.lock.Unlock()
 
-	newEvents := make(eventList, 0)
+	newEvents := make([]Event, 0)
 	for _, ee := range eh.events {
 		if ee != e {
 			newEvents = append(newEvents, ee)

@@ -2,6 +2,7 @@ package scheduler
 
 import (
 	"fmt"
+	"sort"
 	"time"
 )
 
@@ -33,11 +34,9 @@ func (j Job) String() string {
 	return fmt.Sprintf("%d:%02d %s", j.Hour, j.Min, j.Label)
 }
 
-type jobList []*Job
-
-func (jl jobList) Len() int      { return len(jl) }
-func (jl jobList) Swap(i, j int) { jl[i], jl[j] = jl[j], jl[i] }
-func (jl jobList) Less(i, j int) bool {
-	a, b := jl[i], jl[j]
-	return a.Hour < b.Hour || (a.Hour == b.Hour && a.Min < b.Min)
+func sortJobs(jobs []*Job) {
+	sort.Slice(jobs, func(i, j int) bool {
+		a, b := jobs[i], jobs[j]
+		return a.Hour < b.Hour || (a.Hour == b.Hour && a.Min < b.Min)
+	})
 }
