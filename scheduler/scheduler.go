@@ -8,7 +8,7 @@ import (
 )
 
 // variable indirection to enable testing
-var time_Now = time.Now
+var timeNow = time.Now
 
 var ErrInvalidJob = errors.New("invalid job")
 
@@ -114,7 +114,7 @@ func (s *scheduler) NextJob() *Job {
 		}
 		return <-retCh
 	}
-	_, nextJob := s.next(time_Now().Local())
+	_, nextJob := s.next(timeNow().Local())
 	return nextJob
 }
 
@@ -143,7 +143,7 @@ func (s *scheduler) ReadJobs() []Job {
 
 func (s *scheduler) Override(j Job) {
 	s.commandCh <- func() {
-		now := time_Now().Local()
+		now := timeNow().Local()
 		s.nextAt = j.nextOccuranceAfter(now)
 		s.nextJob = &j
 		s.tmr.Reset(s.nextAt.Sub(now))
@@ -161,7 +161,7 @@ func (s *scheduler) run() {
 	s.setCurrentState()
 	for {
 		if s.nextJob == nil {
-			now := time_Now().Local()
+			now := timeNow().Local()
 			s.nextAt, s.nextJob = s.next(now)
 			s.tmr.Reset(s.nextAt.Sub(now))
 			log.Printf("[Scheduler:%s] Next job at %v - %v", s.id, s.nextAt, s.nextJob)
@@ -201,7 +201,7 @@ func (s *scheduler) setCurrentState() {
 	if len(s.jobs) < 1 {
 		return
 	}
-	hour, min, _ := time_Now().Local().Clock()
+	hour, min, _ := timeNow().Local().Clock()
 	var previous *Job
 	for _, j := range s.jobs {
 		if j.after(hour, min) {

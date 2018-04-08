@@ -94,7 +94,7 @@ var _ = Describe("a basic scheduler", func() {
 
 		mockNow = time.Now()
 		nowCount = 0
-		time_Now = func() time.Time {
+		timeNow = func() time.Time {
 			nowCount++
 			return mockNow
 		}
