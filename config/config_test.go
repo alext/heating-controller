@@ -47,11 +47,11 @@ var _ = Describe("Parsing the config data", func() {
 		It("should setup the sensor details", func() {
 			configReader = createConfigReader(configData{
 				"sensors": map[string]map[string]interface{}{
-					"foo": map[string]interface{}{
+					"foo": {
 						"type": "w1",
 						"id":   "1234",
 					},
-					"bar": map[string]interface{}{
+					"bar": {
 						"type": "push",
 						"id":   "2345",
 					},
@@ -72,13 +72,13 @@ var _ = Describe("Parsing the config data", func() {
 		It("should setup the zone details", func() {
 			configReader = createConfigReader(configData{
 				"zones": map[string]map[string]interface{}{
-					"foo": map[string]interface{}{
+					"foo": {
 						"gpio_pin": 42,
 					},
-					"bar": map[string]interface{}{
+					"bar": {
 						"gpio_pin": 12,
 					},
-					"baz": map[string]interface{}{
+					"baz": {
 						"virtual": true,
 					},
 				},
@@ -109,7 +109,7 @@ var _ = Describe("Parsing the config data", func() {
 			It("should add thermostat details if present", func() {
 				configReader = createConfigReader(configData{
 					"zones": map[string]map[string]interface{}{
-						"foo": map[string]interface{}{
+						"foo": {
 							"gpio_pin": 42,
 							"thermostat": map[string]interface{}{
 								"sensor":         "foo",
@@ -128,7 +128,7 @@ var _ = Describe("Parsing the config data", func() {
 			It("should set thermostat to nil if no details present", func() {
 				configReader = createConfigReader(configData{
 					"zones": map[string]map[string]interface{}{
-						"foo": map[string]interface{}{
+						"foo": {
 							"gpio_pin": 42,
 						},
 					},
