@@ -10,7 +10,6 @@ import (
 
 	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/output"
-	"github.com/alext/heating-controller/scheduler"
 	"github.com/alext/heating-controller/webserver"
 )
 
@@ -57,10 +56,10 @@ var _ = Describe("Editing the schedule for a zone", func() {
 
 		Context("with some events", func() {
 			BeforeEach(func() {
-				zone1.Scheduler.AddEvent(scheduler.Event{Hour: 7, Min: 30, Action: scheduler.TurnOn})
-				zone1.Scheduler.AddEvent(scheduler.Event{Hour: 8, Min: 30, Action: scheduler.TurnOff})
-				zone1.Scheduler.AddEvent(scheduler.Event{Hour: 17, Min: 0, Action: scheduler.TurnOn})
-				zone1.Scheduler.AddEvent(scheduler.Event{Hour: 21, Min: 45, Action: scheduler.TurnOff})
+				zone1.AddEvent(controller.Event{Hour: 7, Min: 30, Action: controller.TurnOn})
+				zone1.AddEvent(controller.Event{Hour: 8, Min: 30, Action: controller.TurnOff})
+				zone1.AddEvent(controller.Event{Hour: 17, Min: 0, Action: controller.TurnOn})
+				zone1.AddEvent(controller.Event{Hour: 21, Min: 45, Action: controller.TurnOff})
 			})
 
 			It("should show the schedule", func() {
@@ -95,9 +94,9 @@ var _ = Describe("Editing the schedule for a zone", func() {
 				Expect(page).To(HaveURL(testServer.URL + "/zones/one/schedule"))
 				Expect(page.Find("h1")).To(HaveText("one schedule"))
 
-				events := zone1.Scheduler.ReadEvents()
+				events := zone1.ReadEvents()
 				Expect(events).To(HaveLen(5))
-				Expect(events).To(ContainElement(scheduler.Event{Hour: 14, Min: 42, Action: scheduler.TurnOn}))
+				Expect(events).To(ContainElement(controller.Event{Hour: 14, Min: 42, Action: controller.TurnOn}))
 			})
 
 			It("should allow removing an event", func() {
@@ -110,9 +109,9 @@ var _ = Describe("Editing the schedule for a zone", func() {
 				Expect(page).To(HaveURL(testServer.URL + "/zones/one/schedule"))
 				Expect(page.Find("h1")).To(HaveText("one schedule"))
 
-				events := zone1.Scheduler.ReadEvents()
+				events := zone1.ReadEvents()
 				Expect(events).To(HaveLen(3))
-				Expect(events).NotTo(ContainElement(scheduler.Event{Hour: 8, Min: 30, Action: scheduler.TurnOff}))
+				Expect(events).NotTo(ContainElement(controller.Event{Hour: 8, Min: 30, Action: controller.TurnOff}))
 			})
 		})
 	})

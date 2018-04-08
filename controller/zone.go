@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"log"
 	"sync"
 
@@ -11,10 +12,13 @@ import (
 	"github.com/alext/heating-controller/units"
 )
 
+var ErrInvalidEvent = errors.New("invalid event")
+
 type Zone struct {
 	ID         string
 	Scheduler  scheduler.Scheduler
 	Thermostat thermostat.Thermostat
+	EventHandler
 
 	lock          sync.RWMutex
 	Out           output.Output
@@ -29,7 +33,8 @@ func NewZone(id string, out output.Output) *Zone {
 		Out:         out,
 		thermDemand: true, // always on until a thermostat is added
 	}
-	z.Scheduler = scheduler.New(z.ID, z.schedulerDemand)
+	z.Scheduler = scheduler.New(z.ID)
+	z.EventHandler = NewEventHandler(z.Scheduler, z.eventDemand)
 	return z
 }
 
@@ -55,10 +60,14 @@ func (z *Zone) TDemand() bool {
 	return z.thermDemand
 }
 
-func (z *Zone) schedulerDemand(a scheduler.Action) {
+func (z *Zone) eventDemand(e Event) {
+	z.schedulerDemand(e.Action == TurnOn)
+}
+
+func (z *Zone) schedulerDemand(demand bool) {
 	z.lock.Lock()
 	defer z.lock.Unlock()
-	z.schedDemand = a == scheduler.TurnOn
+	z.schedDemand = demand
 	log.Printf("[Zone:%s] received scheduler demand : %t", z.ID, z.schedDemand)
 	z.updateDemand()
 }

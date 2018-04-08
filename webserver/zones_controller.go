@@ -37,7 +37,7 @@ func (srv *WebServer) zoneBoost(w http.ResponseWriter, req *http.Request, z *con
 	d, err := time.ParseDuration(durationString)
 	if err == nil {
 		log.Printf("[webserver] Zone %s, boosting for %s", z.ID, d)
-		z.Scheduler.Boost(d)
+		z.Boost(d)
 		http.Redirect(w, req, "/", http.StatusFound)
 	} else {
 		http.Error(w, fmt.Sprintf("Invalid boost duration '%s'", durationString), http.StatusBadRequest)
@@ -46,7 +46,7 @@ func (srv *WebServer) zoneBoost(w http.ResponseWriter, req *http.Request, z *con
 
 func (srv *WebServer) zoneCancelBoost(w http.ResponseWriter, req *http.Request, z *controller.Zone) {
 	log.Printf("[webserver] Zone %s, cancelling boost", z.ID)
-	z.Scheduler.CancelBoost()
+	z.CancelBoost()
 	http.Redirect(w, req, "/", http.StatusFound)
 }
 

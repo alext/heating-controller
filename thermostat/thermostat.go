@@ -7,6 +7,7 @@ import (
 	"github.com/alext/heating-controller/units"
 )
 
+//go:generate counterfeiter . Thermostat
 type Thermostat interface {
 	Current() units.Temperature
 	Target() units.Temperature

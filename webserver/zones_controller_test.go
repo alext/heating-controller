@@ -8,33 +8,26 @@ import (
 	"os"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/heating-controller/controller"
+	"github.com/alext/heating-controller/controller/controllerfakes"
 	"github.com/alext/heating-controller/output"
-	"github.com/alext/heating-controller/output/mock_output"
-	"github.com/alext/heating-controller/scheduler/mock_scheduler"
-	"github.com/alext/heating-controller/thermostat/mock_thermostat"
+	"github.com/alext/heating-controller/output/outputfakes"
+	"github.com/alext/heating-controller/thermostat/thermostatfakes"
 	"github.com/alext/heating-controller/webserver"
 )
 
 var _ = Describe("zones controller", func() {
 	var (
-		mockCtrl *gomock.Controller
-		ctrl     *controller.Controller
-		server   *webserver.WebServer
+		ctrl   *controller.Controller
+		server *webserver.WebServer
 	)
 
 	BeforeEach(func() {
-		mockCtrl = gomock.NewController(GinkgoT())
 		ctrl = controller.New()
 		server = webserver.New(ctrl, 8080, "")
-	})
-
-	AfterEach(func() {
-		mockCtrl.Finish()
 	})
 
 	Describe("changing an output state", func() {
@@ -65,11 +58,11 @@ var _ = Describe("zones controller", func() {
 			})
 
 			It("should show an error if activating fails", func() {
-				mockOutput := mock_output.NewMockOutput(mockCtrl)
-				ctrl.AddZone(controller.NewZone("mock", mockOutput))
+				fakeOutput := new(outputfakes.FakeOutput)
+				ctrl.AddZone(controller.NewZone("mock", fakeOutput))
 
 				err := errors.New("Computer says no!")
-				mockOutput.EXPECT().Activate().Return(err)
+				fakeOutput.ActivateReturns(err)
 
 				w := doFakePutRequest(server, "/zones/mock/activate")
 
@@ -97,11 +90,11 @@ var _ = Describe("zones controller", func() {
 			})
 
 			It("should show an error if activating fails", func() {
-				mockOutput := mock_output.NewMockOutput(mockCtrl)
-				ctrl.AddZone(controller.NewZone("mock", mockOutput))
+				fakeOutput := new(outputfakes.FakeOutput)
+				ctrl.AddZone(controller.NewZone("mock", fakeOutput))
 
 				err := errors.New("Computer says no!")
-				mockOutput.EXPECT().Deactivate().Return(err)
+				fakeOutput.DeactivateReturns(err)
 
 				w := doFakePutRequest(server, "/zones/mock/deactivate")
 
@@ -113,24 +106,25 @@ var _ = Describe("zones controller", func() {
 
 	Describe("boosting", func() {
 		var (
-			output1 output.Output
-			zone1   *controller.Zone
+			output1          output.Output
+			zone1            *controller.Zone
+			fakeEventHandler *controllerfakes.FakeEventHandler
 		)
 
 		BeforeEach(func() {
+			fakeEventHandler = new(controllerfakes.FakeEventHandler)
 			output1 = output.Virtual("one")
 			zone1 = controller.NewZone("one", output1)
+			zone1.EventHandler = fakeEventHandler
 			ctrl.AddZone(zone1)
 		})
 
 		Describe("setting the boost", func() {
 			It("should boost the zone's scheduler", func() {
-				mockScheduler := mock_scheduler.NewMockScheduler(mockCtrl)
-				zone1.Scheduler = mockScheduler
-
-				mockScheduler.EXPECT().Boost(42 * time.Minute)
-
 				doFakeRequestWithValues(server, "PUT", "/zones/one/boost", url.Values{"duration": {"42m"}})
+
+				Expect(fakeEventHandler.BoostCallCount()).To(Equal(1))
+				Expect(fakeEventHandler.BoostArgsForCall(0)).To(Equal(42 * time.Minute))
 			})
 
 			It("should redirect to the index", func() {
@@ -153,12 +147,9 @@ var _ = Describe("zones controller", func() {
 
 		Describe("cancelling the boost", func() {
 			It("should boost the zone's scheduler", func() {
-				mockScheduler := mock_scheduler.NewMockScheduler(mockCtrl)
-				zone1.Scheduler = mockScheduler
-
-				mockScheduler.EXPECT().CancelBoost()
-
 				doFakeDeleteRequest(server, "/zones/one/boost")
+
+				Expect(fakeEventHandler.CancelBoostCallCount()).To(Equal(1))
 			})
 
 			It("should redirect to the index", func() {
@@ -188,8 +179,14 @@ var _ = Describe("zones controller", func() {
 		})
 
 		Context("for a zone with a thermostat configured", func() {
+			var (
+				ts *thermostatfakes.FakeThermostat
+			)
+
 			BeforeEach(func() {
-				zone1.Thermostat = mock_thermostat.New(19000)
+				ts = new(thermostatfakes.FakeThermostat)
+				ts.TargetReturns(19000)
+				zone1.Thermostat = ts
 			})
 
 			It("increments the target and redirects back", func() {
@@ -198,7 +195,8 @@ var _ = Describe("zones controller", func() {
 				Expect(w.Code).To(Equal(302))
 				Expect(w.Header().Get("Location")).To(Equal("/"))
 
-				Expect(zone1.Thermostat.Target()).To(BeNumerically("==", 19500))
+				Expect(ts.SetCallCount()).To(Equal(1))
+				Expect(ts.SetArgsForCall(0)).To(BeNumerically("==", 19500))
 			})
 
 			It("decrements the target and redirects back", func() {
@@ -207,10 +205,13 @@ var _ = Describe("zones controller", func() {
 				Expect(w.Code).To(Equal(302))
 				Expect(w.Header().Get("Location")).To(Equal("/"))
 
-				Expect(zone1.Thermostat.Target()).To(BeNumerically("==", 18500))
+				Expect(ts.SetCallCount()).To(Equal(1))
+				Expect(ts.SetArgsForCall(0)).To(BeNumerically("==", 18500))
 			})
 
 			It("saves the zone state", func() {
+				ts.TargetReturns(19500)
+
 				doRequest(server, "POST", "/zones/one/thermostat/increment")
 
 				file, err := os.Open(controller.DataDir + "/one.json")

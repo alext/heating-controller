@@ -11,7 +11,6 @@ import (
 
 	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/output"
-	"github.com/alext/heating-controller/scheduler"
 	"github.com/alext/heating-controller/webserver"
 )
 
@@ -67,10 +66,10 @@ var _ = Describe("boosting a zone", func() {
 
 			Expect(zone1.Active()).To(Equal(true))
 
-			nextEvent := zone1.Scheduler.NextEvent()
+			nextEvent := zone1.NextEvent()
 			Expect(nextEvent).NotTo(BeNil())
 
-			Expect(nextEvent.Action).To(Equal(scheduler.TurnOff))
+			Expect(nextEvent.Action).To(Equal(controller.TurnOff))
 
 			eventTime := nextEvent.NextOccurance()
 			expected := time.Now().Local().Add(30 * time.Minute)
@@ -92,7 +91,7 @@ var _ = Describe("boosting a zone", func() {
 			zone1 = controller.NewZone("one", output1)
 			ctrl.AddZone(zone1)
 			zone1.Scheduler.Start()
-			zone1.Scheduler.Boost(23 * time.Minute)
+			zone1.Boost(23 * time.Minute)
 		})
 
 		AfterEach(func() {
@@ -112,14 +111,8 @@ var _ = Describe("boosting a zone", func() {
 
 			Expect(zone1.Active()).To(Equal(false))
 
-			nextEvent := zone1.Scheduler.NextEvent()
+			nextEvent := zone1.NextEvent()
 			Expect(nextEvent).To(BeNil())
-
-			//Expect(nextEvent.Action).To(Equal(scheduler.TurnOff))
-
-			//eventTime := nextEvent.NextOccurance()
-			//expected := time.Now().Local().Add(30 * time.Minute)
-			//Expect(eventTime).To(BeTemporally("~", expected, 65*time.Second)) // allow for minute tickover.
 
 			cell = boostCell(page, "one")
 			Expect(cell.Find("input[value=Boost]")).To(BeFound())
