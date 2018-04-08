@@ -23,7 +23,7 @@ var _ = Describe("a push sensor", func() {
 		Expect(updated).To(Equal(zeroTime))
 	})
 
-	It("saves and returns the set temerature", func() {
+	It("saves and returns the set temperature", func() {
 		s := &pushSensor{}
 		now := time.Now()
 		s.Set(1234, now)

@@ -529,7 +529,7 @@ var _ = Describe("a basic scheduler", func() {
 				Expect(theScheduler).To(HaveNextJobLabelled("override"))
 			})
 
-			It("cancelling the override contines with the next scheduled job", func() {
+			It("cancelling the override continues with the next scheduled job", func() {
 				mockNow = todayAt(16, 30, 0)
 				theScheduler.CancelOverride()
 
