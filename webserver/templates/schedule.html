@@ -22,7 +22,7 @@
   <tr>
     <td colspan="2">
       <form action="/zones/{{ .ID }}/schedule" method="post">
-        <input type="text" name="hour" maxlength="2" size="2" placeholder="hh">:<input type="text" name="min" maxlength="2" size="2" placeholder="mm">
+        <input type="number" name="hour" min="0" max="23" placeholder="hh">:<input type="number" name="min" min="0" max="59" placeholder="mm">
         <select name="action">
           <option value="on">On</option>
           <option value="off">Off</option>
