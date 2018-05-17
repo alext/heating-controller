@@ -34,7 +34,7 @@ func NewZone(id string, out output.Output) *Zone {
 		thermDemand: true, // always on until a thermostat is added
 	}
 	z.Scheduler = scheduler.New(z.ID)
-	z.EventHandler = NewEventHandler(z.Scheduler, z.eventDemand)
+	z.EventHandler = NewEventHandler(z.Scheduler, z.applyEvent)
 	return z
 }
 
@@ -60,8 +60,11 @@ func (z *Zone) TDemand() bool {
 	return z.thermDemand
 }
 
-func (z *Zone) eventDemand(e Event) {
+func (z *Zone) applyEvent(e Event) {
 	z.schedulerDemand(e.Action == On)
+	if e.ThermAction != nil && z.Thermostat != nil {
+		e.ThermAction.Apply(z.Thermostat)
+	}
 }
 
 func (z *Zone) schedulerDemand(demand bool) {

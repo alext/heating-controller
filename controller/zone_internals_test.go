@@ -6,9 +6,57 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/heating-controller/output"
+	"github.com/alext/heating-controller/thermostat/thermostatfakes"
 )
 
 var _ = Describe("Zone demand handling", func() {
+
+	Describe("applying Event actions", func() {
+		var (
+			therm *thermostatfakes.FakeThermostat
+			z     *Zone
+		)
+
+		BeforeEach(func() {
+			therm = &thermostatfakes.FakeThermostat{}
+			z = NewZone("something", output.Virtual("something"))
+			z.Thermostat = therm
+		})
+
+		Context("with no ThermAction", func() {
+			It("triggers the scheduler demand", func() {
+				z.applyEvent(Event{Action: On})
+				Expect(z.schedDemand).To(BeTrue())
+				// more detailed tests below
+			})
+		})
+
+		Context("with a ThermAction", func() {
+			var e Event
+			BeforeEach(func() { e = Event{Action: On, ThermAction: &ThermostatAction{Action: SetTarget, Param: 19000}} })
+
+			It("still triggers the scheduler demand", func() {
+				z.applyEvent(e)
+				Expect(z.schedDemand).To(BeTrue())
+			})
+
+			It("sets the thermostat target", func() {
+				z.applyEvent(e)
+				Expect(therm.SetCallCount()).To(Equal(1))
+				// more detailed tests in action_test.go
+			})
+
+			It("ignores the ThermAction if the zone has no thermostat", func() {
+				z.Thermostat = nil
+				z.applyEvent(e)
+
+				//should still trigger the scheduler
+				Expect(z.schedDemand).To(BeTrue())
+
+				//should not blow up...
+			})
+		})
+	})
 
 	Describe("handling scheduler demand", func() {
 		var (

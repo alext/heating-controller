@@ -46,3 +46,18 @@ type ThermostatAction struct {
 	Action Action            `json:"action"`
 	Param  units.Temperature `json:"param"`
 }
+
+func (ta ThermostatAction) Apply(t thermostat.Thermostat) {
+	switch ta.Action {
+	case SetTarget:
+		t.Set(ta.Param)
+	case IncreaseTarget:
+		if t.Target() < ta.Param {
+			t.Set(ta.Param)
+		}
+	case DecreaseTarget:
+		if t.Target() > ta.Param {
+			t.Set(ta.Param)
+		}
+	}
+}

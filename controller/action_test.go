@@ -8,6 +8,8 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/heating-controller/controller"
+	"github.com/alext/heating-controller/thermostat/thermostatfakes"
+	"github.com/alext/heating-controller/units"
 )
 
 var _ = Describe("Action", func() {
@@ -45,4 +47,57 @@ var _ = Describe("Action", func() {
 		err := json.Unmarshal([]byte(`"Foo"`), &a)
 		Expect(err).To(HaveOccurred())
 	})
+})
+
+var _ = Describe("ThermostatAction", func() {
+
+	type applyCase struct {
+		initialTarget units.Temperature
+		action        *controller.ThermostatAction
+		expectSet     bool
+	}
+
+	DescribeTable("applying to a Thermostat",
+		func(c applyCase) {
+			t := &thermostatfakes.FakeThermostat{}
+			t.TargetReturns(c.initialTarget)
+
+			c.action.Apply(t)
+
+			if c.expectSet {
+				Expect(t.SetCallCount()).To(Equal(1))
+				Expect(t.SetArgsForCall(0)).To(Equal(c.action.Param))
+			} else {
+				Expect(t.SetCallCount()).To(Equal(0))
+			}
+		},
+		Entry("SetTarget sets the thermostat when lower", applyCase{
+			initialTarget: 19500, expectSet: true,
+			action: &controller.ThermostatAction{Action: controller.SetTarget, Param: 19000},
+		}),
+		Entry("SetTarget sets the thermostat when higher", applyCase{
+			initialTarget: 17000, expectSet: true,
+			action: &controller.ThermostatAction{Action: controller.SetTarget, Param: 19000},
+		}),
+		Entry("IncreaseTarget increases the thermostat target when it's lower than the param", applyCase{
+			initialTarget: 18500, expectSet: true,
+			action: &controller.ThermostatAction{Action: controller.IncreaseTarget, Param: 19000},
+		}),
+		Entry("IncreaseTarget does nothing when the target is higher than the param", applyCase{
+			initialTarget: 19500, expectSet: false,
+			action: &controller.ThermostatAction{Action: controller.IncreaseTarget, Param: 19000},
+		}),
+		Entry("DecreaseTarget decreases the thermostat target when it's higher than the param", applyCase{
+			initialTarget: 19500, expectSet: true,
+			action: &controller.ThermostatAction{Action: controller.DecreaseTarget, Param: 19000},
+		}),
+		Entry("DecreaseTarget does nothing when the target is lower than the param", applyCase{
+			initialTarget: 18500, expectSet: false,
+			action: &controller.ThermostatAction{Action: controller.DecreaseTarget, Param: 19000},
+		}),
+		Entry("does nothing with an unexpected action", applyCase{
+			expectSet: false,
+			action:    &controller.ThermostatAction{Action: controller.On},
+		}),
+	)
 })
