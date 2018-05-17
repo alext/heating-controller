@@ -24,9 +24,16 @@
       <form action="/zones/{{ .ID }}/schedule" method="post">
         <input type="number" name="hour" min="0" max="23" placeholder="hh">:<input type="number" name="min" min="0" max="59" placeholder="mm">
         <select name="action">
-          <option value="on">On</option>
-          <option value="off">Off</option>
+          <option value="On">On</option>
+          <option value="Off">Off</option>
         </select>
+        <select name="therm_action">
+          <option value="">No Change</option>
+          <option value="SetTarget">Set Target</option>
+          <option value="IncreaseTarget">Increase Target</option>
+          <option value="DecreaseTarget">Decrease Target</option>
+        </select>
+        <input type="number" name="therm_param" placeholder="temp" step="0.5" style="width: 4em">
         <input type="submit" value="Add Event">
       </form>
     </td>

@@ -47,7 +47,9 @@ var _ = Describe("schedule controller", func() {
 			values = url.Values{}
 			values.Set("hour", "10")
 			values.Set("min", "24")
-			values.Set("action", "on")
+			values.Set("action", "On")
+			values.Set("therm_action", "")
+			values.Set("therm_param", "")
 		})
 
 		It("should add the event to the schedule and redirect to the schedule", func() {
@@ -60,6 +62,22 @@ var _ = Describe("schedule controller", func() {
 			events := zone1.ReadEvents()
 			Expect(events).To(HaveLen(3))
 			Expect(events).To(ContainElement(controller.Event{Hour: 10, Min: 24, Action: controller.On}))
+		})
+
+		It("should add the event with a thermostat action when requested", func() {
+			values.Set("therm_action", "SetTarget")
+			values.Set("therm_param", "19.5")
+			w := doRequestWithValues(server, "POST", "/zones/one/schedule", values)
+
+			Expect(w.Code).To(Equal(302))
+			Expect(w.Header().Get("Location")).To(Equal("/zones/one/schedule"))
+
+			events := zone1.ReadEvents()
+			Expect(events).To(HaveLen(3))
+			Expect(events).To(ContainElement(controller.Event{
+				Hour: 10, Min: 24, Action: controller.On,
+				ThermAction: &controller.ThermostatAction{Action: controller.SetTarget, Param: 19500},
+			}))
 		})
 
 		It("should save the zone state", func() {
@@ -77,6 +95,14 @@ var _ = Describe("schedule controller", func() {
 		})
 
 		Context("with invalid input", func() {
+			It("should return an error with an invalid action", func() {
+				values.Set("action", "fooey")
+				w := doRequestWithValues(server, "POST", "/zones/one/schedule", values)
+				Expect(w.Code).To(Equal(400))
+				Expect(w.Body.String()).To(ContainSubstring("invalid action"))
+				Expect(zone1.ReadEvents()).To(HaveLen(2))
+			})
+
 			It("should return an error with a non-numeric hour", func() {
 				values.Set("hour", "fooey")
 				w := doRequestWithValues(server, "POST", "/zones/one/schedule", values)
@@ -90,6 +116,23 @@ var _ = Describe("schedule controller", func() {
 				w := doRequestWithValues(server, "POST", "/zones/one/schedule", values)
 				Expect(w.Code).To(Equal(400))
 				Expect(w.Body.String()).To(ContainSubstring("minute must be a number"))
+				Expect(zone1.ReadEvents()).To(HaveLen(2))
+			})
+
+			It("should return an error with an invalid thermostat action", func() {
+				values.Set("therm_action", "fooey")
+				w := doRequestWithValues(server, "POST", "/zones/one/schedule", values)
+				Expect(w.Code).To(Equal(400))
+				Expect(w.Body.String()).To(ContainSubstring("invalid thermostat action"))
+				Expect(zone1.ReadEvents()).To(HaveLen(2))
+			})
+
+			It("should return an error with an invalid thermostat param", func() {
+				values.Set("therm_action", "IncreaseTarget")
+				values.Set("therm_param", "fooey")
+				w := doRequestWithValues(server, "POST", "/zones/one/schedule", values)
+				Expect(w.Code).To(Equal(400))
+				Expect(w.Body.String()).To(ContainSubstring("thermostat param must be a number"))
 				Expect(zone1.ReadEvents()).To(HaveLen(2))
 			})
 

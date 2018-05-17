@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/alext/heating-controller/controller"
+	"github.com/alext/heating-controller/units"
 	"github.com/gorilla/mux"
 )
 
@@ -40,9 +41,26 @@ func (srv *WebServer) scheduleAddEvent(w http.ResponseWriter, req *http.Request,
 		http.Error(w, "minute must be a number: "+err.Error(), http.StatusBadRequest)
 		return
 	}
-	if req.FormValue("action") == "on" {
-		e.Action = controller.On
+	err = e.Action.UnmarshalText([]byte(req.FormValue("action")))
+	if err != nil {
+		http.Error(w, "invalid action: "+err.Error(), http.StatusBadRequest)
+		return
 	}
+	if req.FormValue("therm_action") != "" {
+		e.ThermAction = &controller.ThermostatAction{}
+		err = e.ThermAction.Action.UnmarshalText([]byte(req.FormValue("therm_action")))
+		if err != nil {
+			http.Error(w, "invalid thermostat action: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		param, err := units.ParseTemperature(req.FormValue("therm_param"))
+		if err != nil {
+			http.Error(w, "thermostat param must be a number: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		e.ThermAction.Param = param
+	}
+
 	err = z.AddEvent(e)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

@@ -47,6 +47,10 @@ type ThermostatAction struct {
 	Param  units.Temperature `json:"param"`
 }
 
+func (ta ThermostatAction) String() string {
+	return fmt.Sprintf("%s(%s)", ta.Action, ta.Param)
+}
+
 func (ta ThermostatAction) Apply(t thermostat.Thermostat) {
 	switch ta.Action {
 	case SetTarget:

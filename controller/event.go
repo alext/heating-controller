@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/alext/heating-controller/scheduler"
@@ -37,7 +38,12 @@ func (e Event) after(hour, min int) bool {
 }
 
 func (e Event) String() string {
-	return fmt.Sprintf("%d:%02d %s", e.Hour, e.Min, e.Action)
+	var b strings.Builder
+	fmt.Fprintf(&b, "%d:%02d %s", e.Hour, e.Min, e.Action)
+	if e.ThermAction != nil {
+		fmt.Fprintf(&b, " %s", e.ThermAction)
+	}
+	return b.String()
 }
 
 func (e Event) buildSchedulerJob(demand func(Event)) scheduler.Job {
