@@ -61,7 +61,7 @@ func (z *Zone) TDemand() bool {
 }
 
 func (z *Zone) eventDemand(e Event) {
-	z.schedulerDemand(e.Action == TurnOn)
+	z.schedulerDemand(e.Action == On)
 }
 
 func (z *Zone) schedulerDemand(demand bool) {

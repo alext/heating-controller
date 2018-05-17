@@ -38,8 +38,8 @@ var _ = Describe("persisting a zone's state", func() {
 		})
 
 		It("should save the scheduler events to the file", func() {
-			z.AddEvent(Event{Hour: 6, Min: 30, Action: TurnOn})
-			z.AddEvent(Event{Hour: 7, Min: 45, Action: TurnOff})
+			z.AddEvent(Event{Hour: 6, Min: 30, Action: On})
+			z.AddEvent(Event{Hour: 7, Min: 45, Action: Off})
 
 			Expect(z.Save()).To(Succeed())
 
@@ -83,8 +83,8 @@ var _ = Describe("persisting a zone's state", func() {
 
 			events := z.ReadEvents()
 			Expect(events).To(HaveLen(2))
-			Expect(events[0]).To(Equal(Event{Hour: 6, Min: 30, Action: TurnOn}))
-			Expect(events[1]).To(Equal(Event{Hour: 7, Min: 45, Action: TurnOff}))
+			Expect(events[0]).To(Equal(Event{Hour: 6, Min: 30, Action: On}))
+			Expect(events[1]).To(Equal(Event{Hour: 7, Min: 45, Action: Off}))
 		})
 
 		It("should treat a non-existent data file the same as a file with an empty scheduler event list", func() {
@@ -107,9 +107,9 @@ var _ = Describe("persisting a zone's state", func() {
 
 			events := z.ReadEvents()
 			Expect(events).To(HaveLen(3))
-			Expect(events[0]).To(Equal(Event{Hour: 6, Min: 30, Action: TurnOn}))
-			Expect(events[1]).To(Equal(Event{Hour: 16, Min: 30, Action: TurnOn}))
-			Expect(events[2]).To(Equal(Event{Hour: 18, Min: 40, Action: TurnOff}))
+			Expect(events[0]).To(Equal(Event{Hour: 6, Min: 30, Action: On}))
+			Expect(events[1]).To(Equal(Event{Hour: 16, Min: 30, Action: On}))
+			Expect(events[2]).To(Equal(Event{Hour: 18, Min: 40, Action: Off}))
 		})
 
 		It("should restore the thermostat target", func() {

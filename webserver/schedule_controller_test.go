@@ -41,8 +41,8 @@ var _ = Describe("schedule controller", func() {
 		BeforeEach(func() {
 			zone1 = controller.NewZone("one", output.Virtual("one"))
 			ctrl.AddZone(zone1)
-			zone1.AddEvent(controller.Event{Hour: 7, Min: 30, Action: controller.TurnOn})
-			zone1.AddEvent(controller.Event{Hour: 8, Min: 30, Action: controller.TurnOff})
+			zone1.AddEvent(controller.Event{Hour: 7, Min: 30, Action: controller.On})
+			zone1.AddEvent(controller.Event{Hour: 8, Min: 30, Action: controller.Off})
 
 			values = url.Values{}
 			values.Set("hour", "10")
@@ -59,7 +59,7 @@ var _ = Describe("schedule controller", func() {
 
 			events := zone1.ReadEvents()
 			Expect(events).To(HaveLen(3))
-			Expect(events).To(ContainElement(controller.Event{Hour: 10, Min: 24, Action: controller.TurnOn}))
+			Expect(events).To(ContainElement(controller.Event{Hour: 10, Min: 24, Action: controller.On}))
 		})
 
 		It("should save the zone state", func() {
@@ -111,8 +111,8 @@ var _ = Describe("schedule controller", func() {
 		BeforeEach(func() {
 			zone1 = controller.NewZone("one", output.Virtual("one"))
 			ctrl.AddZone(zone1)
-			zone1.AddEvent(controller.Event{Hour: 7, Min: 30, Action: controller.TurnOn})
-			zone1.AddEvent(controller.Event{Hour: 8, Min: 30, Action: controller.TurnOff})
+			zone1.AddEvent(controller.Event{Hour: 7, Min: 30, Action: controller.On})
+			zone1.AddEvent(controller.Event{Hour: 8, Min: 30, Action: controller.Off})
 		})
 
 		It("should remove the matching event and redirect to the schedule", func() {
@@ -123,7 +123,7 @@ var _ = Describe("schedule controller", func() {
 
 			events := zone1.ReadEvents()
 			Expect(events).To(HaveLen(1))
-			Expect(events).NotTo(ContainElement(controller.Event{Hour: 7, Min: 30, Action: controller.TurnOn}))
+			Expect(events).NotTo(ContainElement(controller.Event{Hour: 7, Min: 30, Action: controller.On}))
 		})
 
 		It("should save the zone state", func() {

@@ -11,28 +11,28 @@ import (
 var _ = Describe("Action", func() {
 
 	Describe("JSON marshalling", func() {
-		It("should marshal TurnOn", func() {
-			Expect(json.Marshal(controller.TurnOn)).To(BeEquivalentTo(`"On"`))
+		It("should marshal On", func() {
+			Expect(json.Marshal(controller.On)).To(BeEquivalentTo(`"On"`))
 		})
 
-		It("should marshal TurnOff", func() {
-			Expect(json.Marshal(controller.TurnOff)).To(BeEquivalentTo(`"Off"`))
+		It("should marshal Off", func() {
+			Expect(json.Marshal(controller.Off)).To(BeEquivalentTo(`"Off"`))
 		})
 	})
 
 	Describe("JSON unmarshalling", func() {
-		It("should unmarshal TurnOn", func() {
+		It("should unmarshal On", func() {
 			var a controller.Action
 			err := json.Unmarshal([]byte(`"On"`), &a)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(a).To(Equal(controller.TurnOn))
+			Expect(a).To(Equal(controller.On))
 		})
 
-		It("should unmarshal TurnOn", func() {
+		It("should unmarshal Off", func() {
 			var a controller.Action
 			err := json.Unmarshal([]byte(`"Off"`), &a)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(a).To(Equal(controller.TurnOff))
+			Expect(a).To(Equal(controller.Off))
 		})
 
 		It("should error for an unrecognised string", func() {

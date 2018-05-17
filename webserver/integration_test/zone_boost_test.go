@@ -69,7 +69,7 @@ var _ = Describe("boosting a zone", func() {
 			nextEvent := zone1.NextEvent()
 			Expect(nextEvent).NotTo(BeNil())
 
-			Expect(nextEvent.Action).To(Equal(controller.TurnOff))
+			Expect(nextEvent.Action).To(Equal(controller.Off))
 
 			eventTime := nextEvent.NextOccurance()
 			expected := time.Now().Local().Add(30 * time.Minute)

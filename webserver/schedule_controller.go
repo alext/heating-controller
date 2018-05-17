@@ -41,7 +41,7 @@ func (srv *WebServer) scheduleAddEvent(w http.ResponseWriter, req *http.Request,
 		return
 	}
 	if req.FormValue("action") == "on" {
-		e.Action = controller.TurnOn
+		e.Action = controller.On
 	}
 	err = z.AddEvent(e)
 	if err != nil {

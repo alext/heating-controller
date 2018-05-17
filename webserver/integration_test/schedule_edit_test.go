@@ -56,10 +56,10 @@ var _ = Describe("Editing the schedule for a zone", func() {
 
 		Context("with some events", func() {
 			BeforeEach(func() {
-				zone1.AddEvent(controller.Event{Hour: 7, Min: 30, Action: controller.TurnOn})
-				zone1.AddEvent(controller.Event{Hour: 8, Min: 30, Action: controller.TurnOff})
-				zone1.AddEvent(controller.Event{Hour: 17, Min: 0, Action: controller.TurnOn})
-				zone1.AddEvent(controller.Event{Hour: 21, Min: 45, Action: controller.TurnOff})
+				zone1.AddEvent(controller.Event{Hour: 7, Min: 30, Action: controller.On})
+				zone1.AddEvent(controller.Event{Hour: 8, Min: 30, Action: controller.Off})
+				zone1.AddEvent(controller.Event{Hour: 17, Min: 0, Action: controller.On})
+				zone1.AddEvent(controller.Event{Hour: 21, Min: 45, Action: controller.Off})
 			})
 
 			It("should show the schedule", func() {
@@ -96,7 +96,7 @@ var _ = Describe("Editing the schedule for a zone", func() {
 
 				events := zone1.ReadEvents()
 				Expect(events).To(HaveLen(5))
-				Expect(events).To(ContainElement(controller.Event{Hour: 14, Min: 42, Action: controller.TurnOn}))
+				Expect(events).To(ContainElement(controller.Event{Hour: 14, Min: 42, Action: controller.On}))
 			})
 
 			It("should allow removing an event", func() {
@@ -111,7 +111,7 @@ var _ = Describe("Editing the schedule for a zone", func() {
 
 				events := zone1.ReadEvents()
 				Expect(events).To(HaveLen(3))
-				Expect(events).NotTo(ContainElement(controller.Event{Hour: 8, Min: 30, Action: controller.TurnOff}))
+				Expect(events).NotTo(ContainElement(controller.Event{Hour: 8, Min: 30, Action: controller.Off}))
 			})
 		})
 	})

@@ -111,7 +111,7 @@ func (eh *eventHandler) NextEvent() *Event {
 		Min:  j.Min,
 	}
 	if j.Label == "On" {
-		e.Action = TurnOn
+		e.Action = On
 	}
 	return e
 }
@@ -137,7 +137,7 @@ func (eh *eventHandler) Boost(d time.Duration) {
 	eh.lock.Lock()
 	defer eh.lock.Unlock()
 	eh.boosted = true
-	eh.demand(Event{Action: TurnOn})
+	eh.demand(Event{Action: On})
 
 	if d == 0 {
 		return
@@ -147,7 +147,7 @@ func (eh *eventHandler) Boost(d time.Duration) {
 	endEvent := Event{
 		Hour:   endTime.Hour(),
 		Min:    endTime.Minute(),
-		Action: TurnOff,
+		Action: Off,
 	}
 
 	nextEvent := eh.nextEvent()
@@ -170,6 +170,6 @@ func (eh *eventHandler) CancelBoost() {
 	if previous != nil {
 		eh.demand(*previous)
 	} else {
-		eh.demand(Event{Action: TurnOff})
+		eh.demand(Event{Action: Off})
 	}
 }

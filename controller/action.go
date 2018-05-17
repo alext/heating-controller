@@ -5,12 +5,12 @@ import "fmt"
 type Action int8
 
 const (
-	TurnOff Action = iota
-	TurnOn
+	Off Action = iota
+	On
 )
 
 func (a Action) String() string {
-	if a == TurnOn {
+	if a == On {
 		return "On"
 	}
 	return "Off"
@@ -23,9 +23,9 @@ func (a Action) MarshalText() ([]byte, error) {
 func (a *Action) UnmarshalText(data []byte) error {
 	switch string(data) {
 	case "On":
-		*a = TurnOn
+		*a = On
 	case "Off":
-		*a = TurnOff
+		*a = Off
 	default:
 		return fmt.Errorf("Unrecognised action value '%s'", data)
 	}
