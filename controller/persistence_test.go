@@ -38,7 +38,7 @@ var _ = Describe("persisting a zone's state", func() {
 		})
 
 		It("should save the scheduler events to the file", func() {
-			z.AddEvent(Event{Hour: 6, Min: 30, Action: On})
+			z.AddEvent(Event{Hour: 6, Min: 30, Action: On, ThermAction: &ThermostatAction{SetTarget, 19000}})
 			z.AddEvent(Event{Hour: 7, Min: 45, Action: Off})
 
 			Expect(z.Save()).To(Succeed())
@@ -46,7 +46,7 @@ var _ = Describe("persisting a zone's state", func() {
 			data := readFile(filepath.Join(tempDataDir, "ch.json"))
 			expected, _ := json.Marshal(map[string]interface{}{
 				"events": []map[string]interface{}{
-					{"hour": 6, "min": 30, "action": "On"},
+					{"hour": 6, "min": 30, "action": "On", "therm_action": map[string]interface{}{"action": "SetTarget", "param": 19000}},
 					{"hour": 7, "min": 45, "action": "Off"},
 				},
 			})
@@ -74,7 +74,7 @@ var _ = Describe("persisting a zone's state", func() {
 		It("should load the scheduler events from the file", func() {
 			writeJSONToFile(filepath.Join(tempDataDir, "ch.json"), map[string]interface{}{
 				"events": []map[string]interface{}{
-					{"hour": 6, "min": 30, "action": "On"},
+					{"hour": 6, "min": 30, "action": "On", "therm_action": map[string]interface{}{"action": "SetTarget", "param": 19000}},
 					{"hour": 7, "min": 45, "action": "Off"},
 				},
 			})
@@ -83,8 +83,8 @@ var _ = Describe("persisting a zone's state", func() {
 
 			events := z.ReadEvents()
 			Expect(events).To(HaveLen(2))
-			Expect(events[0]).To(Equal(Event{Hour: 6, Min: 30, Action: On}))
-			Expect(events[1]).To(Equal(Event{Hour: 7, Min: 45, Action: Off}))
+			Expect(events[0]).To(Equal(Event{Hour: 6, Min: 30, Action: On, ThermAction: &ThermostatAction{SetTarget, 19000}}))
+			Expect(events[1]).To(Equal(Event{Hour: 7, Min: 45, Action: Off, ThermAction: nil}))
 		})
 
 		It("should treat a non-existent data file the same as a file with an empty scheduler event list", func() {

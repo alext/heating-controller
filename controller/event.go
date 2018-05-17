@@ -9,9 +9,10 @@ import (
 )
 
 type Event struct {
-	Hour   int    `json:"hour"`
-	Min    int    `json:"min"`
-	Action Action `json:"action"`
+	Hour        int               `json:"hour"`
+	Min         int               `json:"min"`
+	Action      Action            `json:"action"`
+	ThermAction *ThermostatAction `json:"therm_action,omitempty"`
 }
 
 func (e Event) Valid() bool {

@@ -3,42 +3,46 @@ package controller_test
 import (
 	"encoding/json"
 
-	"github.com/alext/heating-controller/controller"
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
+
+	"github.com/alext/heating-controller/controller"
 )
 
 var _ = Describe("Action", func() {
 
-	Describe("JSON marshalling", func() {
-		It("should marshal On", func() {
-			Expect(json.Marshal(controller.On)).To(BeEquivalentTo(`"On"`))
-		})
+	DescribeTable("string representation",
+		func(a controller.Action, str string) {
+			Expect(a.String()).To(Equal(str))
+		},
+		Entry("On", controller.On, "On"),
+		Entry("Off", controller.Off, "Off"),
+		Entry("SetTarget", controller.SetTarget, "SetTarget"),
+		Entry("IncreaseTarget", controller.IncreaseTarget, "IncreaseTarget"),
+		Entry("DecreaseTarget", controller.DecreaseTarget, "DecreaseTarget"),
+	)
 
-		It("should marshal Off", func() {
-			Expect(json.Marshal(controller.Off)).To(BeEquivalentTo(`"Off"`))
-		})
-	})
+	DescribeTable("JSON marshalling/unmarshalling",
+		func(a controller.Action) {
+			str := `"` + a.String() + `"`
+			Expect(json.Marshal(a)).To(BeEquivalentTo(str))
 
-	Describe("JSON unmarshalling", func() {
-		It("should unmarshal On", func() {
-			var a controller.Action
-			err := json.Unmarshal([]byte(`"On"`), &a)
+			var actual controller.Action
+			err := json.Unmarshal([]byte(str), &actual)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(a).To(Equal(controller.On))
-		})
+			Expect(actual).To(Equal(a))
+		},
+		Entry("On", controller.On),
+		Entry("Off", controller.On),
+		Entry("SetTarget", controller.SetTarget),
+		Entry("IncreaseTarget", controller.IncreaseTarget),
+		Entry("DecreaseTarget", controller.DecreaseTarget),
+	)
 
-		It("should unmarshal Off", func() {
-			var a controller.Action
-			err := json.Unmarshal([]byte(`"Off"`), &a)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(a).To(Equal(controller.Off))
-		})
-
-		It("should error for an unrecognised string", func() {
-			var a controller.Action
-			err := json.Unmarshal([]byte(`"Foo"`), &a)
-			Expect(err).To(HaveOccurred())
-		})
+	It("JSON unmarshal should error for an unrecognised string", func() {
+		var a controller.Action
+		err := json.Unmarshal([]byte(`"Foo"`), &a)
+		Expect(err).To(HaveOccurred())
 	})
 })
