@@ -98,6 +98,51 @@ var _ = Describe("EventHandler", func() {
 		})
 	})
 
+	Describe("querying the next event", func() {
+		var (
+			sched *schedulerfakes.FakeScheduler
+			eh    EventHandler
+		)
+
+		BeforeEach(func() {
+			sched = &schedulerfakes.FakeScheduler{}
+			eh = NewEventHandler(sched, func(Event) {})
+		})
+
+		It("returns nil with an empty scheduler", func() {
+			sched.NextJobReturns(nil)
+			Expect(eh.NextEvent()).To(BeNil())
+		})
+
+		Context("with some events", func() {
+			var e1, e2 Event
+
+			BeforeEach(func() {
+				e1 = Event{Hour: 6, Min: 30, Action: On, ThermAction: &ThermostatAction{Action: SetTarget, Param: 19000}}
+				e2 = Event{Hour: 8, Min: 15, Action: Off}
+				eh.AddEvent(e1)
+				eh.AddEvent(e2)
+			})
+
+			It("returns the event corresponding to the next scheduler job", func() {
+				job := e2.buildSchedulerJob(func(e Event) {})
+				sched.NextJobReturns(&job)
+				Expect(*eh.NextEvent()).To(Equal(e2))
+			})
+
+			It("includes all the event detail", func() {
+				job := e1.buildSchedulerJob(func(e Event) {})
+				sched.NextJobReturns(&job)
+				Expect(*eh.NextEvent()).To(Equal(e1))
+			})
+			It("when boosted it returns a dummy event representing the end of the boost", func() {
+				job := Event{Hour: 16, Min: 12}.buildSchedulerJob(func(e Event) {})
+				sched.NextJobReturns(&job)
+				Expect(*eh.NextEvent()).To(Equal(Event{Hour: 16, Min: 12}))
+			})
+		})
+	})
+
 	Describe("bost function", func() {
 		var (
 			mockNow     time.Time

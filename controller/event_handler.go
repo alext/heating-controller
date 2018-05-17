@@ -106,14 +106,19 @@ func (eh *eventHandler) NextEvent() *Event {
 	if j == nil {
 		return nil
 	}
-	e := &Event{
+	eh.lock.RLock()
+	defer eh.lock.RUnlock()
+	for _, e := range eh.events {
+		if e.Hour == j.Hour && e.Min == j.Min {
+			return &e
+		}
+	}
+
+	// scheduler is boosted, construct event representing end.
+	return &Event{
 		Hour: j.Hour,
 		Min:  j.Min,
 	}
-	if j.Label == "On" {
-		e.Action = On
-	}
-	return e
 }
 
 func (eh *eventHandler) ReadEvents() []Event {
