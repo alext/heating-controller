@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.10-browsers
+      - image: circleci/golang:1.11.1-browsers
 
     working_directory: /go/src/github.com/alext/heating-controller
     steps:
