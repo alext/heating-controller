@@ -25,7 +25,7 @@ var _ = BeforeSuite(func() {
 	var err error
 	controller.DataDir, err = ioutil.TempDir("", "integration_test")
 	Expect(err).NotTo(HaveOccurred())
-	agoutiDriver = agouti.PhantomJS()
+	agoutiDriver = agouti.ChromeDriver()
 	Expect(agoutiDriver.Start()).To(Succeed())
 })
 
