@@ -7,6 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/heating-controller/scheduler/schedulerfakes"
+	"github.com/alext/heating-controller/units"
 )
 
 var _ = Describe("EventHandler", func() {
@@ -176,8 +177,7 @@ var _ = Describe("EventHandler", func() {
 
 				Expect(sched.OverrideCallCount()).To(Equal(1))
 				j := sched.OverrideArgsForCall(0)
-				Expect(j.Hour).To(Equal(9))
-				Expect(j.Min).To(Equal(30))
+				Expect(j.Time).To(Equal(units.NewTimeOfDay(9, 30)))
 				j.Action()
 				Expect(activations).To(HaveLen(2))
 				Expect(activations[1].Action).To(Equal(Off))

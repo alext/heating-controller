@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/alext/heating-controller/scheduler"
+	"github.com/alext/heating-controller/units"
 )
 
 type Event struct {
@@ -48,8 +49,7 @@ func (e Event) String() string {
 
 func (e Event) buildSchedulerJob(demand func(Event)) scheduler.Job {
 	return scheduler.Job{
-		Hour:   e.Hour,
-		Min:    e.Min,
+		Time:   units.NewTimeOfDay(e.Hour, e.Min),
 		Label:  e.Action.String(),
 		Action: func() { demand(e) },
 	}

@@ -190,7 +190,7 @@ func (s *scheduler) addJob(j *Job) {
 func (s *scheduler) removeJob(job *Job) {
 	newJobs := make([]*Job, 0)
 	for _, j := range s.jobs {
-		if j.Hour != job.Hour || j.Min != job.Min || j.Label != job.Label {
+		if j.Time != job.Time || j.Label != job.Label {
 			newJobs = append(newJobs, j)
 		}
 	}

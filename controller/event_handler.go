@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/alext/heating-controller/scheduler"
+	"github.com/alext/heating-controller/units"
 )
 
 //go:generate counterfeiter . EventHandler
@@ -109,15 +110,15 @@ func (eh *eventHandler) NextEvent() *Event {
 	eh.lock.RLock()
 	defer eh.lock.RUnlock()
 	for _, e := range eh.events {
-		if e.Hour == j.Hour && e.Min == j.Min {
+		if j.Time == units.NewTimeOfDay(e.Hour, e.Min) {
 			return &e
 		}
 	}
 
 	// scheduler is boosted, construct event representing end.
 	return &Event{
-		Hour: j.Hour,
-		Min:  j.Min,
+		Hour: j.Time.Hour(),
+		Min:  j.Time.Minute(),
 	}
 }
 
