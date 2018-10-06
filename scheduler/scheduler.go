@@ -114,8 +114,7 @@ func (s *scheduler) NextJob() *Job {
 		}
 		return <-retCh
 	}
-	_, nextJob := s.next(timeNow().Local())
-	return nextJob
+	return s.next(timeNow().Local())
 }
 
 func (s *scheduler) ReadJobs() []Job {
@@ -162,7 +161,12 @@ func (s *scheduler) run() {
 	for {
 		if s.nextJob == nil {
 			now := timeNow().Local()
-			s.nextAt, s.nextJob = s.next(now)
+			s.nextJob = s.next(now)
+			if s.nextJob != nil {
+				s.nextAt = s.nextJob.Time.NextOccuranceAfter(now)
+			} else {
+				s.nextAt = now.Add(24 * time.Hour)
+			}
 			s.tmr.Reset(s.nextAt.Sub(now))
 			log.Printf("[Scheduler:%s] Next job at %v - %v", s.id, s.nextAt, s.nextJob)
 		}
@@ -215,15 +219,15 @@ func (s *scheduler) setCurrentState() {
 	go previous.Action()
 }
 
-func (s *scheduler) next(now time.Time) (time.Time, *Job) {
+func (s *scheduler) next(now time.Time) *Job {
 	if len(s.jobs) < 1 {
-		return now.Add(24 * time.Hour), nil
+		return nil
 	}
 	hour, min, _ := now.Clock()
 	for _, job := range s.jobs {
 		if job.after(hour, min) {
-			return job.Time.NextOccuranceAfter(now), job
+			return job
 		}
 	}
-	return s.jobs[0].Time.NextOccuranceAfter(now), s.jobs[0]
+	return s.jobs[0]
 }
