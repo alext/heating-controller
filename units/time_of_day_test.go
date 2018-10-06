@@ -13,24 +13,26 @@ import (
 var _ = Describe("TimeOfDay", func() {
 
 	DescribeTable("constructing and forammting",
-		func(hour, min int, expected string) {
-			t := units.NewTimeOfDay(hour, min)
+		func(t units.TimeOfDay, expected string) {
 			Expect(t.String()).To(Equal(expected))
 		},
-		Entry("formats the time correctly", 12, 34, "12:34"),
-		Entry("always uses 2 digits for minutes", 12, 5, "12:05"),
-		Entry("omits leading zeros for hour", 2, 15, "2:15"),
+		Entry("formats the time correctly", units.NewTimeOfDay(12, 34), "12:34"),
+		Entry("always uses 2 digits for minutes", units.NewTimeOfDay(12, 5), "12:05"),
+		Entry("omits leading zeros for hour", units.NewTimeOfDay(2, 15), "2:15"),
+		Entry("supports second precision", units.NewTimeOfDay(12, 34, 35), "12:34:35"),
+		Entry("omits seconds if zero", units.NewTimeOfDay(12, 34, 0), "12:34"),
+		Entry("always uses 2 digits for seconds", units.NewTimeOfDay(12, 34, 06), "12:34:06"),
 	)
 
 	DescribeTable("validity",
-		func(hour, min int, expected bool) {
-			t := units.NewTimeOfDay(hour, min)
+		func(t units.TimeOfDay, expected bool) {
 			Expect(t.Valid()).To(Equal(expected))
 		},
-		Entry("a time in the day", 12, 34, true),
-		Entry("midnight", 0, 0, true),
-		Entry("one minute before midnight", 23, 59, true),
-		Entry("an invalid time", 24, 0, false),
+		Entry("a time in the day", units.NewTimeOfDay(12, 34), true),
+		Entry("midnight", units.NewTimeOfDay(0, 0, 0), true),
+		Entry("one minute before midnight", units.NewTimeOfDay(23, 59), true),
+		Entry("one second before midnight", units.NewTimeOfDay(23, 59, 59), true),
+		Entry("an invalid time", units.NewTimeOfDay(24, 0, 0), false),
 	)
 
 	Describe("NextOccuranceAfter", func() {
@@ -62,5 +64,11 @@ var _ = Describe("TimeOfDay", func() {
 			actual := tod.NextOccuranceAfter(time.Date(2018, 10, 27, 18, 0, 0, 0, london))
 			Expect(actual).To(Equal(time.Date(2018, 10, 28, 14, 15, 0, 0, london)))
 		})
+		It("handles a second precision TimeOfDay", func() {
+			tod = units.NewTimeOfDay(14, 15, 16)
+			actual := tod.NextOccuranceAfter(time.Date(2018, 9, 25, 11, 0, 0, 0, london))
+			Expect(actual).To(Equal(time.Date(2018, 9, 25, 14, 15, 16, 0, london)))
+		})
+
 	})
 })

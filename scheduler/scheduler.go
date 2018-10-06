@@ -5,6 +5,8 @@ import (
 	"log"
 	"sync"
 	"time"
+
+	"github.com/alext/heating-controller/units"
 )
 
 // variable indirection to enable testing
@@ -205,10 +207,10 @@ func (s *scheduler) setCurrentState() {
 	if len(s.jobs) < 1 {
 		return
 	}
-	hour, min, _ := timeNow().Local().Clock()
+	currentToD := units.NewTimeOfDay(timeNow().Local().Clock())
 	var previous *Job
 	for _, j := range s.jobs {
-		if j.after(hour, min) {
+		if j.Time > currentToD {
 			break
 		}
 		previous = j
@@ -223,9 +225,9 @@ func (s *scheduler) next(now time.Time) *Job {
 	if len(s.jobs) < 1 {
 		return nil
 	}
-	hour, min, _ := now.Clock()
+	currentToD := units.NewTimeOfDay(now.Clock())
 	for _, job := range s.jobs {
-		if job.after(hour, min) {
+		if job.Time > currentToD {
 			return job
 		}
 	}
