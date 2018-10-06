@@ -49,9 +49,9 @@ func (eh *eventHandler) nextEvent() *Event {
 	if len(eh.events) < 1 {
 		return nil
 	}
-	hour, min, _ := timeNow().Local().Clock()
+	currentToD := units.NewTimeOfDay(timeNow().Local().Clock())
 	for _, e := range eh.events {
-		if e.after(hour, min) {
+		if e.Time > currentToD {
 			return &e
 		}
 	}
@@ -62,9 +62,9 @@ func (eh *eventHandler) previousEvent() *Event {
 	if len(eh.events) < 1 {
 		return nil
 	}
-	hour, min, _ := timeNow().Local().Clock()
+	currentToD := units.NewTimeOfDay(timeNow().Local().Clock())
 	for i, e := range eh.events {
-		if e.after(hour, min) {
+		if e.Time > currentToD {
 			if i > 0 {
 				return &eh.events[i-1]
 			}
@@ -110,15 +110,14 @@ func (eh *eventHandler) NextEvent() *Event {
 	eh.lock.RLock()
 	defer eh.lock.RUnlock()
 	for _, e := range eh.events {
-		if j.Time == units.NewTimeOfDay(e.Hour, e.Min) {
+		if j.Time == e.Time {
 			return &e
 		}
 	}
 
 	// scheduler is boosted, construct event representing end.
 	return &Event{
-		Hour: j.Time.Hour(),
-		Min:  j.Time.Minute(),
+		Time: j.Time,
 	}
 }
 
@@ -151,8 +150,7 @@ func (eh *eventHandler) Boost(d time.Duration) {
 
 	endTime := timeNow().Local().Add(d)
 	endEvent := Event{
-		Hour:   endTime.Hour(),
-		Min:    endTime.Minute(),
+		Time:   units.NewTimeOfDay(endTime.Clock()),
 		Action: Off,
 	}
 

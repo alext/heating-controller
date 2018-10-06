@@ -120,8 +120,8 @@ var _ = Describe("Controller", func() {
 			It("Should restore the state of the zones", func() {
 				writeJSONToFile(DataDir+"/ch.json", map[string]interface{}{
 					"events": []map[string]interface{}{
-						{"hour": 6, "min": 30, "action": "On"},
-						{"hour": 7, "min": 45, "action": "Off"},
+						{"time": "6:30", "action": "On"},
+						{"time": "7:45", "action": "Off"},
 					},
 				})
 				cfg.Zones["ch"] = config.ZoneConfig{Virtual: true}

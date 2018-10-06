@@ -10,6 +10,7 @@ import (
 
 	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/output"
+	"github.com/alext/heating-controller/units"
 	"github.com/alext/heating-controller/webserver"
 )
 
@@ -57,12 +58,12 @@ var _ = Describe("Editing the schedule for a zone", func() {
 		Context("with some events", func() {
 			BeforeEach(func() {
 				zone1.AddEvent(controller.Event{
-					Hour: 7, Min: 30, Action: controller.On,
+					Time: units.NewTimeOfDay(7, 30), Action: controller.On,
 					ThermAction: &controller.ThermostatAction{Action: controller.DecreaseTarget, Param: 19000},
 				})
-				zone1.AddEvent(controller.Event{Hour: 8, Min: 30, Action: controller.Off})
-				zone1.AddEvent(controller.Event{Hour: 17, Min: 0, Action: controller.On})
-				zone1.AddEvent(controller.Event{Hour: 21, Min: 45, Action: controller.Off})
+				zone1.AddEvent(controller.Event{Time: units.NewTimeOfDay(8, 30), Action: controller.Off})
+				zone1.AddEvent(controller.Event{Time: units.NewTimeOfDay(17, 0), Action: controller.On})
+				zone1.AddEvent(controller.Event{Time: units.NewTimeOfDay(21, 45), Action: controller.Off})
 			})
 
 			It("should show the schedule", func() {
@@ -99,7 +100,7 @@ var _ = Describe("Editing the schedule for a zone", func() {
 
 				events := zone1.ReadEvents()
 				Expect(events).To(HaveLen(5))
-				Expect(events).To(ContainElement(controller.Event{Hour: 14, Min: 42, Action: controller.On}))
+				Expect(events).To(ContainElement(controller.Event{Time: units.NewTimeOfDay(14, 42), Action: controller.On}))
 			})
 
 			It("should allow adding an event with a thermostat action", func() {
@@ -121,7 +122,7 @@ var _ = Describe("Editing the schedule for a zone", func() {
 				events := zone1.ReadEvents()
 				Expect(events).To(HaveLen(5))
 				Expect(events).To(ContainElement(controller.Event{
-					Hour: 14, Min: 42, Action: controller.On,
+					Time: units.NewTimeOfDay(14, 42), Action: controller.On,
 					ThermAction: &controller.ThermostatAction{Action: controller.SetTarget, Param: 19500},
 				}))
 			})
@@ -138,7 +139,7 @@ var _ = Describe("Editing the schedule for a zone", func() {
 
 				events := zone1.ReadEvents()
 				Expect(events).To(HaveLen(3))
-				Expect(events).NotTo(ContainElement(controller.Event{Hour: 8, Min: 30, Action: controller.Off}))
+				Expect(events).NotTo(ContainElement(controller.Event{Time: units.NewTimeOfDay(8, 30), Action: controller.Off}))
 			})
 		})
 	})

@@ -11,6 +11,7 @@ import (
 
 	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/output"
+	"github.com/alext/heating-controller/units"
 	"github.com/alext/heating-controller/webserver"
 )
 
@@ -41,8 +42,8 @@ var _ = Describe("schedule controller", func() {
 		BeforeEach(func() {
 			zone1 = controller.NewZone("one", output.Virtual("one"))
 			ctrl.AddZone(zone1)
-			zone1.AddEvent(controller.Event{Hour: 7, Min: 30, Action: controller.On})
-			zone1.AddEvent(controller.Event{Hour: 8, Min: 30, Action: controller.Off})
+			zone1.AddEvent(controller.Event{Time: units.NewTimeOfDay(7, 30), Action: controller.On})
+			zone1.AddEvent(controller.Event{Time: units.NewTimeOfDay(8, 30), Action: controller.Off})
 
 			values = url.Values{}
 			values.Set("hour", "10")
@@ -61,7 +62,7 @@ var _ = Describe("schedule controller", func() {
 
 			events := zone1.ReadEvents()
 			Expect(events).To(HaveLen(3))
-			Expect(events).To(ContainElement(controller.Event{Hour: 10, Min: 24, Action: controller.On}))
+			Expect(events).To(ContainElement(controller.Event{Time: units.NewTimeOfDay(10, 24), Action: controller.On}))
 		})
 
 		It("should add the event with a thermostat action when requested", func() {
@@ -75,7 +76,7 @@ var _ = Describe("schedule controller", func() {
 			events := zone1.ReadEvents()
 			Expect(events).To(HaveLen(3))
 			Expect(events).To(ContainElement(controller.Event{
-				Hour: 10, Min: 24, Action: controller.On,
+				Time: units.NewTimeOfDay(10, 24), Action: controller.On,
 				ThermAction: &controller.ThermostatAction{Action: controller.SetTarget, Param: 19500},
 			}))
 		})
@@ -86,9 +87,9 @@ var _ = Describe("schedule controller", func() {
 			data := readFile(controller.DataDir + "/one.json")
 			expected, _ := json.Marshal(map[string]interface{}{
 				"events": []map[string]interface{}{
-					{"hour": 7, "min": 30, "action": "On"},
-					{"hour": 8, "min": 30, "action": "Off"},
-					{"hour": 10, "min": 24, "action": "On"},
+					{"time": "7:30", "action": "On"},
+					{"time": "8:30", "action": "Off"},
+					{"time": "10:24", "action": "On"},
 				},
 			})
 			Expect(data).To(MatchJSON(expected))
@@ -137,7 +138,7 @@ var _ = Describe("schedule controller", func() {
 			})
 
 			It("should return an error with a well-formed, but invalid event", func() {
-				values.Set("min", "64")
+				values.Set("hour", "25")
 				w := doRequestWithValues(server, "POST", "/zones/one/schedule", values)
 				Expect(w.Code).To(Equal(400))
 				Expect(w.Body.String()).To(ContainSubstring("invalid event"))
@@ -154,8 +155,8 @@ var _ = Describe("schedule controller", func() {
 		BeforeEach(func() {
 			zone1 = controller.NewZone("one", output.Virtual("one"))
 			ctrl.AddZone(zone1)
-			zone1.AddEvent(controller.Event{Hour: 7, Min: 30, Action: controller.On})
-			zone1.AddEvent(controller.Event{Hour: 8, Min: 30, Action: controller.Off})
+			zone1.AddEvent(controller.Event{Time: units.NewTimeOfDay(7, 30), Action: controller.On})
+			zone1.AddEvent(controller.Event{Time: units.NewTimeOfDay(8, 30), Action: controller.Off})
 		})
 
 		It("should remove the matching event and redirect to the schedule", func() {
@@ -166,7 +167,7 @@ var _ = Describe("schedule controller", func() {
 
 			events := zone1.ReadEvents()
 			Expect(events).To(HaveLen(1))
-			Expect(events).NotTo(ContainElement(controller.Event{Hour: 7, Min: 30, Action: controller.On}))
+			Expect(events).NotTo(ContainElement(controller.Event{Time: units.NewTimeOfDay(7, 30), Action: controller.On}))
 		})
 
 		It("should save the zone state", func() {
@@ -175,7 +176,7 @@ var _ = Describe("schedule controller", func() {
 			data := readFile(controller.DataDir + "/one.json")
 			expected, _ := json.Marshal(map[string]interface{}{
 				"events": []map[string]interface{}{
-					{"hour": 8, "min": 30, "action": "Off"},
+					{"time": "8:30", "action": "Off"},
 				},
 			})
 			Expect(data).To(MatchJSON(expected))

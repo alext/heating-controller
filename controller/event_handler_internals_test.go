@@ -7,6 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/heating-controller/scheduler/schedulerfakes"
+	"github.com/alext/heating-controller/units"
 )
 
 var _ = Describe("EventHandler internals", func() {
@@ -30,22 +31,22 @@ var _ = Describe("EventHandler internals", func() {
 
 		Context("with some events", func() {
 			BeforeEach(func() {
-				eh.AddEvent(Event{Hour: 6, Min: 15, Action: On})
-				eh.AddEvent(Event{Hour: 8, Min: 30, Action: Off})
-				eh.AddEvent(Event{Hour: 18, Min: 0, Action: On})
-				eh.AddEvent(Event{Hour: 22, Min: 0, Action: Off})
+				eh.AddEvent(Event{Time: units.NewTimeOfDay(6, 15), Action: On})
+				eh.AddEvent(Event{Time: units.NewTimeOfDay(8, 30), Action: Off})
+				eh.AddEvent(Event{Time: units.NewTimeOfDay(18, 0), Action: On})
+				eh.AddEvent(Event{Time: units.NewTimeOfDay(22, 0), Action: Off})
 			})
 
 			It("returns the next event after now", func() {
 				mockNow = todayAt(7, 15, 0)
-				Expect(eh.nextEvent()).To(Equal(&Event{Hour: 8, Min: 30, Action: Off}))
+				Expect(eh.nextEvent()).To(Equal(&Event{Time: units.NewTimeOfDay(8, 30), Action: Off}))
 				mockNow = todayAt(10, 30, 0)
-				Expect(eh.nextEvent()).To(Equal(&Event{Hour: 18, Min: 0, Action: On}))
+				Expect(eh.nextEvent()).To(Equal(&Event{Time: units.NewTimeOfDay(18, 0), Action: On}))
 			})
 
 			It("returns the first event if there are no more events today", func() {
 				mockNow = todayAt(22, 5, 0)
-				Expect(eh.nextEvent()).To(Equal(&Event{Hour: 6, Min: 15, Action: On}))
+				Expect(eh.nextEvent()).To(Equal(&Event{Time: units.NewTimeOfDay(6, 15), Action: On}))
 			})
 		})
 	})
@@ -57,22 +58,22 @@ var _ = Describe("EventHandler internals", func() {
 
 		Context("with some events", func() {
 			BeforeEach(func() {
-				eh.AddEvent(Event{Hour: 6, Min: 15, Action: On})
-				eh.AddEvent(Event{Hour: 8, Min: 30, Action: Off})
-				eh.AddEvent(Event{Hour: 18, Min: 0, Action: On})
-				eh.AddEvent(Event{Hour: 22, Min: 0, Action: Off})
+				eh.AddEvent(Event{Time: units.NewTimeOfDay(6, 15), Action: On})
+				eh.AddEvent(Event{Time: units.NewTimeOfDay(8, 30), Action: Off})
+				eh.AddEvent(Event{Time: units.NewTimeOfDay(18, 0), Action: On})
+				eh.AddEvent(Event{Time: units.NewTimeOfDay(22, 0), Action: Off})
 			})
 
 			It("returns the event before now", func() {
 				mockNow = todayAt(7, 15, 0)
-				Expect(eh.previousEvent()).To(Equal(&Event{Hour: 6, Min: 15, Action: On}))
+				Expect(eh.previousEvent()).To(Equal(&Event{Time: units.NewTimeOfDay(6, 15), Action: On}))
 				mockNow = todayAt(10, 30, 0)
-				Expect(eh.previousEvent()).To(Equal(&Event{Hour: 8, Min: 30, Action: Off}))
+				Expect(eh.previousEvent()).To(Equal(&Event{Time: units.NewTimeOfDay(8, 30), Action: Off}))
 			})
 
 			It("returns the last event if there are no earlier events today", func() {
 				mockNow = todayAt(6, 5, 0)
-				Expect(eh.previousEvent()).To(Equal(&Event{Hour: 22, Min: 0, Action: Off}))
+				Expect(eh.previousEvent()).To(Equal(&Event{Time: units.NewTimeOfDay(22, 0), Action: Off}))
 			})
 		})
 	})

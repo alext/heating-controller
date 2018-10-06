@@ -12,7 +12,7 @@
   <tr>
     <td>{{ .String }}</td>
     <td>
-      <form action="/zones/{{ $.ID }}/schedule/{{ .Hour }}-{{ .Min }}" method="post">
+      <form action="/zones/{{ $.ID }}/schedule/{{ .Time.Hour }}-{{ .Time.Minute }}" method="post">
         <input type="hidden" name="_method" value="DELETE">
         <input type="submit" value="Delete Event">
       </form>
