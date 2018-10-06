@@ -22,6 +22,17 @@ var _ = Describe("TimeOfDay", func() {
 		Entry("omits leading zeros for hour", 2, 15, "2:15"),
 	)
 
+	DescribeTable("validity",
+		func(hour, min int, expected bool) {
+			t := units.NewTimeOfDay(hour, min)
+			Expect(t.Valid()).To(Equal(expected))
+		},
+		Entry("a time in the day", 12, 34, true),
+		Entry("midnight", 0, 0, true),
+		Entry("one minute before midnight", 23, 59, true),
+		Entry("an invalid time", 24, 0, false),
+	)
+
 	Describe("NextOccuranceAfter", func() {
 		var (
 			tod    units.TimeOfDay

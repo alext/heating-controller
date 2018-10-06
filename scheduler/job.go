@@ -14,8 +14,7 @@ type Job struct {
 }
 
 func (j Job) Valid() bool {
-	// FIXME: Add something here, or remove entirely
-	return true
+	return j.Time.Valid()
 }
 
 func (j Job) after(hour, min int) bool {

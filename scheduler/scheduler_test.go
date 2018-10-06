@@ -314,8 +314,8 @@ var _ = Describe("a basic scheduler", func() {
 		})
 	})
 
-	PIt("should return an error when adding an invalid job", func() {
-		err := theScheduler.AddJob(Job{Time: 0})
+	It("should return an error when adding an invalid job", func() {
+		err := theScheduler.AddJob(Job{Time: units.NewTimeOfDay(25, 0)})
 		Expect(err).To(MatchError(ErrInvalidJob))
 		Expect(theScheduler.ReadJobs()).To(HaveLen(0))
 	})
