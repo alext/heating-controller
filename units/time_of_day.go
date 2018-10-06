@@ -2,6 +2,7 @@ package units
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -53,4 +54,34 @@ func (t TimeOfDay) NextOccuranceAfter(current time.Time) time.Time {
 		next = next.AddDate(0, 0, 1)
 	}
 	return next
+}
+
+func (t TimeOfDay) MarshalText() ([]byte, error) {
+	return []byte(t.String()), nil
+}
+
+func (t *TimeOfDay) UnmarshalText(data []byte) error {
+	parts := strings.Split(string(data), ":")
+	if len(parts) < 2 || len(parts) > 3 {
+		return fmt.Errorf("Invalid time: %s", data)
+	}
+
+	hour, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return err
+	}
+	min, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return err
+	}
+	sec := 0
+	if len(parts) == 3 {
+		sec, err = strconv.Atoi(parts[2])
+		if err != nil {
+			return err
+		}
+	}
+
+	*t = NewTimeOfDay(hour, min, sec)
+	return nil
 }

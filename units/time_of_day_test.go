@@ -1,6 +1,7 @@
 package units_test
 
 import (
+	"encoding/json"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -69,6 +70,36 @@ var _ = Describe("TimeOfDay", func() {
 			actual := tod.NextOccuranceAfter(time.Date(2018, 9, 25, 11, 0, 0, 0, london))
 			Expect(actual).To(Equal(time.Date(2018, 9, 25, 14, 15, 16, 0, london)))
 		})
-
 	})
+
+	DescribeTable("Text marshalling/unmarshalling",
+		func(t units.TimeOfDay, serialised string) {
+			str := `"` + serialised + `"`
+			Expect(json.Marshal(t)).To(BeEquivalentTo(str))
+
+			var actual units.TimeOfDay
+			err := json.Unmarshal([]byte(str), &actual)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actual).To(Equal(t))
+		},
+		Entry("encodes and decodes the time correctly", units.NewTimeOfDay(12, 34), "12:34"),
+		Entry("handles using 2 digits for minutes", units.NewTimeOfDay(12, 5), "12:05"),
+		Entry("omits leading zeros for hour", units.NewTimeOfDay(2, 15), "2:15"),
+		Entry("supports second precision", units.NewTimeOfDay(12, 34, 35), "12:34:35"),
+		Entry("omits seconds if zero", units.NewTimeOfDay(12, 34, 0), "12:34"),
+		Entry("handles using 2 digits for seconds", units.NewTimeOfDay(12, 34, 06), "12:34:06"),
+	)
+
+	DescribeTable("UnmarshalText error handling",
+		func(input string) {
+			var t units.TimeOfDay
+			err := json.Unmarshal([]byte(`"`+input+`"`), &t)
+			Expect(err).To(HaveOccurred())
+		},
+		Entry("not given hour and minute", "14"),
+		Entry("more than 3 time components", "14:15:16:17"),
+		Entry("non-numeric hour", "foo:23"),
+		Entry("non-numeric min", "12:foo"),
+		Entry("non-numeric second", "12:23:foo"),
+	)
 })
