@@ -143,6 +143,25 @@ var _ = Describe("persisting a zone's state", func() {
 
 			Expect(z.Restore()).To(Succeed())
 		})
+
+		Describe("handling the previous serialisation format", func() {
+
+			It("should restore events serialised with an 'hour' and 'min' instead of 'time'", func() {
+				writeJSONToFile(filepath.Join(tempDataDir, "ch.json"), map[string]interface{}{
+					"events": []map[string]interface{}{
+						{"hour": 6, "min": 30, "action": "On", "therm_action": map[string]interface{}{"action": "SetTarget", "param": 19000}},
+						{"hour": 7, "min": 45, "action": "Off"},
+					},
+				})
+
+				Expect(z.Restore()).To(Succeed())
+
+				events := z.ReadEvents()
+				Expect(events).To(HaveLen(2))
+				Expect(events[0]).To(Equal(Event{Time: units.NewTimeOfDay(6, 30), Action: On, ThermAction: &ThermostatAction{SetTarget, 19000}}))
+				Expect(events[1]).To(Equal(Event{Time: units.NewTimeOfDay(7, 45), Action: Off, ThermAction: nil}))
+			})
+		})
 	})
 
 })
