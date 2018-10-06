@@ -144,7 +144,7 @@ func (s *scheduler) ReadJobs() []Job {
 func (s *scheduler) Override(j Job) {
 	s.commandCh <- func() {
 		now := timeNow().Local()
-		s.nextAt = j.nextOccuranceAfter(now)
+		s.nextAt = j.Time.NextOccuranceAfter(now)
 		s.nextJob = &j
 		s.tmr.Reset(s.nextAt.Sub(now))
 		log.Printf("[Scheduler:%s] Override job at %v - %v", s.id, s.nextAt, s.nextJob)
@@ -222,8 +222,8 @@ func (s *scheduler) next(now time.Time) (time.Time, *Job) {
 	hour, min, _ := now.Clock()
 	for _, job := range s.jobs {
 		if job.after(hour, min) {
-			return job.nextOccuranceAfter(now), job
+			return job.Time.NextOccuranceAfter(now), job
 		}
 	}
-	return s.jobs[0].nextOccuranceAfter(now), s.jobs[0]
+	return s.jobs[0].Time.NextOccuranceAfter(now), s.jobs[0]
 }

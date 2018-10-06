@@ -2,6 +2,7 @@ package units
 
 import (
 	"fmt"
+	"time"
 )
 
 type TimeOfDay uint
@@ -20,4 +21,12 @@ func (t TimeOfDay) Hour() int {
 
 func (t TimeOfDay) Minute() int {
 	return int(t % 60)
+}
+
+func (t TimeOfDay) NextOccuranceAfter(current time.Time) time.Time {
+	next := time.Date(current.Year(), current.Month(), current.Day(), t.Hour(), t.Minute(), 0, 0, current.Location())
+	if next.Before(current) {
+		next = next.AddDate(0, 0, 1)
+	}
+	return next
 }
