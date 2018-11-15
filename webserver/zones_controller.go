@@ -80,23 +80,3 @@ func (srv *WebServer) thermostatDec(w http.ResponseWriter, req *http.Request, z 
 	}
 	http.Redirect(w, req, "/", http.StatusFound)
 }
-
-func (srv *WebServer) zoneActivate(w http.ResponseWriter, req *http.Request, z *controller.Zone) {
-	log.Printf("[webserver] Manual activation zone %s", z.ID)
-	err := z.Out.Activate()
-	if err != nil {
-		writeError(w, fmt.Errorf("Error activating output '%s': %s", z.ID, err.Error()))
-		return
-	}
-	http.Redirect(w, req, "/", http.StatusFound)
-}
-
-func (srv *WebServer) zoneDeactivate(w http.ResponseWriter, req *http.Request, z *controller.Zone) {
-	log.Printf("[webserver] Manual deactivation zone %s", z.ID)
-	err := z.Out.Deactivate()
-	if err != nil {
-		writeError(w, fmt.Errorf("Error deactivating output '%s': %s", z.ID, err.Error()))
-		return
-	}
-	http.Redirect(w, req, "/", http.StatusFound)
-}

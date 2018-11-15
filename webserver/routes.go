@@ -27,9 +27,6 @@ func (srv *WebServer) buildRouter() http.Handler {
 	r.Methods("POST").Path("/zones/{zone_id}/thermostat/increment").HandlerFunc(srv.withZone(srv.thermostatInc))
 	r.Methods("POST").Path("/zones/{zone_id}/thermostat/decrement").HandlerFunc(srv.withZone(srv.thermostatDec))
 
-	r.Methods("PUT").Path("/zones/{zone_id}/activate").HandlerFunc(srv.withZone(srv.zoneActivate))
-	r.Methods("PUT").Path("/zones/{zone_id}/deactivate").HandlerFunc(srv.withZone(srv.zoneDeactivate))
-
 	return httpMethodOverrideHandler(r)
 }
 

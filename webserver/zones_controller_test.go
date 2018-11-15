@@ -2,7 +2,6 @@ package webserver_test
 
 import (
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -14,7 +13,6 @@ import (
 	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/controller/controllerfakes"
 	"github.com/alext/heating-controller/output"
-	"github.com/alext/heating-controller/output/outputfakes"
 	"github.com/alext/heating-controller/thermostat/thermostatfakes"
 	"github.com/alext/heating-controller/webserver"
 )
@@ -28,80 +26,6 @@ var _ = Describe("zones controller", func() {
 	BeforeEach(func() {
 		ctrl = controller.New()
 		server = webserver.New(ctrl, 8080, "")
-	})
-
-	Describe("changing an output state", func() {
-		var (
-			output1 output.Output
-			zone1   *controller.Zone
-		)
-
-		BeforeEach(func() {
-			output1 = output.Virtual("one")
-			zone1 = controller.NewZone("one", output1)
-			ctrl.AddZone(zone1)
-		})
-
-		Describe("activating the zone's output", func() {
-
-			It("should activate the output", func() {
-				doFakePutRequest(server, "/zones/one/activate")
-
-				Expect(output1.Active()).To(Equal(true))
-			})
-
-			It("should redirect to the index", func() {
-				w := doFakePutRequest(server, "/zones/one/activate")
-
-				Expect(w.Code).To(Equal(302))
-				Expect(w.Header().Get("Location")).To(Equal("/"))
-			})
-
-			It("should show an error if activating fails", func() {
-				fakeOutput := new(outputfakes.FakeOutput)
-				ctrl.AddZone(controller.NewZone("mock", fakeOutput))
-
-				err := errors.New("Computer says no!")
-				fakeOutput.ActivateReturns(err)
-
-				w := doFakePutRequest(server, "/zones/mock/activate")
-
-				Expect(w.Code).To(Equal(500))
-				Expect(w.Body.String()).To(Equal("Error activating output 'mock': Computer says no!\n"))
-			})
-		})
-
-		Describe("deactivating the zone's output", func() {
-			BeforeEach(func() {
-				output1.Activate()
-			})
-
-			It("should deactivate the output", func() {
-				doFakePutRequest(server, "/zones/one/deactivate")
-
-				Expect(output1.Active()).To(Equal(false))
-			})
-
-			It("should redirect to the index", func() {
-				w := doFakePutRequest(server, "/zones/one/deactivate")
-
-				Expect(w.Code).To(Equal(302))
-				Expect(w.Header().Get("Location")).To(Equal("/"))
-			})
-
-			It("should show an error if activating fails", func() {
-				fakeOutput := new(outputfakes.FakeOutput)
-				ctrl.AddZone(controller.NewZone("mock", fakeOutput))
-
-				err := errors.New("Computer says no!")
-				fakeOutput.DeactivateReturns(err)
-
-				w := doFakePutRequest(server, "/zones/mock/deactivate")
-
-				Expect(w.Code).To(Equal(500))
-				Expect(w.Body.String()).To(Equal("Error deactivating output 'mock': Computer says no!\n"))
-			})
-		})
 	})
 
 	Describe("boosting", func() {

@@ -63,22 +63,6 @@
         </td>
       </tr>
     {{ end }}
-    <tr>
-      <td>Manual override</td>
-      <td>
-        {{ if .Active }}
-        <form action="/zones/{{ .ID }}/deactivate" method="post">
-          <input type="hidden" name="_method" value="PUT">
-          <input type="submit" value="Deactivate">
-        </form>
-        {{ else }}
-        <form action="/zones/{{ .ID }}/activate" method="post">
-          <input type="hidden" name="_method" value="PUT">
-          <input type="submit" value="Activate">
-        </form>
-        {{ end }}
-      <td>
-    </tr>
   </tbody>
   {{ end }}
 </table>
