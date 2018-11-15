@@ -11,6 +11,7 @@ import (
 
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/thermostat/thermostatfakes"
+	"github.com/alext/heating-controller/units"
 )
 
 var _ = Describe("persisting a zone's state", func() {
@@ -38,16 +39,16 @@ var _ = Describe("persisting a zone's state", func() {
 		})
 
 		It("should save the scheduler events to the file", func() {
-			z.AddEvent(Event{Hour: 6, Min: 30, Action: On, ThermAction: &ThermostatAction{SetTarget, 19000}})
-			z.AddEvent(Event{Hour: 7, Min: 45, Action: Off})
+			z.AddEvent(Event{Time: units.NewTimeOfDay(6, 30), Action: On, ThermAction: &ThermostatAction{SetTarget, 19000}})
+			z.AddEvent(Event{Time: units.NewTimeOfDay(7, 45), Action: Off})
 
 			Expect(z.Save()).To(Succeed())
 
 			data := readFile(filepath.Join(tempDataDir, "ch.json"))
 			expected, _ := json.Marshal(map[string]interface{}{
 				"events": []map[string]interface{}{
-					{"hour": 6, "min": 30, "action": "On", "therm_action": map[string]interface{}{"action": "SetTarget", "param": 19000}},
-					{"hour": 7, "min": 45, "action": "Off"},
+					{"time": "6:30", "action": "On", "therm_action": map[string]interface{}{"action": "SetTarget", "param": 19000}},
+					{"time": "7:45", "action": "Off"},
 				},
 			})
 			Expect(data).To(MatchJSON(expected))
@@ -74,8 +75,8 @@ var _ = Describe("persisting a zone's state", func() {
 		It("should load the scheduler events from the file", func() {
 			writeJSONToFile(filepath.Join(tempDataDir, "ch.json"), map[string]interface{}{
 				"events": []map[string]interface{}{
-					{"hour": 6, "min": 30, "action": "On", "therm_action": map[string]interface{}{"action": "SetTarget", "param": 19000}},
-					{"hour": 7, "min": 45, "action": "Off"},
+					{"time": "6:30", "action": "On", "therm_action": map[string]interface{}{"action": "SetTarget", "param": 19000}},
+					{"time": "7:45", "action": "Off"},
 				},
 			})
 
@@ -83,8 +84,8 @@ var _ = Describe("persisting a zone's state", func() {
 
 			events := z.ReadEvents()
 			Expect(events).To(HaveLen(2))
-			Expect(events[0]).To(Equal(Event{Hour: 6, Min: 30, Action: On, ThermAction: &ThermostatAction{SetTarget, 19000}}))
-			Expect(events[1]).To(Equal(Event{Hour: 7, Min: 45, Action: Off, ThermAction: nil}))
+			Expect(events[0]).To(Equal(Event{Time: units.NewTimeOfDay(6, 30), Action: On, ThermAction: &ThermostatAction{SetTarget, 19000}}))
+			Expect(events[1]).To(Equal(Event{Time: units.NewTimeOfDay(7, 45), Action: Off, ThermAction: nil}))
 		})
 
 		It("should treat a non-existent data file the same as a file with an empty scheduler event list", func() {
@@ -96,10 +97,10 @@ var _ = Describe("persisting a zone's state", func() {
 		It("should skip over any invalid scheduler events in the file", func() {
 			writeJSONToFile(filepath.Join(tempDataDir, "ch.json"), map[string]interface{}{
 				"events": []map[string]interface{}{
-					{"hour": 6, "min": 30, "action": "On"},
-					{"hour": 7, "min": 75, "action": "Off"}, // Invalid minute 75
-					{"hour": 16, "min": 30, "action": "On"},
-					{"hour": 18, "min": 40, "action": "Off"},
+					{"time": "6:30", "action": "On"},
+					{"time": "25:25", "action": "Off"}, // Invalid hour 25
+					{"time": "16:30", "action": "On"},
+					{"time": "18:40", "action": "Off"},
 				},
 			})
 
@@ -107,9 +108,9 @@ var _ = Describe("persisting a zone's state", func() {
 
 			events := z.ReadEvents()
 			Expect(events).To(HaveLen(3))
-			Expect(events[0]).To(Equal(Event{Hour: 6, Min: 30, Action: On}))
-			Expect(events[1]).To(Equal(Event{Hour: 16, Min: 30, Action: On}))
-			Expect(events[2]).To(Equal(Event{Hour: 18, Min: 40, Action: Off}))
+			Expect(events[0]).To(Equal(Event{Time: units.NewTimeOfDay(6, 30), Action: On}))
+			Expect(events[1]).To(Equal(Event{Time: units.NewTimeOfDay(16, 30), Action: On}))
+			Expect(events[2]).To(Equal(Event{Time: units.NewTimeOfDay(18, 40), Action: Off}))
 		})
 
 		It("should restore the thermostat target", func() {
@@ -141,6 +142,25 @@ var _ = Describe("persisting a zone's state", func() {
 			})
 
 			Expect(z.Restore()).To(Succeed())
+		})
+
+		Describe("handling the previous serialisation format", func() {
+
+			It("should restore events serialised with an 'hour' and 'min' instead of 'time'", func() {
+				writeJSONToFile(filepath.Join(tempDataDir, "ch.json"), map[string]interface{}{
+					"events": []map[string]interface{}{
+						{"hour": 6, "min": 30, "action": "On", "therm_action": map[string]interface{}{"action": "SetTarget", "param": 19000}},
+						{"hour": 7, "min": 45, "action": "Off"},
+					},
+				})
+
+				Expect(z.Restore()).To(Succeed())
+
+				events := z.ReadEvents()
+				Expect(events).To(HaveLen(2))
+				Expect(events[0]).To(Equal(Event{Time: units.NewTimeOfDay(6, 30), Action: On, ThermAction: &ThermostatAction{SetTarget, 19000}}))
+				Expect(events[1]).To(Equal(Event{Time: units.NewTimeOfDay(7, 45), Action: Off, ThermAction: nil}))
+			})
 		})
 	})
 

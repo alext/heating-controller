@@ -5,6 +5,8 @@ import (
 	"log"
 	"sync"
 	"time"
+
+	"github.com/alext/heating-controller/units"
 )
 
 // variable indirection to enable testing
@@ -114,8 +116,7 @@ func (s *scheduler) NextJob() *Job {
 		}
 		return <-retCh
 	}
-	_, nextJob := s.next(timeNow().Local())
-	return nextJob
+	return s.next(timeNow().Local())
 }
 
 func (s *scheduler) ReadJobs() []Job {
@@ -144,7 +145,7 @@ func (s *scheduler) ReadJobs() []Job {
 func (s *scheduler) Override(j Job) {
 	s.commandCh <- func() {
 		now := timeNow().Local()
-		s.nextAt = j.nextOccuranceAfter(now)
+		s.nextAt = j.Time.NextOccuranceAfter(now)
 		s.nextJob = &j
 		s.tmr.Reset(s.nextAt.Sub(now))
 		log.Printf("[Scheduler:%s] Override job at %v - %v", s.id, s.nextAt, s.nextJob)
@@ -162,7 +163,12 @@ func (s *scheduler) run() {
 	for {
 		if s.nextJob == nil {
 			now := timeNow().Local()
-			s.nextAt, s.nextJob = s.next(now)
+			s.nextJob = s.next(now)
+			if s.nextJob != nil {
+				s.nextAt = s.nextJob.Time.NextOccuranceAfter(now)
+			} else {
+				s.nextAt = now.Add(24 * time.Hour)
+			}
 			s.tmr.Reset(s.nextAt.Sub(now))
 			log.Printf("[Scheduler:%s] Next job at %v - %v", s.id, s.nextAt, s.nextJob)
 		}
@@ -190,7 +196,7 @@ func (s *scheduler) addJob(j *Job) {
 func (s *scheduler) removeJob(job *Job) {
 	newJobs := make([]*Job, 0)
 	for _, j := range s.jobs {
-		if j.Hour != job.Hour || j.Min != job.Min || j.Label != job.Label {
+		if j.Time != job.Time || j.Label != job.Label {
 			newJobs = append(newJobs, j)
 		}
 	}
@@ -201,10 +207,10 @@ func (s *scheduler) setCurrentState() {
 	if len(s.jobs) < 1 {
 		return
 	}
-	hour, min, _ := timeNow().Local().Clock()
+	currentToD := units.NewTimeOfDay(timeNow().Local().Clock())
 	var previous *Job
 	for _, j := range s.jobs {
-		if j.after(hour, min) {
+		if j.Time > currentToD {
 			break
 		}
 		previous = j
@@ -215,15 +221,15 @@ func (s *scheduler) setCurrentState() {
 	go previous.Action()
 }
 
-func (s *scheduler) next(now time.Time) (time.Time, *Job) {
+func (s *scheduler) next(now time.Time) *Job {
 	if len(s.jobs) < 1 {
-		return now.Add(24 * time.Hour), nil
+		return nil
 	}
-	hour, min, _ := now.Clock()
+	currentToD := units.NewTimeOfDay(now.Clock())
 	for _, job := range s.jobs {
-		if job.after(hour, min) {
-			return job.nextOccuranceAfter(now), job
+		if job.Time > currentToD {
+			return job
 		}
 	}
-	return s.jobs[0].nextOccuranceAfter(now), s.jobs[0]
+	return s.jobs[0]
 }

@@ -7,6 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/heating-controller/scheduler/schedulerfakes"
+	"github.com/alext/heating-controller/units"
 )
 
 var _ = Describe("EventHandler", func() {
@@ -21,80 +22,80 @@ var _ = Describe("EventHandler", func() {
 
 		It("should allow adding and reading events", func() {
 			Expect(
-				eh.AddEvent(Event{Hour: 6, Min: 15, Action: On}),
+				eh.AddEvent(Event{Time: units.NewTimeOfDay(6, 15), Action: On}),
 			).To(Succeed())
 			Expect(
-				eh.AddEvent(Event{Hour: 8, Min: 30, Action: Off}),
+				eh.AddEvent(Event{Time: units.NewTimeOfDay(8, 30), Action: Off}),
 			).To(Succeed())
 
 			events := eh.ReadEvents()
 			Expect(events).To(HaveLen(2))
-			Expect(events).To(ContainElement(Event{Hour: 6, Min: 15, Action: On}))
-			Expect(events).To(ContainElement(Event{Hour: 8, Min: 30, Action: Off}))
+			Expect(events).To(ContainElement(Event{Time: units.NewTimeOfDay(6, 15), Action: On}))
+			Expect(events).To(ContainElement(Event{Time: units.NewTimeOfDay(8, 30), Action: Off}))
 		})
 
 		It("should sort the events by time when adding", func() {
 			Expect(
-				eh.AddEvent(Event{Hour: 6, Min: 15, Action: On}),
+				eh.AddEvent(Event{Time: units.NewTimeOfDay(6, 15), Action: On}),
 			).To(Succeed())
 			Expect(
-				eh.AddEvent(Event{Hour: 18, Min: 0, Action: On}),
+				eh.AddEvent(Event{Time: units.NewTimeOfDay(18, 0), Action: On}),
 			).To(Succeed())
 			Expect(
-				eh.AddEvent(Event{Hour: 8, Min: 30, Action: Off}),
+				eh.AddEvent(Event{Time: units.NewTimeOfDay(8, 30), Action: Off}),
 			).To(Succeed())
 
 			events := eh.ReadEvents()
 			Expect(events).To(HaveLen(3))
-			Expect(events[0]).To(Equal(Event{Hour: 6, Min: 15, Action: On}))
-			Expect(events[1]).To(Equal(Event{Hour: 8, Min: 30, Action: Off}))
-			Expect(events[2]).To(Equal(Event{Hour: 18, Min: 0, Action: On}))
+			Expect(events[0]).To(Equal(Event{Time: units.NewTimeOfDay(6, 15), Action: On}))
+			Expect(events[1]).To(Equal(Event{Time: units.NewTimeOfDay(8, 30), Action: Off}))
+			Expect(events[2]).To(Equal(Event{Time: units.NewTimeOfDay(18, 0), Action: On}))
 		})
 
 		It("should return an error if an invalid event is added", func() {
 			Expect(
-				eh.AddEvent(Event{Hour: 24, Min: 15, Action: On}),
+				eh.AddEvent(Event{Time: units.NewTimeOfDay(24, 15), Action: On}),
 			).NotTo(Succeed())
 		})
 
 		It("should allow removing an event", func() {
 			Expect(
-				eh.AddEvent(Event{Hour: 6, Min: 15, Action: On}),
+				eh.AddEvent(Event{Time: units.NewTimeOfDay(6, 15), Action: On}),
 			).To(Succeed())
 			Expect(
-				eh.AddEvent(Event{Hour: 8, Min: 30, Action: Off}),
+				eh.AddEvent(Event{Time: units.NewTimeOfDay(8, 30), Action: Off}),
 			).To(Succeed())
 			Expect(
-				eh.AddEvent(Event{Hour: 18, Min: 0, Action: Off}),
+				eh.AddEvent(Event{Time: units.NewTimeOfDay(18, 0), Action: Off}),
 			).To(Succeed())
 
-			eh.RemoveEvent(Event{Hour: 8, Min: 30, Action: Off})
+			eh.RemoveEvent(Event{Time: units.NewTimeOfDay(8, 30), Action: Off})
 
 			events := eh.ReadEvents()
 			Expect(events).To(HaveLen(2))
-			Expect(events).NotTo(ContainElement(Event{Hour: 8, Min: 30, Action: Off}))
+			Expect(events).NotTo(ContainElement(Event{Time: units.NewTimeOfDay(8, 30), Action: Off}))
 		})
 
 		It("should return a copy of the events list", func() {
 			Expect(
-				eh.AddEvent(Event{Hour: 6, Min: 15, Action: On}),
+				eh.AddEvent(Event{Time: units.NewTimeOfDay(6, 15), Action: On}),
 			).To(Succeed())
 			Expect(
-				eh.AddEvent(Event{Hour: 12, Min: 0, Action: On}),
+				eh.AddEvent(Event{Time: units.NewTimeOfDay(12, 0), Action: On}),
 			).To(Succeed())
 			Expect(
-				eh.AddEvent(Event{Hour: 18, Min: 0, Action: Off}),
+				eh.AddEvent(Event{Time: units.NewTimeOfDay(18, 0), Action: Off}),
 			).To(Succeed())
 
 			events := eh.ReadEvents()
 
 			// Event will be added at index 2, which would overwrite the above returned slice if it's not a copy
 			Expect(
-				eh.AddEvent(Event{Hour: 8, Min: 30, Action: Off}),
+				eh.AddEvent(Event{Time: units.NewTimeOfDay(8, 30), Action: Off}),
 			).To(Succeed())
 
 			Expect(events).To(HaveLen(3))
-			Expect(events[2]).To(Equal(Event{Hour: 18, Min: 0, Action: Off}))
+			Expect(events[2]).To(Equal(Event{Time: units.NewTimeOfDay(18, 0), Action: Off}))
 		})
 	})
 
@@ -118,8 +119,8 @@ var _ = Describe("EventHandler", func() {
 			var e1, e2 Event
 
 			BeforeEach(func() {
-				e1 = Event{Hour: 6, Min: 30, Action: On, ThermAction: &ThermostatAction{Action: SetTarget, Param: 19000}}
-				e2 = Event{Hour: 8, Min: 15, Action: Off}
+				e1 = Event{Time: units.NewTimeOfDay(6, 30), Action: On, ThermAction: &ThermostatAction{Action: SetTarget, Param: 19000}}
+				e2 = Event{Time: units.NewTimeOfDay(8, 15), Action: Off}
 				eh.AddEvent(e1)
 				eh.AddEvent(e2)
 			})
@@ -136,9 +137,9 @@ var _ = Describe("EventHandler", func() {
 				Expect(*eh.NextEvent()).To(Equal(e1))
 			})
 			It("when boosted it returns a dummy event representing the end of the boost", func() {
-				job := Event{Hour: 16, Min: 12}.buildSchedulerJob(func(e Event) {})
+				job := Event{Time: units.NewTimeOfDay(16, 12)}.buildSchedulerJob(func(e Event) {})
 				sched.NextJobReturns(&job)
-				Expect(*eh.NextEvent()).To(Equal(Event{Hour: 16, Min: 12}))
+				Expect(*eh.NextEvent()).To(Equal(Event{Time: units.NewTimeOfDay(16, 12)}))
 			})
 		})
 	})
@@ -160,10 +161,10 @@ var _ = Describe("EventHandler", func() {
 			eh = NewEventHandler(sched, func(e Event) {
 				activations = append(activations, e)
 			})
-			eh.AddEvent(Event{Hour: 6, Min: 15, Action: On})
-			eh.AddEvent(Event{Hour: 8, Min: 0, Action: Off})
-			eh.AddEvent(Event{Hour: 15, Min: 30, Action: On})
-			eh.AddEvent(Event{Hour: 22, Min: 0, Action: Off})
+			eh.AddEvent(Event{Time: units.NewTimeOfDay(6, 15), Action: On})
+			eh.AddEvent(Event{Time: units.NewTimeOfDay(8, 0), Action: Off})
+			eh.AddEvent(Event{Time: units.NewTimeOfDay(15, 30), Action: On})
+			eh.AddEvent(Event{Time: units.NewTimeOfDay(22, 0), Action: Off})
 		})
 
 		Describe("boosting", func() {
@@ -176,8 +177,7 @@ var _ = Describe("EventHandler", func() {
 
 				Expect(sched.OverrideCallCount()).To(Equal(1))
 				j := sched.OverrideArgsForCall(0)
-				Expect(j.Hour).To(Equal(9))
-				Expect(j.Min).To(Equal(30))
+				Expect(j.Time).To(Equal(units.NewTimeOfDay(9, 30)))
 				j.Action()
 				Expect(activations).To(HaveLen(2))
 				Expect(activations[1].Action).To(Equal(Off))
@@ -225,7 +225,7 @@ var _ = Describe("EventHandler", func() {
 				eh.CancelBoost()
 
 				Expect(activations).To(HaveLen(1))
-				Expect(activations[0]).To(Equal(Event{Hour: 8, Min: 0, Action: Off}))
+				Expect(activations[0]).To(Equal(Event{Time: units.NewTimeOfDay(8, 0), Action: Off}))
 			})
 
 			It("deactivates the zone if there are no events", func() {

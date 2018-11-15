@@ -7,39 +7,26 @@ import (
 	"time"
 
 	"github.com/alext/heating-controller/scheduler"
+	"github.com/alext/heating-controller/units"
 )
 
 type Event struct {
-	Hour        int               `json:"hour"`
-	Min         int               `json:"min"`
+	Time        units.TimeOfDay   `json:"time"`
 	Action      Action            `json:"action"`
 	ThermAction *ThermostatAction `json:"therm_action,omitempty"`
 }
 
 func (e Event) Valid() bool {
-	return e.Hour >= 0 && e.Hour < 24 && e.Min >= 0 && e.Min < 60
+	return e.Time.Valid()
 }
 
 func (e Event) NextOccurance() time.Time {
-	return e.nextOccuranceAfter(timeNow().Local())
-}
-
-func (e Event) nextOccuranceAfter(current time.Time) time.Time {
-	next := time.Date(current.Year(), current.Month(), current.Day(), e.Hour, e.Min, 0, 0, time.Local)
-	if next.Before(current) {
-		current = current.AddDate(0, 0, 1)
-		next = time.Date(current.Year(), current.Month(), current.Day(), e.Hour, e.Min, 0, 0, time.Local)
-	}
-	return next
-}
-
-func (e Event) after(hour, min int) bool {
-	return e.Hour > hour || (e.Hour == hour && e.Min > min)
+	return e.Time.NextOccuranceAfter(timeNow().Local())
 }
 
 func (e Event) String() string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "%d:%02d %s", e.Hour, e.Min, e.Action)
+	fmt.Fprintf(&b, "%s %s", e.Time, e.Action)
 	if e.ThermAction != nil {
 		fmt.Fprintf(&b, " %s", e.ThermAction)
 	}
@@ -48,8 +35,7 @@ func (e Event) String() string {
 
 func (e Event) buildSchedulerJob(demand func(Event)) scheduler.Job {
 	return scheduler.Job{
-		Hour:   e.Hour,
-		Min:    e.Min,
+		Time:   e.Time,
 		Label:  e.Action.String(),
 		Action: func() { demand(e) },
 	}
@@ -57,7 +43,6 @@ func (e Event) buildSchedulerJob(demand func(Event)) scheduler.Job {
 
 func sortEvents(events []Event) {
 	sort.Slice(events, func(i, j int) bool {
-		a, b := events[i], events[j]
-		return a.Hour < b.Hour || (a.Hour == b.Hour && a.Min < b.Min)
+		return events[i].Time < events[j].Time
 	})
 }

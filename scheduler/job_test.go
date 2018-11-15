@@ -3,6 +3,8 @@ package scheduler
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	"github.com/alext/heating-controller/units"
 )
 
 var _ = Describe("Job", func() {
@@ -11,20 +13,8 @@ var _ = Describe("Job", func() {
 			Expect(Job{}.Valid()).To(BeTrue())
 		})
 
-		It("should be invalid for a negative hour", func() {
-			Expect(Job{Hour: -1}.Valid()).To(BeFalse())
-		})
-
-		It("should be invalid for an hour greater than 23", func() {
-			Expect(Job{Hour: 24}.Valid()).To(BeFalse())
-		})
-
-		It("should be invalid for a negative minute", func() {
-			Expect(Job{Min: -1}.Valid()).To(BeFalse())
-		})
-
-		It("should be invalid for an minute greater than 59", func() {
-			Expect(Job{Min: 60}.Valid()).To(BeFalse())
+		It("should be invalid for a job with an invalid time", func() {
+			Expect(Job{Time: units.NewTimeOfDay(25, 0)}.Valid()).To(BeFalse())
 		})
 	})
 })

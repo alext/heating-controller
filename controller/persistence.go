@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -35,6 +36,11 @@ func (z *Zone) Restore() error {
 		log.Printf("[Zone:%s] Error parsing saved zone state: %s", z.ID, err.Error())
 		return err
 	}
+	err = handleLegacyFormat(&data, file)
+	if err != nil {
+		log.Printf("[Zone:%s] Error handling legacy format: %s", z.ID, err.Error())
+		return err
+	}
 	for _, e := range data.Events {
 		err = z.AddEvent(e)
 		if err != nil {
@@ -43,6 +49,52 @@ func (z *Zone) Restore() error {
 	}
 	if data.ThermostatTarget != nil && z.Thermostat != nil {
 		z.Thermostat.Set(*data.ThermostatTarget)
+	}
+	return nil
+}
+
+// FIXME: remove all this once we've migrated everywhere.
+type legacyEvent struct {
+	Hour        int               `json:"hour"`
+	Min         int               `json:"min"`
+	Action      Action            `json:"action"`
+	ThermAction *ThermostatAction `json:"therm_action,omitempty"`
+}
+
+type legacyZoneData struct {
+	Events []legacyEvent `json:"events"`
+}
+
+func handleLegacyFormat(data *zoneData, file io.ReadSeeker) error {
+	if len(data.Events) == 0 || data.Events[0].Time != 0 {
+		// nothing to do
+		return nil
+	}
+
+	_, err := file.Seek(0, io.SeekStart)
+	if err != nil {
+		return err
+	}
+
+	var legacyData legacyZoneData
+	err = json.NewDecoder(file).Decode(&legacyData)
+	if err != nil {
+		return err
+	}
+	if len(legacyData.Events) == 0 {
+		return nil
+	}
+	if legacyData.Events[0].Hour == 0 && legacyData.Events[0].Min == 0 {
+		// looks like no logacy data present, so abort.
+		return nil
+	}
+	data.Events = make([]Event, 0, len(legacyData.Events))
+	for _, e := range legacyData.Events {
+		data.Events = append(data.Events, Event{
+			Time:        units.NewTimeOfDay(e.Hour, e.Min),
+			Action:      e.Action,
+			ThermAction: e.ThermAction,
+		})
 	}
 	return nil
 }
