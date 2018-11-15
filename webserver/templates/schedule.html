@@ -27,6 +27,7 @@
           <option value="On">On</option>
           <option value="Off">Off</option>
         </select>
+        {{ if .Thermostat }}
         <select name="therm_action">
           <option value="">No Change</option>
           <option value="SetTarget">Set Target</option>
@@ -34,6 +35,7 @@
           <option value="DecreaseTarget">Decrease Target</option>
         </select>
         <input type="number" name="therm_param" placeholder="temp" step="0.5" style="width: 4em">
+        {{ end }}
         <input type="submit" value="Add Event">
       </form>
     </td>

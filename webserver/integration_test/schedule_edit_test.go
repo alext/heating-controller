@@ -10,6 +10,7 @@ import (
 
 	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/output"
+	"github.com/alext/heating-controller/thermostat/thermostatfakes"
 	"github.com/alext/heating-controller/units"
 	"github.com/alext/heating-controller/webserver"
 )
@@ -26,6 +27,7 @@ var _ = Describe("Editing the schedule for a zone", func() {
 		ctrl := controller.New()
 
 		zone1 = controller.NewZone("one", output.Virtual("one"))
+		zone1.Thermostat = &thermostatfakes.FakeThermostat{}
 		zone2 = controller.NewZone("two", output.Virtual("two"))
 		ctrl.AddZone(zone1)
 		ctrl.AddZone(zone2)
@@ -125,6 +127,16 @@ var _ = Describe("Editing the schedule for a zone", func() {
 					Time: units.NewTimeOfDay(14, 42), Action: controller.On,
 					ThermAction: &controller.ThermostatAction{Action: controller.SetTarget, Param: 19500},
 				}))
+			})
+
+			It("does not show the thermostat action fields for a zone without a thermostat", func() {
+				Expect(page.Navigate(testServer.URL + "/zones/two/schedule")).To(Succeed())
+
+				form := page.All("table tr").At(1).Find("form")
+				Expect(form).To(BeFound())
+
+				Expect(form.Find("select[name=therm_action]")).ToNot(BeFound())
+				Expect(form.Find("input[name=therm_param]")).ToNot(BeFound())
 			})
 
 			It("should allow removing an event", func() {
