@@ -21,7 +21,7 @@ type Zone struct {
 	EventHandler
 
 	lock          sync.RWMutex
-	Out           output.Output
+	out           output.Output
 	schedDemand   bool
 	thermDemand   bool
 	currentDemand bool
@@ -30,7 +30,7 @@ type Zone struct {
 func NewZone(id string, out output.Output) *Zone {
 	z := &Zone{
 		ID:          id,
-		Out:         out,
+		out:         out,
 		thermDemand: true, // always on until a thermostat is added
 	}
 	z.Scheduler = scheduler.New(z.ID)
@@ -45,7 +45,7 @@ func (z *Zone) SetupThermostat(source sensor.Sensor, initialTarget units.Tempera
 func (z *Zone) Active() (bool, error) {
 	z.lock.RLock()
 	defer z.lock.RUnlock()
-	return z.Out.Active()
+	return z.out.Active()
 }
 
 func (z *Zone) SDemand() bool {
@@ -94,10 +94,10 @@ func (z *Zone) updateDemand() {
 	var err error
 	if targetDemand {
 		log.Printf("[Zone:%s] Activating output", z.ID)
-		err = z.Out.Activate()
+		err = z.out.Activate()
 	} else {
 		log.Printf("[Zone:%s] Deactivating output", z.ID)
-		err = z.Out.Deactivate()
+		err = z.out.Deactivate()
 	}
 	if err != nil {
 		log.Printf("[Zone:%s] Output error: %v", z.ID, err)

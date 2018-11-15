@@ -172,7 +172,7 @@ var _ = Describe("Zone demand handling", func() {
 				out.Deactivate()
 			}
 			z := &Zone{
-				Out:           out,
+				out:           out,
 				schedDemand:   c.schedDemand,
 				thermDemand:   c.thermDemand,
 				currentDemand: c.currentDemand,

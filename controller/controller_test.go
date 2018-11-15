@@ -84,8 +84,8 @@ var _ = Describe("Controller", func() {
 
 				Expect(ctrl.Zones).To(HaveKey("foo"))
 				Expect(ctrl.Zones).To(HaveKey("bar"))
-				Expect(ctrl.Zones["foo"].Out.Id()).To(Equal("foo"))
-				Expect(ctrl.Zones["bar"].Out.Id()).To(Equal("bar"))
+				Expect(ctrl.Zones["foo"].out.Id()).To(Equal("foo"))
+				Expect(ctrl.Zones["bar"].out.Id()).To(Equal("bar"))
 			})
 
 			Describe("configuring a thermostat", func() {
@@ -152,8 +152,8 @@ var _ = Describe("Controller", func() {
 
 				Expect(ctrl.Zones).To(HaveKey("foo"))
 				Expect(ctrl.Zones).To(HaveKey("bar"))
-				Expect(ctrl.Zones["foo"].Out.Id()).To(Equal("foo-gpio10"))
-				Expect(ctrl.Zones["bar"].Out.Id()).To(Equal("bar-gpio47"))
+				Expect(ctrl.Zones["foo"].out.Id()).To(Equal("foo-gpio10"))
+				Expect(ctrl.Zones["bar"].out.Id()).To(Equal("bar-gpio47"))
 			})
 		})
 	})
