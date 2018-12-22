@@ -30,7 +30,7 @@ github.com/onsi/ginkgo/internal/leafnodes
 github.com/onsi/ginkgo/internal/spec
 github.com/onsi/ginkgo/internal/specrunner
 github.com/onsi/ginkgo/reporters/stenographer/support/go-isatty
-# github.com/onsi/gomega v1.2.0
+# github.com/onsi/gomega v1.4.3
 github.com/onsi/gomega
 github.com/onsi/gomega/types
 github.com/onsi/gomega/internal/assertion
@@ -56,11 +56,11 @@ github.com/sclevine/agouti/matchers/internal/colorparser
 # github.com/spf13/afero v1.2.0
 github.com/spf13/afero
 github.com/spf13/afero/mem
-# golang.org/x/net v0.0.0-20170809000501-1c05540f6879
+# golang.org/x/net v0.0.0-20180906233101-161cd47e91fd
 golang.org/x/net/html/charset
 golang.org/x/net/html
 golang.org/x/net/html/atom
-# golang.org/x/sys v0.0.0-20170817234608-43e60d72a8e2
+# golang.org/x/sys v0.0.0-20180909124046-d0be0721c37e
 golang.org/x/sys/unix
 # golang.org/x/text v0.3.0
 golang.org/x/text/transform
@@ -83,5 +83,5 @@ golang.org/x/text/internal/tag
 gopkg.in/fsnotify.v1
 # gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7
 gopkg.in/tomb.v1
-# gopkg.in/yaml.v2 v2.0.0-20170812160011-eb3733d160e7
+# gopkg.in/yaml.v2 v2.2.1
 gopkg.in/yaml.v2
