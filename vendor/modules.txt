@@ -47,7 +47,7 @@ github.com/sclevine/agouti/matchers/internal
 github.com/sclevine/agouti/api/internal/bus
 github.com/sclevine/agouti/api/internal/service
 github.com/sclevine/agouti/matchers/internal/colorparser
-# github.com/spf13/afero v0.0.0-20170217164146-9be650865eab
+# github.com/spf13/afero v1.2.0
 github.com/spf13/afero
 github.com/spf13/afero/mem
 # golang.org/x/net v0.0.0-20170809000501-1c05540f6879
@@ -56,7 +56,7 @@ golang.org/x/net/html
 golang.org/x/net/html/atom
 # golang.org/x/sys v0.0.0-20170817234608-43e60d72a8e2
 golang.org/x/sys/unix
-# golang.org/x/text v0.0.0-20170814122439-e56139fd9c5b
+# golang.org/x/text v0.3.0
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
 golang.org/x/text/encoding
