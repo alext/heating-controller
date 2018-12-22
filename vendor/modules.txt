@@ -37,7 +37,7 @@ github.com/onsi/gomega/matchers/support/goraph/bipartitegraph
 github.com/onsi/gomega/matchers/support/goraph/edge
 github.com/onsi/gomega/matchers/support/goraph/node
 github.com/onsi/gomega/matchers/support/goraph/util
-# github.com/sclevine/agouti v0.0.0-20170619155925-dfc6680bb9fc
+# github.com/sclevine/agouti v3.0.0+incompatible
 github.com/sclevine/agouti
 github.com/sclevine/agouti/matchers
 github.com/sclevine/agouti/api

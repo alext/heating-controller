@@ -9,7 +9,7 @@ require (
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/onsi/ginkgo v1.4.0
 	github.com/onsi/gomega v1.2.0
-	github.com/sclevine/agouti v0.0.0-20170619155925-dfc6680bb9fc
+	github.com/sclevine/agouti v3.0.0+incompatible
 	github.com/spf13/afero v1.2.0
 	golang.org/x/net v0.0.0-20170809000501-1c05540f6879 // indirect
 	golang.org/x/sync v0.0.0-20181108010431-42b317875d0f // indirect
