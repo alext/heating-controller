@@ -14,8 +14,8 @@ import (
 
 func (srv *WebServer) zonesIndex(w http.ResponseWriter, req *http.Request) {
 	t, err := template.ParseFiles(
-		filepath.Join(srv.templatesPath, "_base.html"),
-		filepath.Join(srv.templatesPath, "index.html"),
+		filepath.Join(srv.templatesPath, "_base.tmpl"),
+		filepath.Join(srv.templatesPath, "index.tmpl"),
 	)
 	if err != nil {
 		log.Print("Error parsing template:", err)

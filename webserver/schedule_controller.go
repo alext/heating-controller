@@ -14,8 +14,8 @@ import (
 
 func (srv *WebServer) scheduleEdit(w http.ResponseWriter, req *http.Request, z *controller.Zone) {
 	t, err := template.ParseFiles(
-		filepath.Join(srv.templatesPath, "_base.html"),
-		filepath.Join(srv.templatesPath, "schedule.html"),
+		filepath.Join(srv.templatesPath, "_base.tmpl"),
+		filepath.Join(srv.templatesPath, "schedule.tmpl"),
 	)
 	if err != nil {
 		log.Println("Error parsing template:", err)
