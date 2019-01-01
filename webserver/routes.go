@@ -17,6 +17,8 @@ func (srv *WebServer) buildRouter() http.Handler {
 	r.Methods("GET").Path("/sensors/{sensor_id}").HandlerFunc(srv.sensorGet)
 	r.Methods("PUT").Path("/sensors/{sensor_id}").HandlerFunc(srv.sensorPut)
 
+	r.Methods("GET").Path("/zones").HandlerFunc(srv.zonesAPIIndex)
+
 	r.Methods("PUT").Path("/zones/{zone_id}/boost").HandlerFunc(srv.withZone(srv.zoneBoost))
 	r.Methods("DELETE").Path("/zones/{zone_id}/boost").HandlerFunc(srv.withZone(srv.zoneCancelBoost))
 

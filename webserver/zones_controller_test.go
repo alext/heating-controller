@@ -28,6 +28,34 @@ var _ = Describe("zones controller", func() {
 		server = webserver.New(ctrl, 8080, "")
 	})
 
+	Describe("JSON index", func() {
+		BeforeEach(func() {
+			out1 := output.Virtual("one")
+			zone1 := controller.NewZone("one", out1)
+			zone1.EventHandler = new(controllerfakes.FakeEventHandler)
+			out2 := output.Virtual("two")
+			zone2 := controller.NewZone("two", out2)
+			zone2.EventHandler = new(controllerfakes.FakeEventHandler)
+			ctrl.AddZone(zone1)
+			ctrl.AddZone(zone2)
+			out1.Activate()
+		})
+
+		It("returns details of the state of all zones", func() {
+			resp := doGetRequest(server, "/zones")
+			Expect(resp.Code).To(Equal(200))
+			Expect(resp.Header().Get("Content-Type")).To(Equal("application/json"))
+
+			data := decodeJsonResponse(resp)
+			Expect(data).To(HaveKey("one"))
+			Expect(data).To(HaveKey("two"))
+			data1 := data["one"].(map[string]interface{})
+			Expect(data1["active"]).To(BeTrue())
+			data2 := data["two"].(map[string]interface{})
+			Expect(data2["active"]).To(BeFalse())
+		})
+	})
+
 	Describe("boosting", func() {
 		var (
 			output1          output.Output

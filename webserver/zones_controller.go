@@ -32,6 +32,31 @@ func (srv *WebServer) zonesIndex(w http.ResponseWriter, req *http.Request) {
 	w.Write(b.Bytes())
 }
 
+type jsonZone struct {
+	Active bool `json:"active"`
+}
+
+func newJSONZone(z *controller.Zone) (*jsonZone, error) {
+	active, err := z.Active()
+	jz := &jsonZone{
+		Active: active,
+	}
+	return jz, err
+}
+
+func (srv *WebServer) zonesAPIIndex(w http.ResponseWriter, req *http.Request) {
+	data := make(map[string]*jsonZone)
+	var err error
+	for name, z := range srv.controller.Zones {
+		data[name], err = newJSONZone(z)
+		if err != nil {
+			writeError(w, err, 500)
+			return
+		}
+	}
+	writeJSON(w, data)
+}
+
 func (srv *WebServer) zoneBoost(w http.ResponseWriter, req *http.Request, z *controller.Zone) {
 	durationString := req.FormValue("duration")
 	d, err := time.ParseDuration(durationString)
