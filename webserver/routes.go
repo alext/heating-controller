@@ -24,7 +24,7 @@ func (srv *WebServer) buildRouter() http.Handler {
 
 	r.Methods("GET").Path("/zones/{zone_id}/schedule").HandlerFunc(srv.withZone(srv.scheduleEdit))
 	r.Methods("POST").Path("/zones/{zone_id}/schedule").HandlerFunc(srv.withZone(srv.scheduleAddEvent))
-	r.Methods("DELETE").Path("/zones/{zone_id}/schedule/{hour:\\d+}-{min:\\d+}").HandlerFunc(srv.withZone(srv.scheduleRemoveEvent))
+	r.Methods("DELETE").Path("/zones/{zone_id}/schedule/{time:\\d+:\\d+}").HandlerFunc(srv.withZone(srv.scheduleRemoveEvent))
 
 	r.Methods("POST").Path("/zones/{zone_id}/thermostat/increment").HandlerFunc(srv.withZone(srv.thermostatInc))
 	r.Methods("POST").Path("/zones/{zone_id}/thermostat/decrement").HandlerFunc(srv.withZone(srv.thermostatDec))

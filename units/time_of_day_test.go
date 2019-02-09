@@ -102,4 +102,17 @@ var _ = Describe("TimeOfDay", func() {
 		Entry("non-numeric min", "12:foo"),
 		Entry("non-numeric second", "12:23:foo"),
 	)
+
+	Describe("Building from a string", func() {
+		It("Can build an event from a string", func() {
+			t, err := units.ParseTimeOfDay("12:34")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(t).To(Equal(units.NewTimeOfDay(12, 34)))
+		})
+
+		It("propogates any errors", func() {
+			_, err := units.ParseTimeOfDay("fooey")
+			Expect(err).To(HaveOccurred())
+		})
+	})
 })

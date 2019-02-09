@@ -77,9 +77,11 @@ func (srv *WebServer) scheduleAddEvent(w http.ResponseWriter, req *http.Request,
 }
 
 func (srv *WebServer) scheduleRemoveEvent(w http.ResponseWriter, req *http.Request, z *controller.Zone) {
-	hour, _ := strconv.Atoi(mux.Vars(req)["hour"])
-	min, _ := strconv.Atoi(mux.Vars(req)["min"])
-	t := units.NewTimeOfDay(hour, min)
+	t, err := units.ParseTimeOfDay(mux.Vars(req)["time"])
+	if err != nil {
+		write404(w)
+		return
+	}
 	for _, e := range z.ReadEvents() {
 		if e.Time == t {
 			z.RemoveEvent(e)
@@ -87,7 +89,7 @@ func (srv *WebServer) scheduleRemoveEvent(w http.ResponseWriter, req *http.Reque
 		}
 	}
 
-	err := z.Save()
+	err = z.Save()
 	if err != nil {
 		writeError(w, err)
 		return

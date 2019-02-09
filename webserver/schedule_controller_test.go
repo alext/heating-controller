@@ -160,7 +160,7 @@ var _ = Describe("schedule controller", func() {
 		})
 
 		It("should remove the matching event and redirect to the schedule", func() {
-			w := doFakeDeleteRequest(server, "/zones/one/schedule/7-30")
+			w := doFakeDeleteRequest(server, "/zones/one/schedule/7:30")
 
 			Expect(w.Code).To(Equal(302))
 			Expect(w.Header().Get("Location")).To(Equal("/zones/one/schedule"))
@@ -171,7 +171,7 @@ var _ = Describe("schedule controller", func() {
 		})
 
 		It("should save the zone state", func() {
-			doFakeDeleteRequest(server, "/zones/one/schedule/7-30")
+			doFakeDeleteRequest(server, "/zones/one/schedule/7:30")
 
 			data := readFile(controller.DataDir + "/one.json")
 			expected, _ := json.Marshal(map[string]interface{}{
@@ -183,7 +183,7 @@ var _ = Describe("schedule controller", func() {
 		})
 
 		It("should do nothing for a non-existent event", func() {
-			w := doFakeDeleteRequest(server, "/zones/one/schedule/7-40")
+			w := doFakeDeleteRequest(server, "/zones/one/schedule/7:40")
 
 			Expect(w.Code).To(Equal(302))
 			Expect(w.Header().Get("Location")).To(Equal("/zones/one/schedule"))

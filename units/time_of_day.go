@@ -23,6 +23,31 @@ func NewTimeOfDay(hour, minute int, sec ...int) TimeOfDay {
 	return TimeOfDay(t)
 }
 
+func ParseTimeOfDay(input string) (TimeOfDay, error) {
+	parts := strings.Split(input, ":")
+	if len(parts) < 2 || len(parts) > 3 {
+		return 0, fmt.Errorf("Invalid time: %s", input)
+	}
+
+	hour, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return 0, err
+	}
+	min, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return 0, err
+	}
+	sec := 0
+	if len(parts) == 3 {
+		sec, err = strconv.Atoi(parts[2])
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	return NewTimeOfDay(hour, min, sec), nil
+}
+
 func (t TimeOfDay) String() string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "%d:%02d", t.Hour(), t.Minute())
@@ -61,27 +86,7 @@ func (t TimeOfDay) MarshalText() ([]byte, error) {
 }
 
 func (t *TimeOfDay) UnmarshalText(data []byte) error {
-	parts := strings.Split(string(data), ":")
-	if len(parts) < 2 || len(parts) > 3 {
-		return fmt.Errorf("Invalid time: %s", data)
-	}
-
-	hour, err := strconv.Atoi(parts[0])
-	if err != nil {
-		return err
-	}
-	min, err := strconv.Atoi(parts[1])
-	if err != nil {
-		return err
-	}
-	sec := 0
-	if len(parts) == 3 {
-		sec, err = strconv.Atoi(parts[2])
-		if err != nil {
-			return err
-		}
-	}
-
-	*t = NewTimeOfDay(hour, min, sec)
-	return nil
+	var err error
+	*t, err = ParseTimeOfDay(string(data))
+	return err
 }
