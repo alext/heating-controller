@@ -40,6 +40,19 @@ type FakeEventHandler struct {
 	cancelBoostMutex       sync.RWMutex
 	cancelBoostArgsForCall []struct {
 	}
+	FindEventStub        func(units.TimeOfDay) (controller.Event, bool)
+	findEventMutex       sync.RWMutex
+	findEventArgsForCall []struct {
+		arg1 units.TimeOfDay
+	}
+	findEventReturns struct {
+		result1 controller.Event
+		result2 bool
+	}
+	findEventReturnsOnCall map[int]struct {
+		result1 controller.Event
+		result2 bool
+	}
 	NextEventStub        func() *controller.Event
 	nextEventMutex       sync.RWMutex
 	nextEventArgsForCall []struct {
@@ -69,6 +82,18 @@ type FakeEventHandler struct {
 		result1 error
 	}
 	removeEventReturnsOnCall map[int]struct {
+		result1 error
+	}
+	ReplaceEventStub        func(units.TimeOfDay, controller.Event) error
+	replaceEventMutex       sync.RWMutex
+	replaceEventArgsForCall []struct {
+		arg1 units.TimeOfDay
+		arg2 controller.Event
+	}
+	replaceEventReturns struct {
+		result1 error
+	}
+	replaceEventReturnsOnCall map[int]struct {
 		result1 error
 	}
 	invocations      map[string][][]interface{}
@@ -209,6 +234,59 @@ func (fake *FakeEventHandler) CancelBoostCallCount() int {
 	return len(fake.cancelBoostArgsForCall)
 }
 
+func (fake *FakeEventHandler) FindEvent(arg1 units.TimeOfDay) (controller.Event, bool) {
+	fake.findEventMutex.Lock()
+	ret, specificReturn := fake.findEventReturnsOnCall[len(fake.findEventArgsForCall)]
+	fake.findEventArgsForCall = append(fake.findEventArgsForCall, struct {
+		arg1 units.TimeOfDay
+	}{arg1})
+	fake.recordInvocation("FindEvent", []interface{}{arg1})
+	fake.findEventMutex.Unlock()
+	if fake.FindEventStub != nil {
+		return fake.FindEventStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.findEventReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeEventHandler) FindEventCallCount() int {
+	fake.findEventMutex.RLock()
+	defer fake.findEventMutex.RUnlock()
+	return len(fake.findEventArgsForCall)
+}
+
+func (fake *FakeEventHandler) FindEventArgsForCall(i int) units.TimeOfDay {
+	fake.findEventMutex.RLock()
+	defer fake.findEventMutex.RUnlock()
+	argsForCall := fake.findEventArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeEventHandler) FindEventReturns(result1 controller.Event, result2 bool) {
+	fake.FindEventStub = nil
+	fake.findEventReturns = struct {
+		result1 controller.Event
+		result2 bool
+	}{result1, result2}
+}
+
+func (fake *FakeEventHandler) FindEventReturnsOnCall(i int, result1 controller.Event, result2 bool) {
+	fake.FindEventStub = nil
+	if fake.findEventReturnsOnCall == nil {
+		fake.findEventReturnsOnCall = make(map[int]struct {
+			result1 controller.Event
+			result2 bool
+		})
+	}
+	fake.findEventReturnsOnCall[i] = struct {
+		result1 controller.Event
+		result2 bool
+	}{result1, result2}
+}
+
 func (fake *FakeEventHandler) NextEvent() *controller.Event {
 	fake.nextEventMutex.Lock()
 	ret, specificReturn := fake.nextEventReturnsOnCall[len(fake.nextEventArgsForCall)]
@@ -343,6 +421,57 @@ func (fake *FakeEventHandler) RemoveEventReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *FakeEventHandler) ReplaceEvent(arg1 units.TimeOfDay, arg2 controller.Event) error {
+	fake.replaceEventMutex.Lock()
+	ret, specificReturn := fake.replaceEventReturnsOnCall[len(fake.replaceEventArgsForCall)]
+	fake.replaceEventArgsForCall = append(fake.replaceEventArgsForCall, struct {
+		arg1 units.TimeOfDay
+		arg2 controller.Event
+	}{arg1, arg2})
+	fake.recordInvocation("ReplaceEvent", []interface{}{arg1, arg2})
+	fake.replaceEventMutex.Unlock()
+	if fake.ReplaceEventStub != nil {
+		return fake.ReplaceEventStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.replaceEventReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeEventHandler) ReplaceEventCallCount() int {
+	fake.replaceEventMutex.RLock()
+	defer fake.replaceEventMutex.RUnlock()
+	return len(fake.replaceEventArgsForCall)
+}
+
+func (fake *FakeEventHandler) ReplaceEventArgsForCall(i int) (units.TimeOfDay, controller.Event) {
+	fake.replaceEventMutex.RLock()
+	defer fake.replaceEventMutex.RUnlock()
+	argsForCall := fake.replaceEventArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeEventHandler) ReplaceEventReturns(result1 error) {
+	fake.ReplaceEventStub = nil
+	fake.replaceEventReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeEventHandler) ReplaceEventReturnsOnCall(i int, result1 error) {
+	fake.ReplaceEventStub = nil
+	if fake.replaceEventReturnsOnCall == nil {
+		fake.replaceEventReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.replaceEventReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeEventHandler) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -354,12 +483,16 @@ func (fake *FakeEventHandler) Invocations() map[string][][]interface{} {
 	defer fake.boostedMutex.RUnlock()
 	fake.cancelBoostMutex.RLock()
 	defer fake.cancelBoostMutex.RUnlock()
+	fake.findEventMutex.RLock()
+	defer fake.findEventMutex.RUnlock()
 	fake.nextEventMutex.RLock()
 	defer fake.nextEventMutex.RUnlock()
 	fake.readEventsMutex.RLock()
 	defer fake.readEventsMutex.RUnlock()
 	fake.removeEventMutex.RLock()
 	defer fake.removeEventMutex.RUnlock()
+	fake.replaceEventMutex.RLock()
+	defer fake.replaceEventMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

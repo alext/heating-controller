@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"errors"
 	"log"
 	"sync"
 
@@ -11,8 +10,6 @@ import (
 	"github.com/alext/heating-controller/thermostat"
 	"github.com/alext/heating-controller/units"
 )
-
-var ErrInvalidEvent = errors.New("invalid event")
 
 type Zone struct {
 	ID         string
