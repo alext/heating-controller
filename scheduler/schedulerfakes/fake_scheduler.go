@@ -63,6 +63,17 @@ type FakeScheduler struct {
 	runningReturnsOnCall map[int]struct {
 		result1 bool
 	}
+	SetJobsStub        func([]scheduler.Job) error
+	setJobsMutex       sync.RWMutex
+	setJobsArgsForCall []struct {
+		arg1 []scheduler.Job
+	}
+	setJobsReturns struct {
+		result1 error
+	}
+	setJobsReturnsOnCall map[int]struct {
+		result1 error
+	}
 	StartStub        func()
 	startMutex       sync.RWMutex
 	startArgsForCall []struct {
@@ -318,6 +329,61 @@ func (fake *FakeScheduler) RunningReturnsOnCall(i int, result1 bool) {
 	}{result1}
 }
 
+func (fake *FakeScheduler) SetJobs(arg1 []scheduler.Job) error {
+	var arg1Copy []scheduler.Job
+	if arg1 != nil {
+		arg1Copy = make([]scheduler.Job, len(arg1))
+		copy(arg1Copy, arg1)
+	}
+	fake.setJobsMutex.Lock()
+	ret, specificReturn := fake.setJobsReturnsOnCall[len(fake.setJobsArgsForCall)]
+	fake.setJobsArgsForCall = append(fake.setJobsArgsForCall, struct {
+		arg1 []scheduler.Job
+	}{arg1Copy})
+	fake.recordInvocation("SetJobs", []interface{}{arg1Copy})
+	fake.setJobsMutex.Unlock()
+	if fake.SetJobsStub != nil {
+		return fake.SetJobsStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.setJobsReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeScheduler) SetJobsCallCount() int {
+	fake.setJobsMutex.RLock()
+	defer fake.setJobsMutex.RUnlock()
+	return len(fake.setJobsArgsForCall)
+}
+
+func (fake *FakeScheduler) SetJobsArgsForCall(i int) []scheduler.Job {
+	fake.setJobsMutex.RLock()
+	defer fake.setJobsMutex.RUnlock()
+	argsForCall := fake.setJobsArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeScheduler) SetJobsReturns(result1 error) {
+	fake.SetJobsStub = nil
+	fake.setJobsReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeScheduler) SetJobsReturnsOnCall(i int, result1 error) {
+	fake.SetJobsStub = nil
+	if fake.setJobsReturnsOnCall == nil {
+		fake.setJobsReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.setJobsReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeScheduler) Start() {
 	fake.startMutex.Lock()
 	fake.startArgsForCall = append(fake.startArgsForCall, struct {
@@ -369,6 +435,8 @@ func (fake *FakeScheduler) Invocations() map[string][][]interface{} {
 	defer fake.removeJobMutex.RUnlock()
 	fake.runningMutex.RLock()
 	defer fake.runningMutex.RUnlock()
+	fake.setJobsMutex.RLock()
+	defer fake.setJobsMutex.RUnlock()
 	fake.startMutex.RLock()
 	defer fake.startMutex.RUnlock()
 	fake.stopMutex.RLock()

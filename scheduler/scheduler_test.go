@@ -415,6 +415,144 @@ var _ = Describe("a basic scheduler", func() {
 
 	})
 
+	Describe("setting the list of jobs", func() {
+		BeforeEach(func() {
+		})
+
+		Context("with a stopped scheduler", func() {
+			It("sets the list of jobs", func() {
+				err := theScheduler.SetJobs([]Job{
+					Job{Time: units.NewTimeOfDay(6, 30), Action: thing.TurnOn, Label: "alpha"},
+					Job{Time: units.NewTimeOfDay(17, 33), Action: thing.TurnOn, Label: "charlie"},
+					Job{Time: units.NewTimeOfDay(7, 45), Action: thing.TurnOff, Label: "bravo"},
+					Job{Time: units.NewTimeOfDay(21, 12), Action: thing.TurnOff, Label: "delta"},
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				jobs := theScheduler.ReadJobs()
+				Expect(jobs).To(HaveLen(4))
+				Expect(jobs[0].Label).To(Equal("alpha"))
+				Expect(jobs[1].Label).To(Equal("bravo"))
+				Expect(jobs[2].Time).To(Equal(units.NewTimeOfDay(17, 33)))
+			})
+
+			It("replaces any existing jobs", func() {
+				theScheduler.AddJob(Job{Time: units.NewTimeOfDay(7, 30), Action: thing.TurnOn, Label: "existing1"})
+				theScheduler.AddJob(Job{Time: units.NewTimeOfDay(22, 0), Action: thing.TurnOff, Label: "existing2"})
+
+				err := theScheduler.SetJobs([]Job{
+					Job{Time: units.NewTimeOfDay(6, 30), Action: thing.TurnOn, Label: "alpha"},
+					Job{Time: units.NewTimeOfDay(7, 45), Action: thing.TurnOff, Label: "bravo"},
+					Job{Time: units.NewTimeOfDay(17, 33), Action: thing.TurnOn, Label: "charlie"},
+					Job{Time: units.NewTimeOfDay(21, 12), Action: thing.TurnOff, Label: "delta"},
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				jobs := theScheduler.ReadJobs()
+				Expect(jobs).To(HaveLen(4))
+				Expect(jobs[0].Label).To(Equal("alpha"))
+				Expect(jobs[1].Label).To(Equal("bravo"))
+				Expect(jobs[2].Time).To(Equal(units.NewTimeOfDay(17, 33)))
+			})
+
+			It("errors and does nothing if any of the jobs are invalid", func() {
+				theScheduler.AddJob(Job{Time: units.NewTimeOfDay(7, 30), Action: thing.TurnOn, Label: "existing1"})
+				theScheduler.AddJob(Job{Time: units.NewTimeOfDay(22, 0), Action: thing.TurnOff, Label: "existing2"})
+
+				err := theScheduler.SetJobs([]Job{
+					Job{Time: units.NewTimeOfDay(6, 30), Action: thing.TurnOn, Label: "alpha"},
+					Job{Time: units.NewTimeOfDay(25, 45), Action: thing.TurnOff, Label: "bravo"},
+					Job{Time: units.NewTimeOfDay(17, 33), Action: thing.TurnOn, Label: "charlie"},
+					Job{Time: units.NewTimeOfDay(21, 12), Action: thing.TurnOff, Label: "delta"},
+				})
+				Expect(err).To(HaveOccurred())
+
+				jobs := theScheduler.ReadJobs()
+				Expect(jobs).To(HaveLen(2))
+				Expect(jobs[0].Label).To(Equal("existing1"))
+			})
+		})
+
+		Context("with a running scheduler", func() {
+			BeforeEach(func() {
+				mockNow = todayAt(14, 0, 0)
+				theScheduler.Start()
+				<-waitNotify
+			})
+
+			It("sets the list of jobs", func() {
+				err := theScheduler.SetJobs([]Job{
+					Job{Time: units.NewTimeOfDay(6, 30), Action: thing.TurnOn, Label: "alpha"},
+					Job{Time: units.NewTimeOfDay(7, 45), Action: thing.TurnOff, Label: "bravo"},
+					Job{Time: units.NewTimeOfDay(17, 33), Action: thing.TurnOn, Label: "charlie"},
+					Job{Time: units.NewTimeOfDay(21, 12), Action: thing.TurnOff, Label: "delta"},
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				jobs := theScheduler.ReadJobs()
+				Expect(jobs).To(HaveLen(4))
+				Expect(jobs[0].Label).To(Equal("alpha"))
+				Expect(jobs[1].Label).To(Equal("bravo"))
+				Expect(jobs[2].Time).To(Equal(units.NewTimeOfDay(17, 33)))
+			})
+
+			It("replaces any existing jobs", func() {
+				theScheduler.AddJob(Job{Time: units.NewTimeOfDay(7, 30), Action: thing.TurnOn, Label: "existing1"})
+				theScheduler.AddJob(Job{Time: units.NewTimeOfDay(22, 0), Action: thing.TurnOff, Label: "existing2"})
+
+				err := theScheduler.SetJobs([]Job{
+					Job{Time: units.NewTimeOfDay(6, 30), Action: thing.TurnOn, Label: "alpha"},
+					Job{Time: units.NewTimeOfDay(7, 45), Action: thing.TurnOff, Label: "bravo"},
+					Job{Time: units.NewTimeOfDay(17, 33), Action: thing.TurnOn, Label: "charlie"},
+					Job{Time: units.NewTimeOfDay(21, 12), Action: thing.TurnOff, Label: "delta"},
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				jobs := theScheduler.ReadJobs()
+				Expect(jobs).To(HaveLen(4))
+				Expect(jobs[0].Label).To(Equal("alpha"))
+				Expect(jobs[1].Label).To(Equal("bravo"))
+				Expect(jobs[2].Time).To(Equal(units.NewTimeOfDay(17, 33)))
+			})
+
+			It("reschedules with the new joblist", func() {
+				theScheduler.AddJob(Job{Time: units.NewTimeOfDay(7, 30), Action: thing.TurnOn, Label: "existing1"})
+				<-waitNotify
+				theScheduler.AddJob(Job{Time: units.NewTimeOfDay(22, 0), Action: thing.TurnOff, Label: "existing2"})
+				<-waitNotify
+
+				mockNow = todayAt(15, 0, 0)
+				err := theScheduler.SetJobs([]Job{
+					Job{Time: units.NewTimeOfDay(6, 30), Action: thing.TurnOn, Label: "alpha"},
+					Job{Time: units.NewTimeOfDay(7, 45), Action: thing.TurnOff, Label: "bravo"},
+					Job{Time: units.NewTimeOfDay(17, 33), Action: thing.TurnOn, Label: "charlie"},
+					Job{Time: units.NewTimeOfDay(21, 12), Action: thing.TurnOff, Label: "delta"},
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				<-waitNotify
+				Expect(resetParam.String()).To(Equal("2h33m0s"))
+			})
+
+			It("errors and does nothing if any of the jobs are invalid", func() {
+				theScheduler.AddJob(Job{Time: units.NewTimeOfDay(7, 30), Action: thing.TurnOn, Label: "existing1"})
+				theScheduler.AddJob(Job{Time: units.NewTimeOfDay(22, 0), Action: thing.TurnOff, Label: "existing2"})
+
+				err := theScheduler.SetJobs([]Job{
+					Job{Time: units.NewTimeOfDay(6, 30), Action: thing.TurnOn, Label: "alpha"},
+					Job{Time: units.NewTimeOfDay(25, 45), Action: thing.TurnOff, Label: "bravo"},
+					Job{Time: units.NewTimeOfDay(17, 33), Action: thing.TurnOn, Label: "charlie"},
+					Job{Time: units.NewTimeOfDay(21, 12), Action: thing.TurnOff, Label: "delta"},
+				})
+				Expect(err).To(HaveOccurred())
+
+				jobs := theScheduler.ReadJobs()
+				Expect(jobs).To(HaveLen(2))
+				Expect(jobs[0].Label).To(Equal("existing1"))
+			})
+		})
+	})
+
 	Describe("removing a job", func() {
 		BeforeEach(func() {
 			theScheduler.AddJob(Job{Time: units.NewTimeOfDay(6, 30), Action: thing.TurnOn, Label: "alpha"})
