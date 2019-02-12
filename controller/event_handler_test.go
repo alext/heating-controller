@@ -69,7 +69,7 @@ var _ = Describe("EventHandler", func() {
 				eh.AddEvent(Event{Time: units.NewTimeOfDay(18, 0), Action: Off}),
 			).To(Succeed())
 
-			eh.RemoveEvent(Event{Time: units.NewTimeOfDay(8, 30), Action: Off})
+			Expect(eh.RemoveEvent(units.NewTimeOfDay(8, 30))).To(Succeed())
 
 			events := eh.ReadEvents()
 			Expect(events).To(HaveLen(2))

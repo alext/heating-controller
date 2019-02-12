@@ -82,11 +82,10 @@ func (srv *WebServer) scheduleRemoveEvent(w http.ResponseWriter, req *http.Reque
 		write404(w)
 		return
 	}
-	for _, e := range z.ReadEvents() {
-		if e.Time == t {
-			z.RemoveEvent(e)
-			break
-		}
+	err = z.RemoveEvent(t)
+	if err != nil {
+		writeError(w, err)
+		return
 	}
 
 	err = z.Save()

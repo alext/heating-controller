@@ -6,6 +6,7 @@ import (
 	time "time"
 
 	controller "github.com/alext/heating-controller/controller"
+	units "github.com/alext/heating-controller/units"
 )
 
 type FakeEventHandler struct {
@@ -59,10 +60,16 @@ type FakeEventHandler struct {
 	readEventsReturnsOnCall map[int]struct {
 		result1 []controller.Event
 	}
-	RemoveEventStub        func(controller.Event)
+	RemoveEventStub        func(units.TimeOfDay) error
 	removeEventMutex       sync.RWMutex
 	removeEventArgsForCall []struct {
-		arg1 controller.Event
+		arg1 units.TimeOfDay
+	}
+	removeEventReturns struct {
+		result1 error
+	}
+	removeEventReturnsOnCall map[int]struct {
+		result1 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
@@ -286,16 +293,22 @@ func (fake *FakeEventHandler) ReadEventsReturnsOnCall(i int, result1 []controlle
 	}{result1}
 }
 
-func (fake *FakeEventHandler) RemoveEvent(arg1 controller.Event) {
+func (fake *FakeEventHandler) RemoveEvent(arg1 units.TimeOfDay) error {
 	fake.removeEventMutex.Lock()
+	ret, specificReturn := fake.removeEventReturnsOnCall[len(fake.removeEventArgsForCall)]
 	fake.removeEventArgsForCall = append(fake.removeEventArgsForCall, struct {
-		arg1 controller.Event
+		arg1 units.TimeOfDay
 	}{arg1})
 	fake.recordInvocation("RemoveEvent", []interface{}{arg1})
 	fake.removeEventMutex.Unlock()
 	if fake.RemoveEventStub != nil {
-		fake.RemoveEventStub(arg1)
+		return fake.RemoveEventStub(arg1)
 	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.removeEventReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeEventHandler) RemoveEventCallCount() int {
@@ -304,11 +317,30 @@ func (fake *FakeEventHandler) RemoveEventCallCount() int {
 	return len(fake.removeEventArgsForCall)
 }
 
-func (fake *FakeEventHandler) RemoveEventArgsForCall(i int) controller.Event {
+func (fake *FakeEventHandler) RemoveEventArgsForCall(i int) units.TimeOfDay {
 	fake.removeEventMutex.RLock()
 	defer fake.removeEventMutex.RUnlock()
 	argsForCall := fake.removeEventArgsForCall[i]
 	return argsForCall.arg1
+}
+
+func (fake *FakeEventHandler) RemoveEventReturns(result1 error) {
+	fake.RemoveEventStub = nil
+	fake.removeEventReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeEventHandler) RemoveEventReturnsOnCall(i int, result1 error) {
+	fake.RemoveEventStub = nil
+	if fake.removeEventReturnsOnCall == nil {
+		fake.removeEventReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.removeEventReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
 }
 
 func (fake *FakeEventHandler) Invocations() map[string][][]interface{} {

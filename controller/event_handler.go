@@ -11,7 +11,7 @@ import (
 //go:generate counterfeiter . EventHandler
 type EventHandler interface {
 	AddEvent(Event) error
-	RemoveEvent(Event)
+	RemoveEvent(units.TimeOfDay) error
 	ReadEvents() []Event
 	NextEvent() *Event
 
@@ -87,19 +87,18 @@ func (eh *eventHandler) AddEvent(e Event) error {
 	return eh.sched.AddJob(e.buildSchedulerJob(eh.trigger))
 }
 
-func (eh *eventHandler) RemoveEvent(e Event) {
+func (eh *eventHandler) RemoveEvent(t units.TimeOfDay) error {
 	eh.lock.Lock()
 	defer eh.lock.Unlock()
 
 	newEvents := make([]Event, 0)
 	for _, ee := range eh.events {
-		if ee != e {
+		if ee.Time != t {
 			newEvents = append(newEvents, ee)
 		}
 	}
 	eh.events = newEvents
-
-	eh.sched.RemoveJob(e.buildSchedulerJob(eh.demand))
+	return eh.sched.SetJobs(buildSchedulerJobs(eh.events, eh.demand))
 }
 
 func (eh *eventHandler) NextEvent() *Event {
