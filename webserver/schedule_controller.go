@@ -50,6 +50,31 @@ func (srv *WebServer) scheduleAddEvent(w http.ResponseWriter, req *http.Request,
 	http.Redirect(w, req, "/zones/"+z.ID+"/schedule", 302)
 }
 
+func (srv *WebServer) scheduleEditEvent(w http.ResponseWriter, req *http.Request, z *controller.Zone) {
+	t, err := units.ParseTimeOfDay(mux.Vars(req)["time"])
+	if err != nil {
+		write404(w)
+		return
+	}
+	e, ok := z.FindEvent(t)
+	if !ok {
+		write404(w)
+		return
+	}
+
+	ed := eventData{
+		Zone:        z,
+		HourValue:   strconv.Itoa(e.Time.Hour()),
+		MinuteValue: strconv.Itoa(e.Time.Minute()),
+		Action:      e.Action.String(),
+	}
+	if e.ThermAction != nil {
+		ed.ThermAction = e.ThermAction.Action.String()
+		ed.ThermParam = strconv.FormatFloat(float64(e.ThermAction.Param)/1000, 'f', -1, 64) //e.ThermAction.Param.String()
+	}
+	srv.renderEventEdit(w, ed)
+}
+
 func (srv *WebServer) scheduleUpdateEvent(w http.ResponseWriter, req *http.Request, z *controller.Zone) {
 	t, err := units.ParseTimeOfDay(mux.Vars(req)["time"])
 	if err != nil {
@@ -101,6 +126,31 @@ func (srv *WebServer) scheduleRemoveEvent(w http.ResponseWriter, req *http.Reque
 	}
 
 	http.Redirect(w, req, "/zones/"+z.ID+"/schedule", 302)
+}
+
+type eventData struct {
+	Zone        *controller.Zone
+	HourValue   string
+	MinuteValue string
+	Action      string
+	ThermAction string
+	ThermParam  string
+}
+
+func (srv *WebServer) renderEventEdit(w http.ResponseWriter, ed eventData) {
+	t, err := template.ParseFiles(
+		filepath.Join(srv.templatesPath, "_base.tmpl"),
+		filepath.Join(srv.templatesPath, "event_edit.tmpl"),
+	)
+	if err != nil {
+		log.Println("Error parsing template:", err)
+		writeError(w, err)
+		return
+	}
+	err = t.Execute(w, ed)
+	if err != nil {
+		log.Println("Error executing template:", err)
+	}
 }
 
 func populateEventFromRequest(e *controller.Event, req *http.Request) error {

@@ -24,6 +24,7 @@ func (srv *WebServer) buildRouter() http.Handler {
 
 	r.Methods("GET").Path("/zones/{zone_id}/schedule").HandlerFunc(srv.withZone(srv.scheduleEdit))
 	r.Methods("POST").Path("/zones/{zone_id}/schedule").HandlerFunc(srv.withZone(srv.scheduleAddEvent))
+	r.Methods("GET").Path("/zones/{zone_id}/schedule/{time:\\d+:\\d+}").HandlerFunc(srv.withZone(srv.scheduleEditEvent))
 	r.Methods("PUT").Path("/zones/{zone_id}/schedule/{time:\\d+:\\d+}").HandlerFunc(srv.withZone(srv.scheduleUpdateEvent))
 	r.Methods("DELETE").Path("/zones/{zone_id}/schedule/{time:\\d+:\\d+}").HandlerFunc(srv.withZone(srv.scheduleRemoveEvent))
 

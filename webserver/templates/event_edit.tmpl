@@ -1,0 +1,52 @@
+{{ define "content" }}
+
+<h1>Edit event</h1>
+
+<form action="/zones/{{ (.Zone).ID }}/schedule/{{ .HourValue }}:{{ .MinuteValue }}" method="post">
+  <input type="hidden" name="_method" value="PUT">
+  <table>
+    <tr>
+      <th>Time</th>
+      <td>
+        <input type="number" name="hour" value="{{ .HourValue }}" min="0" max="23" placeholder="hh">:<input type="number" name="min" value="{{ .MinuteValue }}" min="0" max="59" placeholder="mm">
+      </td>
+    </tr>
+    <tr>
+      <th>Action</th>
+      <td>
+        <select name="action">
+          <option value="On"{{ if eq .Action "On" }} selected{{ end }}>On</option>
+          <option value="Off"{{ if eq .Action "Off" }} selected{{ end }}>Off</option>
+        </select>
+      </td>
+    </tr>
+  {{ if .Zone.Thermostat }}
+    <tr>
+      <th>Thermostat Action</th>
+      <td>
+        <select name="therm_action">
+          <option value="">No Change</option>
+          <option value="SetTarget"{{ if eq .ThermAction "SetTarget" }} selected{{ end }}>Set Target</option>
+          <option value="IncreaseTarget"{{ if eq .ThermAction "IncreaseTarget" }} selected{{ end }}>Increase Target</option>
+          <option value="DecreaseTarget"{{ if eq .ThermAction "DecreaseTarget" }} selected{{ end }}>Decrease Target</option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <th>Thermostat Param</th>
+      <td>
+        <input type="number" name="therm_param" value="{{ .ThermParam }}" placeholder="temp" step="0.5" style="width: 4em">
+      </td>
+    </tr>
+  {{ end }}
+    <tr>
+      <th></th>
+      <td>
+        <input type="submit" value="Update Event">
+        <a href="/zones/{{ .Zone.ID }}/schedule">cancel</a>
+      </td>
+    </tr>
+  </table>
+</form>
+
+{{ end }}

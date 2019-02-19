@@ -12,9 +12,10 @@
   <tr>
     <td>{{ .String }}</td>
     <td>
-      <form action="/zones/{{ $.ID }}/schedule/{{ .Time }}" method="post">
+      <a href="/zones/{{ $.ID }}/schedule/{{ .Time }}">edit</a>
+      <form action="/zones/{{ $.ID }}/schedule/{{ .Time }}" method="post" style="display: inline">
         <input type="hidden" name="_method" value="DELETE">
-        <input type="submit" value="Delete Event">
+        <input type="submit" value="Delete">
       </form>
     </td>
   </tr>

@@ -191,6 +191,14 @@ var _ = Describe("schedule controller", func() {
 			Expect(data).To(MatchJSON(expected))
 		})
 
+		It("should return an error with invalid data", func() {
+			values.Set("action", "fooey")
+			w := doFakeRequestWithValues(server, "PUT", "/zones/one/schedule/8:30", values)
+			Expect(w.Code).To(Equal(400))
+			Expect(w.Body.String()).To(ContainSubstring("invalid action"))
+			Expect(zone1.ReadEvents()[1].Time).To(Equal(units.NewTimeOfDay(8, 30)))
+		})
+
 		It("should 404 for a non-existent event", func() {
 			w := doFakeRequestWithValues(server, "PUT", "/zones/one/schedule/9:30", values)
 			Expect(w.Code).To(Equal(404))
