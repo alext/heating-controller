@@ -20,6 +20,7 @@ type Scheduler interface {
 	Stop()
 	Running() bool
 	AddJob(Job) error
+	SetJobs([]Job) error
 	RemoveJob(Job)
 	NextJob() *Job
 	ReadJobs() []Job
@@ -89,6 +90,26 @@ func (s *scheduler) AddJob(job Job) error {
 		}
 	} else {
 		s.addJob(&job)
+	}
+	return nil
+}
+
+func (s *scheduler) SetJobs(jobs []Job) error {
+	for _, j := range jobs {
+		if !j.Valid() {
+			return ErrInvalidJob
+		}
+	}
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	log.Printf("[Scheduler:%s] Setting jobs: %v", s.id, jobs)
+	if s.running {
+		s.commandCh <- func() {
+			s.setJobs(jobs)
+			s.nextJob = nil // cause the next job to be recalculated
+		}
+	} else {
+		s.setJobs(jobs)
 	}
 	return nil
 }
@@ -190,6 +211,15 @@ func (s *scheduler) run() {
 
 func (s *scheduler) addJob(j *Job) {
 	s.jobs = append(s.jobs, j)
+	sortJobs(s.jobs)
+}
+
+func (s *scheduler) setJobs(jobs []Job) {
+	s.jobs = nil
+	for _, j := range jobs {
+		j := j // capture loop variable so we can take its address
+		s.jobs = append(s.jobs, &j)
+	}
 	sortJobs(s.jobs)
 }
 

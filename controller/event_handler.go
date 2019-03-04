@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"sync"
 	"time"
 
@@ -8,10 +9,17 @@ import (
 	"github.com/alext/heating-controller/units"
 )
 
+var (
+	ErrInvalidEvent  = errors.New("invalid event")
+	ErrEventNotFound = errors.New("event not found")
+)
+
 //go:generate counterfeiter . EventHandler
 type EventHandler interface {
 	AddEvent(Event) error
-	RemoveEvent(Event)
+	ReplaceEvent(units.TimeOfDay, Event) error
+	RemoveEvent(units.TimeOfDay) error
+	FindEvent(units.TimeOfDay) (Event, bool)
 	ReadEvents() []Event
 	NextEvent() *Event
 
@@ -87,19 +95,40 @@ func (eh *eventHandler) AddEvent(e Event) error {
 	return eh.sched.AddJob(e.buildSchedulerJob(eh.trigger))
 }
 
-func (eh *eventHandler) RemoveEvent(e Event) {
+func (eh *eventHandler) ReplaceEvent(t units.TimeOfDay, e Event) error {
+	if !e.Valid() {
+		return ErrInvalidEvent
+	}
+	eh.lock.Lock()
+	defer eh.lock.Unlock()
+
+	found := false
+	for i, ee := range eh.events {
+		if ee.Time == t {
+			eh.events[i] = e
+			found = true
+			break
+		}
+	}
+	if !found {
+		return ErrEventNotFound
+	}
+	sortEvents(eh.events)
+	return eh.sched.SetJobs(buildSchedulerJobs(eh.events, eh.demand))
+}
+
+func (eh *eventHandler) RemoveEvent(t units.TimeOfDay) error {
 	eh.lock.Lock()
 	defer eh.lock.Unlock()
 
 	newEvents := make([]Event, 0)
 	for _, ee := range eh.events {
-		if ee != e {
+		if ee.Time != t {
 			newEvents = append(newEvents, ee)
 		}
 	}
 	eh.events = newEvents
-
-	eh.sched.RemoveJob(e.buildSchedulerJob(eh.demand))
+	return eh.sched.SetJobs(buildSchedulerJobs(eh.events, eh.demand))
 }
 
 func (eh *eventHandler) NextEvent() *Event {
@@ -119,6 +148,17 @@ func (eh *eventHandler) NextEvent() *Event {
 	return &Event{
 		Time: j.Time,
 	}
+}
+
+func (eh *eventHandler) FindEvent(t units.TimeOfDay) (Event, bool) {
+	eh.lock.Lock()
+	defer eh.lock.Unlock()
+	for _, e := range eh.events {
+		if e.Time == t {
+			return e, true
+		}
+	}
+	return Event{}, false
 }
 
 func (eh *eventHandler) ReadEvents() []Event {

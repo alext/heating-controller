@@ -86,63 +86,119 @@ var _ = Describe("Editing the schedule for a zone", func() {
 				Expect(rows.At(4).All("td").At(0)).To(HaveText("21:45 Off"))
 			})
 
-			It("should allow adding an event", func() {
-				Expect(page.Navigate(testServer.URL + "/zones/one/schedule")).To(Succeed())
+			Describe("adding an event", func() {
+				It("should allow adding an event", func() {
+					Expect(page.Navigate(testServer.URL + "/zones/one/schedule")).To(Succeed())
 
-				form := page.All("table tr").At(5).Find("form")
-				Expect(form).To(BeFound())
+					Expect(page.FindByLink("add event").Click()).To(Succeed())
+					Expect(page).To(HaveURL(testServer.URL + "/zones/one/schedule/new"))
 
-				Expect(form.Find("input[name=hour]").Fill("14")).To(Succeed())
-				Expect(form.Find("input[name=min]").Fill("42")).To(Succeed())
-				Expect(form.Find("select[name=action]").Select("On")).To(Succeed())
-				Expect(form.Find("input[value='Add Event']").Click()).To(Succeed())
+					form := page.Find("form")
+					Expect(form).To(BeFound())
 
-				Expect(page).To(HaveURL(testServer.URL + "/zones/one/schedule"))
-				Expect(page.Find("h1")).To(HaveText("one schedule"))
+					Expect(form.Find("input[name=hour]").Fill("14")).To(Succeed())
+					Expect(form.Find("input[name=min]").Fill("42")).To(Succeed())
+					Expect(form.Find("select[name=action]").Select("On")).To(Succeed())
+					Expect(form.Find("input[value='Add Event']").Click()).To(Succeed())
 
-				events := zone1.ReadEvents()
-				Expect(events).To(HaveLen(5))
-				Expect(events).To(ContainElement(controller.Event{Time: units.NewTimeOfDay(14, 42), Action: controller.On}))
+					Expect(page).To(HaveURL(testServer.URL + "/zones/one/schedule"))
+					Expect(page.Find("h1")).To(HaveText("one schedule"))
+
+					events := zone1.ReadEvents()
+					Expect(events).To(HaveLen(5))
+					Expect(events).To(ContainElement(controller.Event{Time: units.NewTimeOfDay(14, 42), Action: controller.On}))
+				})
+
+				It("should allow adding an event with a thermostat action", func() {
+					Expect(page.Navigate(testServer.URL + "/zones/one/schedule/new")).To(Succeed())
+
+					form := page.Find("form")
+					Expect(form).To(BeFound())
+
+					Expect(form.Find("input[name=hour]").Fill("14")).To(Succeed())
+					Expect(form.Find("input[name=min]").Fill("42")).To(Succeed())
+					Expect(form.Find("select[name=action]").Select("On")).To(Succeed())
+					Expect(form.Find("select[name=therm_action]").Select("Set Target")).To(Succeed())
+					Expect(form.Find("input[name=therm_param]").Fill("19.5")).To(Succeed())
+					Expect(form.Find("input[value='Add Event']").Click()).To(Succeed())
+
+					Expect(page).To(HaveURL(testServer.URL + "/zones/one/schedule"))
+					Expect(page.Find("h1")).To(HaveText("one schedule"))
+
+					events := zone1.ReadEvents()
+					Expect(events).To(HaveLen(5))
+					Expect(events).To(ContainElement(controller.Event{
+						Time: units.NewTimeOfDay(14, 42), Action: controller.On,
+						ThermAction: &controller.ThermostatAction{Action: controller.SetTarget, Param: 19500},
+					}))
+				})
+
+				It("does not show the thermostat action fields for a zone without a thermostat", func() {
+					Expect(page.Navigate(testServer.URL + "/zones/two/schedule/new")).To(Succeed())
+
+					form := page.Find("form")
+					Expect(form).To(BeFound())
+
+					Expect(form.Find("select[name=therm_action]")).ToNot(BeFound())
+					Expect(form.Find("input[name=therm_param]")).ToNot(BeFound())
+				})
 			})
 
-			It("should allow adding an event with a thermostat action", func() {
-				Expect(page.Navigate(testServer.URL + "/zones/one/schedule")).To(Succeed())
+			Describe("editing an event", func() {
+				It("should allow editing an event", func() {
+					Expect(page.Navigate(testServer.URL + "/zones/one/schedule")).To(Succeed())
 
-				form := page.All("table tr").At(5).Find("form")
-				Expect(form).To(BeFound())
+					editLink := page.All("table tr").At(1).FindByLink("edit")
+					Expect(editLink).To(BeFound())
+					Expect(editLink.Click()).To(Succeed())
 
-				Expect(form.Find("input[name=hour]").Fill("14")).To(Succeed())
-				Expect(form.Find("input[name=min]").Fill("42")).To(Succeed())
-				Expect(form.Find("select[name=action]").Select("On")).To(Succeed())
-				Expect(form.Find("select[name=therm_action]").Select("Set Target")).To(Succeed())
-				Expect(form.Find("input[name=therm_param]").Fill("19.5")).To(Succeed())
-				Expect(form.Find("input[value='Add Event']").Click()).To(Succeed())
+					Expect(page).To(HaveURL(testServer.URL + "/zones/one/schedule/7:30"))
+					form := page.Find("form")
+					Expect(form).To(BeFound())
+					Expect(form.Find("input[name=hour]")).To(HaveAttribute("value", "7"))
+					Expect(form.Find("input[name=min]")).To(HaveAttribute("value", "30"))
+					Expect(form.Find("select[name=action] option[value=On]")).To(BeSelected())
+					Expect(form.Find("select[name=therm_action] option[value=DecreaseTarget]")).To(BeSelected())
+					Expect(form.Find("input[name=therm_param]")).To(HaveAttribute("value", "19"))
 
-				Expect(page).To(HaveURL(testServer.URL + "/zones/one/schedule"))
-				Expect(page.Find("h1")).To(HaveText("one schedule"))
+					Expect(form.Find("input[name=hour]").Fill("6")).To(Succeed())
+					Expect(form.Find("input[name=min]").Fill("42")).To(Succeed())
+					Expect(form.Find("select[name=action]").Select("On")).To(Succeed())
+					Expect(form.Find("select[name=therm_action]").Select("Set Target")).To(Succeed())
+					Expect(form.Find("input[name=therm_param]").Fill("19.5")).To(Succeed())
+					Expect(form.FindByButton("Update Event").Click()).To(Succeed())
 
-				events := zone1.ReadEvents()
-				Expect(events).To(HaveLen(5))
-				Expect(events).To(ContainElement(controller.Event{
-					Time: units.NewTimeOfDay(14, 42), Action: controller.On,
-					ThermAction: &controller.ThermostatAction{Action: controller.SetTarget, Param: 19500},
-				}))
-			})
+					Expect(page).To(HaveURL(testServer.URL + "/zones/one/schedule"))
+					Expect(page.Find("h1")).To(HaveText("one schedule"))
 
-			It("does not show the thermostat action fields for a zone without a thermostat", func() {
-				Expect(page.Navigate(testServer.URL + "/zones/two/schedule")).To(Succeed())
+					events := zone1.ReadEvents()
+					Expect(events).To(HaveLen(4))
+					Expect(events).To(ContainElement(controller.Event{
+						Time: units.NewTimeOfDay(6, 42), Action: controller.On,
+						ThermAction: &controller.ThermostatAction{Action: controller.SetTarget, Param: 19500},
+					}))
+					Expect(events).NotTo(ContainElement(controller.Event{
+						Time: units.NewTimeOfDay(7, 30), Action: controller.On,
+						ThermAction: &controller.ThermostatAction{Action: controller.DecreaseTarget, Param: 19000},
+					}))
+				})
 
-				form := page.All("table tr").At(1).Find("form")
-				Expect(form).To(BeFound())
+				It("does not show the thermostat fields for a zone without a thermostat", func() {
+					zone2.AddEvent(controller.Event{Time: units.NewTimeOfDay(7, 15), Action: controller.On})
+					Expect(page.Navigate(testServer.URL + "/zones/two/schedule/7:15")).To(Succeed())
 
-				Expect(form.Find("select[name=therm_action]")).ToNot(BeFound())
-				Expect(form.Find("input[name=therm_param]")).ToNot(BeFound())
+					form := page.Find("form")
+					Expect(form).To(BeFound())
+
+					Expect(form.Find("select[name=therm_action]")).ToNot(BeFound())
+					Expect(form.Find("input[name=therm_param]")).ToNot(BeFound())
+				})
 			})
 
 			It("should allow removing an event", func() {
 				Expect(page.Navigate(testServer.URL + "/zones/one/schedule")).To(Succeed())
 
-				deleteButton := page.All("table tr").At(2).Find("input[value='Delete Event']")
+				deleteButton := page.All("table tr").At(2).Find("input[value='Delete']")
 				Expect(deleteButton).To(BeFound())
 				Expect(deleteButton.Click()).To(Succeed())
 

@@ -2,25 +2,27 @@
 package outputfakes
 
 import (
-	"sync"
+	sync "sync"
 
-	"github.com/alext/heating-controller/output"
+	output "github.com/alext/heating-controller/output"
 )
 
 type FakeOutput struct {
-	IdStub        func() string
-	idMutex       sync.RWMutex
-	idArgsForCall []struct{}
-	idReturns     struct {
-		result1 string
+	ActivateStub        func() error
+	activateMutex       sync.RWMutex
+	activateArgsForCall []struct {
 	}
-	idReturnsOnCall map[int]struct {
-		result1 string
+	activateReturns struct {
+		result1 error
+	}
+	activateReturnsOnCall map[int]struct {
+		result1 error
 	}
 	ActiveStub        func() (bool, error)
 	activeMutex       sync.RWMutex
-	activeArgsForCall []struct{}
-	activeReturns     struct {
+	activeArgsForCall []struct {
+	}
+	activeReturns struct {
 		result1 bool
 		result2 error
 	}
@@ -28,81 +30,87 @@ type FakeOutput struct {
 		result1 bool
 		result2 error
 	}
-	ActivateStub        func() error
-	activateMutex       sync.RWMutex
-	activateArgsForCall []struct{}
-	activateReturns     struct {
-		result1 error
-	}
-	activateReturnsOnCall map[int]struct {
-		result1 error
-	}
-	DeactivateStub        func() error
-	deactivateMutex       sync.RWMutex
-	deactivateArgsForCall []struct{}
-	deactivateReturns     struct {
-		result1 error
-	}
-	deactivateReturnsOnCall map[int]struct {
-		result1 error
-	}
 	CloseStub        func() error
 	closeMutex       sync.RWMutex
-	closeArgsForCall []struct{}
-	closeReturns     struct {
+	closeArgsForCall []struct {
+	}
+	closeReturns struct {
 		result1 error
 	}
 	closeReturnsOnCall map[int]struct {
 		result1 error
 	}
+	DeactivateStub        func() error
+	deactivateMutex       sync.RWMutex
+	deactivateArgsForCall []struct {
+	}
+	deactivateReturns struct {
+		result1 error
+	}
+	deactivateReturnsOnCall map[int]struct {
+		result1 error
+	}
+	IdStub        func() string
+	idMutex       sync.RWMutex
+	idArgsForCall []struct {
+	}
+	idReturns struct {
+		result1 string
+	}
+	idReturnsOnCall map[int]struct {
+		result1 string
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeOutput) Id() string {
-	fake.idMutex.Lock()
-	ret, specificReturn := fake.idReturnsOnCall[len(fake.idArgsForCall)]
-	fake.idArgsForCall = append(fake.idArgsForCall, struct{}{})
-	fake.recordInvocation("Id", []interface{}{})
-	fake.idMutex.Unlock()
-	if fake.IdStub != nil {
-		return fake.IdStub()
+func (fake *FakeOutput) Activate() error {
+	fake.activateMutex.Lock()
+	ret, specificReturn := fake.activateReturnsOnCall[len(fake.activateArgsForCall)]
+	fake.activateArgsForCall = append(fake.activateArgsForCall, struct {
+	}{})
+	fake.recordInvocation("Activate", []interface{}{})
+	fake.activateMutex.Unlock()
+	if fake.ActivateStub != nil {
+		return fake.ActivateStub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.idReturns.result1
+	fakeReturns := fake.activateReturns
+	return fakeReturns.result1
 }
 
-func (fake *FakeOutput) IdCallCount() int {
-	fake.idMutex.RLock()
-	defer fake.idMutex.RUnlock()
-	return len(fake.idArgsForCall)
+func (fake *FakeOutput) ActivateCallCount() int {
+	fake.activateMutex.RLock()
+	defer fake.activateMutex.RUnlock()
+	return len(fake.activateArgsForCall)
 }
 
-func (fake *FakeOutput) IdReturns(result1 string) {
-	fake.IdStub = nil
-	fake.idReturns = struct {
-		result1 string
+func (fake *FakeOutput) ActivateReturns(result1 error) {
+	fake.ActivateStub = nil
+	fake.activateReturns = struct {
+		result1 error
 	}{result1}
 }
 
-func (fake *FakeOutput) IdReturnsOnCall(i int, result1 string) {
-	fake.IdStub = nil
-	if fake.idReturnsOnCall == nil {
-		fake.idReturnsOnCall = make(map[int]struct {
-			result1 string
+func (fake *FakeOutput) ActivateReturnsOnCall(i int, result1 error) {
+	fake.ActivateStub = nil
+	if fake.activateReturnsOnCall == nil {
+		fake.activateReturnsOnCall = make(map[int]struct {
+			result1 error
 		})
 	}
-	fake.idReturnsOnCall[i] = struct {
-		result1 string
+	fake.activateReturnsOnCall[i] = struct {
+		result1 error
 	}{result1}
 }
 
 func (fake *FakeOutput) Active() (bool, error) {
 	fake.activeMutex.Lock()
 	ret, specificReturn := fake.activeReturnsOnCall[len(fake.activeArgsForCall)]
-	fake.activeArgsForCall = append(fake.activeArgsForCall, struct{}{})
+	fake.activeArgsForCall = append(fake.activeArgsForCall, struct {
+	}{})
 	fake.recordInvocation("Active", []interface{}{})
 	fake.activeMutex.Unlock()
 	if fake.ActiveStub != nil {
@@ -111,7 +119,8 @@ func (fake *FakeOutput) Active() (bool, error) {
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.activeReturns.result1, fake.activeReturns.result2
+	fakeReturns := fake.activeReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeOutput) ActiveCallCount() int {
@@ -142,90 +151,11 @@ func (fake *FakeOutput) ActiveReturnsOnCall(i int, result1 bool, result2 error) 
 	}{result1, result2}
 }
 
-func (fake *FakeOutput) Activate() error {
-	fake.activateMutex.Lock()
-	ret, specificReturn := fake.activateReturnsOnCall[len(fake.activateArgsForCall)]
-	fake.activateArgsForCall = append(fake.activateArgsForCall, struct{}{})
-	fake.recordInvocation("Activate", []interface{}{})
-	fake.activateMutex.Unlock()
-	if fake.ActivateStub != nil {
-		return fake.ActivateStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.activateReturns.result1
-}
-
-func (fake *FakeOutput) ActivateCallCount() int {
-	fake.activateMutex.RLock()
-	defer fake.activateMutex.RUnlock()
-	return len(fake.activateArgsForCall)
-}
-
-func (fake *FakeOutput) ActivateReturns(result1 error) {
-	fake.ActivateStub = nil
-	fake.activateReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeOutput) ActivateReturnsOnCall(i int, result1 error) {
-	fake.ActivateStub = nil
-	if fake.activateReturnsOnCall == nil {
-		fake.activateReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.activateReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeOutput) Deactivate() error {
-	fake.deactivateMutex.Lock()
-	ret, specificReturn := fake.deactivateReturnsOnCall[len(fake.deactivateArgsForCall)]
-	fake.deactivateArgsForCall = append(fake.deactivateArgsForCall, struct{}{})
-	fake.recordInvocation("Deactivate", []interface{}{})
-	fake.deactivateMutex.Unlock()
-	if fake.DeactivateStub != nil {
-		return fake.DeactivateStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.deactivateReturns.result1
-}
-
-func (fake *FakeOutput) DeactivateCallCount() int {
-	fake.deactivateMutex.RLock()
-	defer fake.deactivateMutex.RUnlock()
-	return len(fake.deactivateArgsForCall)
-}
-
-func (fake *FakeOutput) DeactivateReturns(result1 error) {
-	fake.DeactivateStub = nil
-	fake.deactivateReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeOutput) DeactivateReturnsOnCall(i int, result1 error) {
-	fake.DeactivateStub = nil
-	if fake.deactivateReturnsOnCall == nil {
-		fake.deactivateReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.deactivateReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
 func (fake *FakeOutput) Close() error {
 	fake.closeMutex.Lock()
 	ret, specificReturn := fake.closeReturnsOnCall[len(fake.closeArgsForCall)]
-	fake.closeArgsForCall = append(fake.closeArgsForCall, struct{}{})
+	fake.closeArgsForCall = append(fake.closeArgsForCall, struct {
+	}{})
 	fake.recordInvocation("Close", []interface{}{})
 	fake.closeMutex.Unlock()
 	if fake.CloseStub != nil {
@@ -234,7 +164,8 @@ func (fake *FakeOutput) Close() error {
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.closeReturns.result1
+	fakeReturns := fake.closeReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeOutput) CloseCallCount() int {
@@ -262,19 +193,103 @@ func (fake *FakeOutput) CloseReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *FakeOutput) Deactivate() error {
+	fake.deactivateMutex.Lock()
+	ret, specificReturn := fake.deactivateReturnsOnCall[len(fake.deactivateArgsForCall)]
+	fake.deactivateArgsForCall = append(fake.deactivateArgsForCall, struct {
+	}{})
+	fake.recordInvocation("Deactivate", []interface{}{})
+	fake.deactivateMutex.Unlock()
+	if fake.DeactivateStub != nil {
+		return fake.DeactivateStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.deactivateReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeOutput) DeactivateCallCount() int {
+	fake.deactivateMutex.RLock()
+	defer fake.deactivateMutex.RUnlock()
+	return len(fake.deactivateArgsForCall)
+}
+
+func (fake *FakeOutput) DeactivateReturns(result1 error) {
+	fake.DeactivateStub = nil
+	fake.deactivateReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeOutput) DeactivateReturnsOnCall(i int, result1 error) {
+	fake.DeactivateStub = nil
+	if fake.deactivateReturnsOnCall == nil {
+		fake.deactivateReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.deactivateReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeOutput) Id() string {
+	fake.idMutex.Lock()
+	ret, specificReturn := fake.idReturnsOnCall[len(fake.idArgsForCall)]
+	fake.idArgsForCall = append(fake.idArgsForCall, struct {
+	}{})
+	fake.recordInvocation("Id", []interface{}{})
+	fake.idMutex.Unlock()
+	if fake.IdStub != nil {
+		return fake.IdStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.idReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeOutput) IdCallCount() int {
+	fake.idMutex.RLock()
+	defer fake.idMutex.RUnlock()
+	return len(fake.idArgsForCall)
+}
+
+func (fake *FakeOutput) IdReturns(result1 string) {
+	fake.IdStub = nil
+	fake.idReturns = struct {
+		result1 string
+	}{result1}
+}
+
+func (fake *FakeOutput) IdReturnsOnCall(i int, result1 string) {
+	fake.IdStub = nil
+	if fake.idReturnsOnCall == nil {
+		fake.idReturnsOnCall = make(map[int]struct {
+			result1 string
+		})
+	}
+	fake.idReturnsOnCall[i] = struct {
+		result1 string
+	}{result1}
+}
+
 func (fake *FakeOutput) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.idMutex.RLock()
-	defer fake.idMutex.RUnlock()
-	fake.activeMutex.RLock()
-	defer fake.activeMutex.RUnlock()
 	fake.activateMutex.RLock()
 	defer fake.activateMutex.RUnlock()
-	fake.deactivateMutex.RLock()
-	defer fake.deactivateMutex.RUnlock()
+	fake.activeMutex.RLock()
+	defer fake.activeMutex.RUnlock()
 	fake.closeMutex.RLock()
 	defer fake.closeMutex.RUnlock()
+	fake.deactivateMutex.RLock()
+	defer fake.deactivateMutex.RUnlock()
+	fake.idMutex.RLock()
+	defer fake.idMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

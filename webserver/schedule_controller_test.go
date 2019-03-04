@@ -147,6 +147,70 @@ var _ = Describe("schedule controller", func() {
 		})
 	})
 
+	Describe("updating an event", func() {
+		var (
+			zone1  *controller.Zone
+			values url.Values
+		)
+
+		BeforeEach(func() {
+			zone1 = controller.NewZone("one", output.Virtual("one"))
+			ctrl.AddZone(zone1)
+			zone1.AddEvent(controller.Event{Time: units.NewTimeOfDay(7, 30), Action: controller.On})
+			zone1.AddEvent(controller.Event{Time: units.NewTimeOfDay(8, 30), Action: controller.Off})
+
+			values = url.Values{}
+			values.Set("hour", "10")
+			values.Set("min", "24")
+			values.Set("action", "On")
+			values.Set("therm_action", "")
+			values.Set("therm_param", "")
+		})
+
+		It("should update the event and redirect to the schedule", func() {
+			w := doFakeRequestWithValues(server, "PUT", "/zones/one/schedule/8:30", values)
+
+			Expect(w.Code).To(Equal(302))
+			Expect(w.Header().Get("Location")).To(Equal("/zones/one/schedule"))
+
+			events := zone1.ReadEvents()
+			Expect(events).To(HaveLen(2))
+			Expect(events[1]).To(Equal(controller.Event{Time: units.NewTimeOfDay(10, 24), Action: controller.On}))
+		})
+
+		It("should save the zone state", func() {
+			doFakeRequestWithValues(server, "PUT", "/zones/one/schedule/8:30", values)
+
+			data := readFile(controller.DataDir + "/one.json")
+			expected, _ := json.Marshal(map[string]interface{}{
+				"events": []map[string]interface{}{
+					{"time": "7:30", "action": "On"},
+					{"time": "10:24", "action": "On"},
+				},
+			})
+			Expect(data).To(MatchJSON(expected))
+		})
+
+		It("should return an error with invalid data", func() {
+			values.Set("action", "fooey")
+			w := doFakeRequestWithValues(server, "PUT", "/zones/one/schedule/8:30", values)
+			Expect(w.Code).To(Equal(400))
+			Expect(w.Body.String()).To(ContainSubstring("invalid action"))
+			Expect(zone1.ReadEvents()[1].Time).To(Equal(units.NewTimeOfDay(8, 30)))
+		})
+
+		It("should 404 for a non-existent event", func() {
+			w := doFakeRequestWithValues(server, "PUT", "/zones/one/schedule/9:30", values)
+			Expect(w.Code).To(Equal(404))
+			Expect(zone1.ReadEvents()).To(HaveLen(2))
+		})
+
+		It("should 404 for an invalid time in the URL", func() {
+			w := doFakeRequestWithValues(server, "PUT", "/zones/one/schedule/foo:30", values)
+			Expect(w.Code).To(Equal(404))
+		})
+	})
+
 	Describe("removing an event", func() {
 		var (
 			zone1 *controller.Zone
@@ -160,7 +224,7 @@ var _ = Describe("schedule controller", func() {
 		})
 
 		It("should remove the matching event and redirect to the schedule", func() {
-			w := doFakeDeleteRequest(server, "/zones/one/schedule/7-30")
+			w := doFakeDeleteRequest(server, "/zones/one/schedule/7:30")
 
 			Expect(w.Code).To(Equal(302))
 			Expect(w.Header().Get("Location")).To(Equal("/zones/one/schedule"))
@@ -171,7 +235,7 @@ var _ = Describe("schedule controller", func() {
 		})
 
 		It("should save the zone state", func() {
-			doFakeDeleteRequest(server, "/zones/one/schedule/7-30")
+			doFakeDeleteRequest(server, "/zones/one/schedule/7:30")
 
 			data := readFile(controller.DataDir + "/one.json")
 			expected, _ := json.Marshal(map[string]interface{}{
@@ -183,7 +247,7 @@ var _ = Describe("schedule controller", func() {
 		})
 
 		It("should do nothing for a non-existent event", func() {
-			w := doFakeDeleteRequest(server, "/zones/one/schedule/7-40")
+			w := doFakeDeleteRequest(server, "/zones/one/schedule/7:40")
 
 			Expect(w.Code).To(Equal(302))
 			Expect(w.Header().Get("Location")).To(Equal("/zones/one/schedule"))

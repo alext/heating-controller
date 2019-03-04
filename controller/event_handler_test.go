@@ -13,11 +13,13 @@ import (
 var _ = Describe("EventHandler", func() {
 	Describe("adding, removing and reading events", func() {
 		var (
-			eh EventHandler
+			sched *schedulerfakes.FakeScheduler
+			eh    EventHandler
 		)
 
 		BeforeEach(func() {
-			eh = NewEventHandler(&schedulerfakes.FakeScheduler{}, func(Event) {})
+			sched = &schedulerfakes.FakeScheduler{}
+			eh = NewEventHandler(sched, func(Event) {})
 		})
 
 		It("should allow adding and reading events", func() {
@@ -58,6 +60,70 @@ var _ = Describe("EventHandler", func() {
 			).NotTo(Succeed())
 		})
 
+		Describe("finding an event by time", func() {
+			BeforeEach(func() {
+				Expect(eh.AddEvent(Event{Time: units.NewTimeOfDay(6, 15), Action: On})).To(Succeed())
+				Expect(eh.AddEvent(Event{Time: units.NewTimeOfDay(8, 30), Action: Off})).To(Succeed())
+				Expect(eh.AddEvent(Event{Time: units.NewTimeOfDay(18, 0), Action: Off})).To(Succeed())
+			})
+
+			It("returns the event with the given time and true", func() {
+				e, ok := eh.FindEvent(units.NewTimeOfDay(8, 30))
+				Expect(ok).To(BeTrue())
+				Expect(e).To(Equal(Event{Time: units.NewTimeOfDay(8, 30), Action: Off}))
+			})
+
+			It("returns false if no event matches the given time", func() {
+				_, ok := eh.FindEvent(units.NewTimeOfDay(8, 45))
+				Expect(ok).To(BeFalse())
+			})
+		})
+
+		Describe("replacing an event", func() {
+			BeforeEach(func() {
+				Expect(eh.AddEvent(Event{Time: units.NewTimeOfDay(6, 15), Action: On})).To(Succeed())
+				Expect(eh.AddEvent(Event{Time: units.NewTimeOfDay(8, 30), Action: Off})).To(Succeed())
+				Expect(eh.AddEvent(Event{Time: units.NewTimeOfDay(18, 0), Action: Off})).To(Succeed())
+			})
+
+			It("should allow replacing an event", func() {
+				Expect(
+					eh.ReplaceEvent(units.NewTimeOfDay(8, 30), Event{Time: units.NewTimeOfDay(8, 45), Action: Off}),
+				).To(Succeed())
+				events := eh.ReadEvents()
+				Expect(events).To(HaveLen(3))
+				Expect(events).To(ContainElement(Event{Time: units.NewTimeOfDay(8, 45), Action: Off}))
+				Expect(events).NotTo(ContainElement(Event{Time: units.NewTimeOfDay(8, 30), Action: Off}))
+			})
+
+			It("should re-sort the events after replacing", func() {
+				Expect(
+					eh.ReplaceEvent(units.NewTimeOfDay(8, 30), Event{Time: units.NewTimeOfDay(19, 45), Action: Off}),
+				).To(Succeed())
+				events := eh.ReadEvents()
+				Expect(events).To(HaveLen(3))
+				Expect(events[2]).To(Equal(Event{Time: units.NewTimeOfDay(19, 45), Action: Off}))
+			})
+
+			It("should error if the target event doesn't exist", func() {
+				Expect(
+					eh.ReplaceEvent(units.NewTimeOfDay(9, 30), Event{Time: units.NewTimeOfDay(8, 45), Action: Off}),
+				).NotTo(Succeed())
+			})
+
+			It("should send the updated events list to the scheduler", func() {
+				Expect(
+					eh.ReplaceEvent(units.NewTimeOfDay(8, 30), Event{Time: units.NewTimeOfDay(8, 45), Action: Off}),
+				).To(Succeed())
+				Expect(sched.SetJobsCallCount()).To(Equal(1))
+				jobs := sched.SetJobsArgsForCall(0)
+				Expect(jobs).To(HaveLen(3))
+				Expect(jobs[0].Time).To(Equal(units.NewTimeOfDay(6, 15)))
+				Expect(jobs[1].Time).To(Equal(units.NewTimeOfDay(8, 45)))
+				Expect(jobs[2].Time).To(Equal(units.NewTimeOfDay(18, 0)))
+			})
+		})
+
 		It("should allow removing an event", func() {
 			Expect(
 				eh.AddEvent(Event{Time: units.NewTimeOfDay(6, 15), Action: On}),
@@ -69,7 +135,7 @@ var _ = Describe("EventHandler", func() {
 				eh.AddEvent(Event{Time: units.NewTimeOfDay(18, 0), Action: Off}),
 			).To(Succeed())
 
-			eh.RemoveEvent(Event{Time: units.NewTimeOfDay(8, 30), Action: Off})
+			Expect(eh.RemoveEvent(units.NewTimeOfDay(8, 30))).To(Succeed())
 
 			events := eh.ReadEvents()
 			Expect(events).To(HaveLen(2))
