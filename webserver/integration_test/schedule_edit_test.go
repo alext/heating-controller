@@ -90,7 +90,10 @@ var _ = Describe("Editing the schedule for a zone", func() {
 				It("should allow adding an event", func() {
 					Expect(page.Navigate(testServer.URL + "/zones/one/schedule")).To(Succeed())
 
-					form := page.All("table tr").At(5).Find("form")
+					Expect(page.FindByLink("add event").Click()).To(Succeed())
+					Expect(page).To(HaveURL(testServer.URL + "/zones/one/schedule/new"))
+
+					form := page.Find("form")
 					Expect(form).To(BeFound())
 
 					Expect(form.Find("input[name=hour]").Fill("14")).To(Succeed())
@@ -107,9 +110,9 @@ var _ = Describe("Editing the schedule for a zone", func() {
 				})
 
 				It("should allow adding an event with a thermostat action", func() {
-					Expect(page.Navigate(testServer.URL + "/zones/one/schedule")).To(Succeed())
+					Expect(page.Navigate(testServer.URL + "/zones/one/schedule/new")).To(Succeed())
 
-					form := page.All("table tr").At(5).Find("form")
+					form := page.Find("form")
 					Expect(form).To(BeFound())
 
 					Expect(form.Find("input[name=hour]").Fill("14")).To(Succeed())
@@ -131,9 +134,9 @@ var _ = Describe("Editing the schedule for a zone", func() {
 				})
 
 				It("does not show the thermostat action fields for a zone without a thermostat", func() {
-					Expect(page.Navigate(testServer.URL + "/zones/two/schedule")).To(Succeed())
+					Expect(page.Navigate(testServer.URL + "/zones/two/schedule/new")).To(Succeed())
 
-					form := page.All("table tr").At(1).Find("form")
+					form := page.Find("form")
 					Expect(form).To(BeFound())
 
 					Expect(form.Find("select[name=therm_action]")).ToNot(BeFound())

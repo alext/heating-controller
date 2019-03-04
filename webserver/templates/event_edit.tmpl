@@ -1,9 +1,13 @@
 {{ define "content" }}
 
-<h1>Edit event</h1>
+<h1>{{ if .NewEvent }}Add{{else}}Edit{{end}} event</h1>
 
+{{ if .NewEvent }}
+<form action="/zones/{{ (.Zone).ID }}/schedule" method="post">
+{{ else }}
 <form action="/zones/{{ (.Zone).ID }}/schedule/{{ .HourValue }}:{{ .MinuteValue }}" method="post">
   <input type="hidden" name="_method" value="PUT">
+{{ end }}
   <table>
     <tr>
       <th>Time</th>
@@ -42,7 +46,7 @@
     <tr>
       <th></th>
       <td>
-        <input type="submit" value="Update Event">
+        <input type="submit" value="{{ if .NewEvent }}Add{{else}}Update{{end}} Event">
         <a href="/zones/{{ .Zone.ID }}/schedule">cancel</a>
       </td>
     </tr>

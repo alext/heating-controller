@@ -50,6 +50,14 @@ func (srv *WebServer) scheduleAddEvent(w http.ResponseWriter, req *http.Request,
 	http.Redirect(w, req, "/zones/"+z.ID+"/schedule", 302)
 }
 
+func (srv *WebServer) scheduleNewEvent(w http.ResponseWriter, req *http.Request, z *controller.Zone) {
+	ed := eventData{
+		NewEvent: true,
+		Zone:     z,
+	}
+	srv.renderEventEdit(w, ed)
+}
+
 func (srv *WebServer) scheduleEditEvent(w http.ResponseWriter, req *http.Request, z *controller.Zone) {
 	t, err := units.ParseTimeOfDay(mux.Vars(req)["time"])
 	if err != nil {
@@ -129,6 +137,7 @@ func (srv *WebServer) scheduleRemoveEvent(w http.ResponseWriter, req *http.Reque
 }
 
 type eventData struct {
+	NewEvent    bool
 	Zone        *controller.Zone
 	HourValue   string
 	MinuteValue string
