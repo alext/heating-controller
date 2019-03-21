@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 
 	. "github.com/onsi/ginkgo"
@@ -10,7 +11,14 @@ import (
 
 	"github.com/alext/heating-controller/config"
 	"github.com/alext/heating-controller/output"
+	"github.com/alext/heating-controller/sensor"
 )
+
+type fakeMetrics struct{}
+
+func (f *fakeMetrics) Handler() http.Handler           { return nil }
+func (f *fakeMetrics) AddSensor(string, sensor.Sensor) {}
+func (f *fakeMetrics) AddZone(*Zone)                   {}
 
 var _ = Describe("Controller", func() {
 
@@ -25,7 +33,7 @@ var _ = Describe("Controller", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			cfg = config.New()
-			ctrl = New()
+			ctrl = New(&fakeMetrics{})
 
 			outputNew = func(id string, pin int) (output.Output, error) {
 				out := output.Virtual(fmt.Sprintf("%s-gpio%d", id, pin))

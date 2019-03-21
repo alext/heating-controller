@@ -52,11 +52,7 @@ func main() {
 
 	setupDataDir(*dataDir)
 
-	m, err := metrics.New()
-	if err != nil {
-		log.Fatalln("[main] Error constructing metrics handler:", err)
-	}
-	ctrl := controller.New(m)
+	ctrl := controller.New(metrics.New())
 
 	err = ctrl.Setup(config)
 	if err != nil {

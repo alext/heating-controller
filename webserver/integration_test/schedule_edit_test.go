@@ -9,6 +9,7 @@ import (
 	. "github.com/sclevine/agouti/matchers"
 
 	"github.com/alext/heating-controller/controller"
+	"github.com/alext/heating-controller/metrics"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/thermostat/thermostatfakes"
 	"github.com/alext/heating-controller/units"
@@ -24,7 +25,7 @@ var _ = Describe("Editing the schedule for a zone", func() {
 	)
 
 	BeforeEach(func() {
-		ctrl := controller.New()
+		ctrl := controller.New(metrics.New())
 
 		zone1 = controller.NewZone("one", output.Virtual("one"))
 		zone1.Thermostat = &thermostatfakes.FakeThermostat{}
