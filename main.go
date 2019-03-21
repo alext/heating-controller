@@ -9,6 +9,7 @@ import (
 
 	"github.com/alext/heating-controller/config"
 	"github.com/alext/heating-controller/controller"
+	"github.com/alext/heating-controller/metrics"
 	"github.com/alext/heating-controller/webserver"
 )
 
@@ -50,7 +51,12 @@ func main() {
 	}
 
 	setupDataDir(*dataDir)
-	ctrl := controller.New()
+
+	m, err := metrics.New()
+	if err != nil {
+		log.Fatalln("[main] Error constructing metrics handler:", err)
+	}
+	ctrl := controller.New(m)
 
 	err = ctrl.Setup(config)
 	if err != nil {
