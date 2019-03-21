@@ -12,20 +12,22 @@ import (
 )
 
 type Metrics struct {
-	sensors map[string]sensor.Sensor
-	lock    sync.RWMutex
+	registry *prometheus.Registry
+	sensors  map[string]sensor.Sensor
+	lock     sync.RWMutex
 }
 
-func New() (*Metrics, error) {
+func New() *Metrics {
 	m := &Metrics{
-		sensors: make(map[string]sensor.Sensor),
+		registry: prometheus.NewRegistry(),
+		sensors:  make(map[string]sensor.Sensor),
 	}
-	err := prometheus.Register(m)
-	return m, err
+	m.registry.MustRegister(m)
+	return m
 }
 
 func (m *Metrics) Handler() http.Handler {
-	return promhttp.Handler()
+	return promhttp.HandlerFor(m.registry, promhttp.HandlerOpts{})
 }
 
 func (m *Metrics) AddSensor(name string, s sensor.Sensor) {
@@ -49,5 +51,5 @@ func (m *Metrics) AddZone(z *controller.Zone) {
 			return 0
 		},
 	)
-	prometheus.MustRegister(g)
+	m.registry.MustRegister(g)
 }
