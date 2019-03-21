@@ -17,9 +17,16 @@ type Metrics struct {
 	lock     sync.RWMutex
 }
 
+func newRegistry() *prometheus.Registry {
+	r := prometheus.NewRegistry()
+	r.MustRegister(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
+	r.MustRegister(prometheus.NewGoCollector())
+	return r
+}
+
 func New() *Metrics {
 	m := &Metrics{
-		registry: prometheus.NewRegistry(),
+		registry: newRegistry(),
 		sensors:  make(map[string]sensor.Sensor),
 	}
 	m.registry.MustRegister(m)
@@ -27,7 +34,10 @@ func New() *Metrics {
 }
 
 func (m *Metrics) Handler() http.Handler {
-	return promhttp.HandlerFor(m.registry, promhttp.HandlerOpts{})
+	return promhttp.InstrumentMetricHandler(
+		m.registry,
+		promhttp.HandlerFor(m.registry, promhttp.HandlerOpts{}),
+	)
 }
 
 func (m *Metrics) AddSensor(name string, s sensor.Sensor) {
