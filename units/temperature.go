@@ -18,6 +18,10 @@ func ParseTemperature(input string) (Temperature, error) {
 	return Temperature(f * 1000), nil
 }
 
+func (t Temperature) Float() float64 {
+	return float64(t) / 1000
+}
+
 func (t Temperature) String() string {
-	return strconv.FormatFloat(float64(t)/1000, 'f', -1, 64) + unitStr
+	return strconv.FormatFloat(t.Float(), 'f', -1, 64) + unitStr
 }
