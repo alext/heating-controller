@@ -1,8 +1,6 @@
 package output
 
-// Workaround for https://github.com/maxbrunsfeld/counterfeiter/issues/75
 //go:generate counterfeiter -o gpiofakes/fake_pin.go ../vendor/github.com/alext/gpio Pin
-//go:generate perl -i -pe "s|github.com/alext/heating-controller/vendor/||" gpiofakes/fake_pin.go
 
 import (
 	"errors"
