@@ -35,6 +35,9 @@ var _ = Describe("viewing the index", func() {
 	})
 
 	AfterEach(func() {
+		for _, z := range ctrl.Zones {
+			z.Scheduler.Stop()
+		}
 		page.Destroy()
 		testServer.Close()
 	})
@@ -48,23 +51,21 @@ var _ = Describe("viewing the index", func() {
 
 	Context("with some zones", func() {
 		var (
-			output1 output.Output
-			output2 output.Output
-			zone1   *controller.Zone
-			zone2   *controller.Zone
+			zone1 *controller.Zone
+			zone2 *controller.Zone
 		)
 
 		BeforeEach(func() {
-			output1 = output.Virtual("one")
-			output2 = output.Virtual("two")
-			zone1 = controller.NewZone("one", output1)
-			zone2 = controller.NewZone("two", output2)
+			zone1 = controller.NewZone("one", output.Virtual("one"))
+			zone1.Scheduler.Start()
+			zone2 = controller.NewZone("two", output.Virtual("two"))
+			zone2.Scheduler.Start()
 			ctrl.AddZone(zone1)
 			ctrl.AddZone(zone2)
 		})
 
 		It("should return a list of zones with their current state", func() {
-			output1.Activate()
+			zone1.Boost(time.Hour)
 
 			Expect(page.Navigate(testServer.URL)).To(Succeed())
 			zoneContent := page.FindByID("zone-one")

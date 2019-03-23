@@ -30,15 +30,18 @@ var _ = Describe("zones controller", func() {
 
 	Describe("JSON index", func() {
 		BeforeEach(func() {
-			out1 := output.Virtual("one")
-			zone1 := controller.NewZone("one", out1)
-			zone1.EventHandler = new(controllerfakes.FakeEventHandler)
-			out2 := output.Virtual("two")
-			zone2 := controller.NewZone("two", out2)
-			zone2.EventHandler = new(controllerfakes.FakeEventHandler)
+			zone1 := controller.NewZone("one", output.Virtual("one"))
+			zone1.Scheduler.Start()
+			zone2 := controller.NewZone("two", output.Virtual("two"))
+			zone2.Scheduler.Start()
 			ctrl.AddZone(zone1)
 			ctrl.AddZone(zone2)
-			out1.Activate()
+			zone1.Boost(time.Hour)
+		})
+		AfterEach(func() {
+			for _, z := range ctrl.Zones {
+				z.Scheduler.Stop()
+			}
 		})
 
 		It("returns details of the state of all zones", func() {

@@ -36,23 +36,16 @@ type jsonZone struct {
 	Active bool `json:"active"`
 }
 
-func newJSONZone(z *controller.Zone) (*jsonZone, error) {
-	active, err := z.Active()
-	jz := &jsonZone{
-		Active: active,
+func newJSONZone(z *controller.Zone) *jsonZone {
+	return &jsonZone{
+		Active: z.Active(),
 	}
-	return jz, err
 }
 
 func (srv *WebServer) zonesAPIIndex(w http.ResponseWriter, req *http.Request) {
 	data := make(map[string]*jsonZone)
-	var err error
 	for name, z := range srv.controller.Zones {
-		data[name], err = newJSONZone(z)
-		if err != nil {
-			writeError(w, err, 500)
-			return
-		}
+		data[name] = newJSONZone(z)
 	}
 	writeJSON(w, data)
 }

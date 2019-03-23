@@ -39,10 +39,10 @@ func (z *Zone) SetupThermostat(source sensor.Sensor, initialTarget units.Tempera
 	z.Thermostat = thermostat.New(z.ID, source, initialTarget, z.thermostatDemand)
 }
 
-func (z *Zone) Active() (bool, error) {
+func (z *Zone) Active() bool {
 	z.lock.RLock()
 	defer z.lock.RUnlock()
-	return z.out.Active()
+	return z.currentDemand
 }
 
 func (z *Zone) SDemand() bool {
