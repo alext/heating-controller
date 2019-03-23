@@ -12,9 +12,10 @@ import (
 )
 
 type Metrics struct {
-	registry *prometheus.Registry
-	sensors  map[string]sensor.Sensor
-	lock     sync.RWMutex
+	registry   *prometheus.Registry
+	sensors    map[string]sensor.Sensor
+	sensorDesc *prometheus.Desc
+	lock       sync.RWMutex
 }
 
 func newRegistry() *prometheus.Registry {
@@ -26,8 +27,9 @@ func newRegistry() *prometheus.Registry {
 
 func New() *Metrics {
 	m := &Metrics{
-		registry: newRegistry(),
-		sensors:  make(map[string]sensor.Sensor),
+		registry:   newRegistry(),
+		sensors:    make(map[string]sensor.Sensor),
+		sensorDesc: newDensorDesc(),
 	}
 	m.registry.MustRegister(m)
 	return m
@@ -44,7 +46,6 @@ func (m *Metrics) AddSensor(name string, s sensor.Sensor) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 	m.sensors[name] = s
-	return
 }
 
 func (m *Metrics) AddZone(z *controller.Zone) {
