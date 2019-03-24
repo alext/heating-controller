@@ -13,6 +13,7 @@ type Metrics struct {
 	ctrl       *controller.Controller
 	registry   *prometheus.Registry
 	sensorDesc *prometheus.Desc
+	zoneDesc   *prometheus.Desc
 }
 
 func newRegistry() *prometheus.Registry {
@@ -27,9 +28,7 @@ func New(ctrl *controller.Controller) *Metrics {
 		ctrl:       ctrl,
 		registry:   newRegistry(),
 		sensorDesc: newDensorDesc(),
-	}
-	for _, z := range ctrl.Zones {
-		m.AddZone(z)
+		zoneDesc:   newZoneDesc(),
 	}
 	m.registry.MustRegister(m)
 	return m
@@ -40,21 +39,4 @@ func (m *Metrics) Handler() http.Handler {
 		m.registry,
 		promhttp.HandlerFor(m.registry, promhttp.HandlerOpts{}),
 	)
-}
-
-func (m *Metrics) AddZone(z *controller.Zone) {
-	g := prometheus.NewGaugeFunc(
-		prometheus.GaugeOpts{
-			Namespace:   "house",
-			Name:        "zone_active",
-			ConstLabels: prometheus.Labels{"id": z.ID},
-		},
-		func() float64 {
-			if z.Active() {
-				return 1
-			}
-			return 0
-		},
-	)
-	m.registry.MustRegister(g)
 }
