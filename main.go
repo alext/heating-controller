@@ -51,15 +51,16 @@ func main() {
 	}
 
 	setupDataDir(*dataDir)
-
-	ctrl := controller.New(metrics.New())
+	ctrl := controller.New()
 
 	err = ctrl.Setup(config)
 	if err != nil {
 		log.Fatalln("[main] Error setting up controller:", err)
 	}
 
-	srv := webserver.New(ctrl, config.Port, filepath.FromSlash(*templateDir))
+	m := metrics.New(ctrl)
+
+	srv := webserver.New(ctrl, config.Port, filepath.FromSlash(*templateDir), m.Handler())
 	err = srv.Run()
 	if err != nil {
 		log.Fatalln("[main] Server.Run:", err)

@@ -16,13 +16,13 @@ type WebServer struct {
 	mux           http.Handler
 }
 
-func New(ctrl *controller.Controller, port int, templatesPath string) (srv *WebServer) {
+func New(ctrl *controller.Controller, port int, templatesPath string, metricsHandler http.Handler) (srv *WebServer) {
 	srv = &WebServer{
 		controller:    ctrl,
 		listenUrl:     fmt.Sprintf(":%d", port),
 		templatesPath: templatesPath,
 	}
-	srv.mux = srv.buildRouter()
+	srv.mux = srv.buildRouter(metricsHandler)
 	return
 }
 

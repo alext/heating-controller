@@ -8,7 +8,6 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/heating-controller/controller"
-	"github.com/alext/heating-controller/metrics"
 	"github.com/alext/heating-controller/sensor"
 	"github.com/alext/heating-controller/units"
 	"github.com/alext/heating-controller/webserver"
@@ -33,8 +32,8 @@ var _ = Describe("sensors controller", func() {
 	)
 
 	BeforeEach(func() {
-		ctrl = controller.New(metrics.New())
-		server = webserver.New(ctrl, 8080, "")
+		ctrl = controller.New()
+		server = webserver.New(ctrl, 8080, "", nil)
 	})
 
 	Describe("sensors index", func() {

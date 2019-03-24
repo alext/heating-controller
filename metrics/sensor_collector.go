@@ -20,10 +20,7 @@ func (m *Metrics) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (m *Metrics) Collect(ch chan<- prometheus.Metric) {
-	m.lock.RLock()
-	defer m.lock.RUnlock()
-
-	for name, s := range m.sensors {
+	for name, s := range m.ctrl.SensorsByName {
 		temp, ts := s.Read()
 
 		metric, err := prometheus.NewConstMetric(m.sensorDesc, prometheus.GaugeValue, temp.Float(), name, s.DeviceId())

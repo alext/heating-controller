@@ -2,20 +2,17 @@ package metrics
 
 import (
 	"net/http"
-	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/alext/heating-controller/controller"
-	"github.com/alext/heating-controller/sensor"
 )
 
 type Metrics struct {
+	ctrl       *controller.Controller
 	registry   *prometheus.Registry
-	sensors    map[string]sensor.Sensor
 	sensorDesc *prometheus.Desc
-	lock       sync.RWMutex
 }
 
 func newRegistry() *prometheus.Registry {
@@ -25,11 +22,14 @@ func newRegistry() *prometheus.Registry {
 	return r
 }
 
-func New() *Metrics {
+func New(ctrl *controller.Controller) *Metrics {
 	m := &Metrics{
+		ctrl:       ctrl,
 		registry:   newRegistry(),
-		sensors:    make(map[string]sensor.Sensor),
 		sensorDesc: newDensorDesc(),
+	}
+	for _, z := range ctrl.Zones {
+		m.AddZone(z)
 	}
 	m.registry.MustRegister(m)
 	return m
@@ -40,12 +40,6 @@ func (m *Metrics) Handler() http.Handler {
 		m.registry,
 		promhttp.HandlerFor(m.registry, promhttp.HandlerOpts{}),
 	)
-}
-
-func (m *Metrics) AddSensor(name string, s sensor.Sensor) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
-	m.sensors[name] = s
 }
 
 func (m *Metrics) AddZone(z *controller.Zone) {

@@ -8,7 +8,7 @@ import (
 	"github.com/alext/heating-controller/controller"
 )
 
-func (srv *WebServer) buildRouter() http.Handler {
+func (srv *WebServer) buildRouter(metricsHandler http.Handler) http.Handler {
 	r := mux.NewRouter()
 	r.Methods("GET").Path("/").HandlerFunc(srv.zonesIndex)
 
@@ -32,7 +32,7 @@ func (srv *WebServer) buildRouter() http.Handler {
 	r.Methods("POST").Path("/zones/{zone_id}/thermostat/increment").HandlerFunc(srv.withZone(srv.thermostatInc))
 	r.Methods("POST").Path("/zones/{zone_id}/thermostat/decrement").HandlerFunc(srv.withZone(srv.thermostatDec))
 
-	r.Methods("GET").Path("/metrics").Handler(srv.controller.Metrics.Handler())
+	r.Methods("GET").Path("/metrics").Handler(metricsHandler)
 
 	return httpMethodOverrideHandler(r)
 }

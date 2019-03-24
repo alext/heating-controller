@@ -10,7 +10,6 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/alext/heating-controller/controller"
-	"github.com/alext/heating-controller/metrics"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/units"
 	"github.com/alext/heating-controller/webserver"
@@ -26,8 +25,8 @@ var _ = Describe("schedule controller", func() {
 	BeforeEach(func() {
 		tempDataDir, _ = ioutil.TempDir("", "schedule_controller_test")
 		controller.DataDir = tempDataDir
-		ctrl = controller.New(metrics.New())
-		server = webserver.New(ctrl, 8080, "")
+		ctrl = controller.New()
+		server = webserver.New(ctrl, 8080, "", nil)
 	})
 
 	AfterEach(func() {

@@ -2,44 +2,33 @@ package controller
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/alext/heating-controller/config"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/sensor"
 )
 
-type Metrics interface {
-	Handler() http.Handler
-	AddSensor(string, sensor.Sensor)
-	AddZone(*Zone)
-}
-
 type Controller struct {
 	SensorsByName     map[string]sensor.Sensor
 	SensorsByDeviceID map[string]sensor.Sensor
 	Zones             map[string]*Zone
-	Metrics           Metrics
 }
 
-func New(m Metrics) *Controller {
+func New() *Controller {
 	return &Controller{
 		SensorsByName:     make(map[string]sensor.Sensor),
 		SensorsByDeviceID: make(map[string]sensor.Sensor),
 		Zones:             make(map[string]*Zone),
-		Metrics:           m,
 	}
 }
 
 func (c *Controller) AddSensor(name string, s sensor.Sensor) {
 	c.SensorsByName[name] = s
 	c.SensorsByDeviceID[s.DeviceId()] = s
-	c.Metrics.AddSensor(name, s)
 }
 
 func (c *Controller) AddZone(z *Zone) {
 	c.Zones[z.ID] = z
-	c.Metrics.AddZone(z)
 }
 
 var outputNew = output.New // variable indirection to facilitate testing

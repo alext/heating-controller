@@ -12,7 +12,6 @@ import (
 
 	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/controller/controllerfakes"
-	"github.com/alext/heating-controller/metrics"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/thermostat/thermostatfakes"
 	"github.com/alext/heating-controller/webserver"
@@ -25,8 +24,8 @@ var _ = Describe("zones controller", func() {
 	)
 
 	BeforeEach(func() {
-		ctrl = controller.New(metrics.New())
-		server = webserver.New(ctrl, 8080, "")
+		ctrl = controller.New()
+		server = webserver.New(ctrl, 8080, "", nil)
 	})
 
 	Describe("JSON index", func() {

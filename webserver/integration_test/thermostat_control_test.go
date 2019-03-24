@@ -10,7 +10,6 @@ import (
 	. "github.com/sclevine/agouti/matchers"
 
 	"github.com/alext/heating-controller/controller"
-	"github.com/alext/heating-controller/metrics"
 	"github.com/alext/heating-controller/output"
 	"github.com/alext/heating-controller/sensor"
 	"github.com/alext/heating-controller/webserver"
@@ -24,8 +23,8 @@ var _ = Describe("controlling the thermostat", func() {
 	)
 
 	BeforeEach(func() {
-		ctrl = controller.New(metrics.New())
-		server := webserver.New(ctrl, 8080, "../templates")
+		ctrl = controller.New()
+		server := webserver.New(ctrl, 8080, "../templates", nil)
 		testServer = httptest.NewServer(server)
 
 		var err error
