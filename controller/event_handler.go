@@ -51,6 +51,18 @@ func (eh *eventHandler) trigger(e Event) {
 	eh.demand(e)
 }
 
+func (eh *eventHandler) buildSchedulerJob(e Event) scheduler.Job {
+	return e.buildSchedulerJob(eh.trigger)
+}
+
+func (eh *eventHandler) buildSchedulerJobs() []scheduler.Job {
+	jobs := make([]scheduler.Job, 0, len(eh.events))
+	for _, e := range eh.events {
+		jobs = append(jobs, eh.buildSchedulerJob(e))
+	}
+	return jobs
+}
+
 // nextEvent returns the next regular event, ignoring any overrides. This is
 // different from NextEvent, which queries the scheduler.
 func (eh *eventHandler) nextEvent() *Event {
@@ -92,7 +104,7 @@ func (eh *eventHandler) AddEvent(e Event) error {
 	eh.events = append(eh.events, e)
 	sortEvents(eh.events)
 
-	return eh.sched.AddJob(e.buildSchedulerJob(eh.trigger))
+	return eh.sched.AddJob(eh.buildSchedulerJob(e))
 }
 
 func (eh *eventHandler) ReplaceEvent(t units.TimeOfDay, e Event) error {
@@ -114,7 +126,7 @@ func (eh *eventHandler) ReplaceEvent(t units.TimeOfDay, e Event) error {
 		return ErrEventNotFound
 	}
 	sortEvents(eh.events)
-	return eh.sched.SetJobs(buildSchedulerJobs(eh.events, eh.demand))
+	return eh.sched.SetJobs(eh.buildSchedulerJobs())
 }
 
 func (eh *eventHandler) RemoveEvent(t units.TimeOfDay) error {
@@ -128,7 +140,7 @@ func (eh *eventHandler) RemoveEvent(t units.TimeOfDay) error {
 		}
 	}
 	eh.events = newEvents
-	return eh.sched.SetJobs(buildSchedulerJobs(eh.events, eh.demand))
+	return eh.sched.SetJobs(eh.buildSchedulerJobs())
 }
 
 func (eh *eventHandler) NextEvent() *Event {
@@ -197,7 +209,7 @@ func (eh *eventHandler) Boost(d time.Duration) {
 	nextEvent := eh.nextEvent()
 
 	if nextEvent == nil || endEvent.NextOccurance().Before(nextEvent.NextOccurance()) {
-		eh.sched.Override(endEvent.buildSchedulerJob(eh.trigger))
+		eh.sched.Override(eh.buildSchedulerJob(endEvent))
 	}
 }
 

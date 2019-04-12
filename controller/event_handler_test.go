@@ -240,6 +240,7 @@ var _ = Describe("EventHandler", func() {
 
 				Expect(activations).To(HaveLen(1))
 				Expect(activations[0].Action).To(Equal(On))
+				Expect(eh.Boosted()).To(BeTrue())
 
 				Expect(sched.OverrideCallCount()).To(Equal(1))
 				j := sched.OverrideArgsForCall(0)
@@ -247,6 +248,7 @@ var _ = Describe("EventHandler", func() {
 				j.Action()
 				Expect(activations).To(HaveLen(2))
 				Expect(activations[1].Action).To(Equal(Off))
+				Expect(eh.Boosted()).To(BeFalse())
 			})
 
 			It("does not schedule a deactivation if there's already an activation within the duration", func() {

@@ -41,14 +41,6 @@ func (e Event) buildSchedulerJob(demand func(Event)) scheduler.Job {
 	}
 }
 
-func buildSchedulerJobs(events []Event, demand func(Event)) []scheduler.Job {
-	jobs := make([]scheduler.Job, 0, len(events))
-	for _, e := range events {
-		jobs = append(jobs, e.buildSchedulerJob(demand))
-	}
-	return jobs
-}
-
 func sortEvents(events []Event) {
 	sort.Slice(events, func(i, j int) bool {
 		return events[i].Time < events[j].Time
