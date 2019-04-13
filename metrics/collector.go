@@ -36,6 +36,10 @@ func (m *Metrics) Collect(ch chan<- prometheus.Metric) {
 func (m *Metrics) collectSensors(ch chan<- prometheus.Metric) {
 	for name, s := range m.ctrl.SensorsByName {
 		temp, ts := s.Read()
+		if ts.IsZero() {
+			// sensor hasn't had a reading, so it returning initial values
+			continue
+		}
 
 		metric, err := prometheus.NewConstMetric(m.sensorDesc, prometheus.GaugeValue, temp.Float(), name, s.DeviceId())
 		if err != nil {
