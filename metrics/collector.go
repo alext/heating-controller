@@ -16,7 +16,7 @@ func newDensorDesc() *prometheus.Desc {
 }
 func newZoneDesc() *prometheus.Desc {
 	return prometheus.NewDesc(
-		prometheus.BuildFQName("house", "", "zone_active"),
+		prometheus.BuildFQName("house", "heating", "zone_active"),
 		"",
 		[]string{"id"},
 		nil,
