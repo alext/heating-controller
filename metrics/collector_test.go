@@ -66,7 +66,7 @@ var _ = Describe("The custom collector", func() {
 
 		It("returns no metrics with an empty controller", func() {
 			body := getMetricsBody(handler)
-			Expect(body).NotTo(ContainSubstring("house_zone_active"))
+			Expect(body).NotTo(ContainSubstring("house_heating_zone_active"))
 		})
 
 		It("exposes zones current state", func() {
@@ -79,9 +79,9 @@ var _ = Describe("The custom collector", func() {
 			z1.Boost(time.Hour)
 
 			lines := getMetricsLines(handler)
-			Expect(lines).To(ContainElement("# TYPE house_zone_active gauge"))
-			Expect(lines).To(ContainElement(`house_zone_active{id="one"} 1`))
-			Expect(lines).To(ContainElement(`house_zone_active{id="two"} 0`))
+			Expect(lines).To(ContainElement("# TYPE house_heating_zone_active gauge"))
+			Expect(lines).To(ContainElement(`house_heating_zone_active{id="one"} 1`))
+			Expect(lines).To(ContainElement(`house_heating_zone_active{id="two"} 0`))
 		})
 	})
 })
