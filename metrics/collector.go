@@ -18,7 +18,7 @@ func newZoneDesc() *prometheus.Desc {
 	return prometheus.NewDesc(
 		prometheus.BuildFQName("house", "heating", "zone_active"),
 		"Heating zone active state - 1 or 0",
-		[]string{"id"},
+		[]string{"name"},
 		nil,
 	)
 }

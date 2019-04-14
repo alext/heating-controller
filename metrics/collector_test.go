@@ -92,8 +92,8 @@ var _ = Describe("The custom collector", func() {
 
 			lines := getMetricsLines(handler)
 			Expect(lines).To(ContainElement("# TYPE house_heating_zone_active gauge"))
-			Expect(lines).To(ContainElement(`house_heating_zone_active{id="one"} 1`))
-			Expect(lines).To(ContainElement(`house_heating_zone_active{id="two"} 0`))
+			Expect(lines).To(ContainElement(`house_heating_zone_active{name="one"} 1`))
+			Expect(lines).To(ContainElement(`house_heating_zone_active{name="two"} 0`))
 		})
 	})
 })
