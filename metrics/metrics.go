@@ -5,6 +5,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/version"
 
 	"github.com/alext/heating-controller/controller"
 )
@@ -20,6 +21,7 @@ func newRegistry() *prometheus.Registry {
 	r := prometheus.NewRegistry()
 	r.MustRegister(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
 	r.MustRegister(prometheus.NewGoCollector())
+	r.MustRegister(version.NewCollector("heating_controller"))
 	return r
 }
 

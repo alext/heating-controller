@@ -9,6 +9,7 @@ require (
 	github.com/onsi/ginkgo v1.7.0
 	github.com/onsi/gomega v1.4.3
 	github.com/prometheus/client_golang v0.9.2
+	github.com/prometheus/common v0.0.0-20181126121408-4724e9255275
 	github.com/sclevine/agouti v3.0.0+incompatible
 	github.com/spf13/afero v1.2.0
 	golang.org/x/net v0.0.0-20190301231341-16b79f2e4e95 // indirect
