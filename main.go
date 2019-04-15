@@ -59,6 +59,7 @@ func main() {
 	}
 
 	m := metrics.New(ctrl)
+	m.AddInfo(version)
 
 	srv := webserver.New(ctrl, config.Port, filepath.FromSlash(*templateDir), m.Handler())
 	err = srv.Run()

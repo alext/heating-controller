@@ -40,3 +40,16 @@ func (m *Metrics) Handler() http.Handler {
 		promhttp.HandlerFor(m.registry, promhttp.HandlerOpts{}),
 	)
 }
+
+func (m *Metrics) AddInfo(version string) {
+	g := prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: "heating_controller",
+		Name:      "info",
+		Help:      "A metric with a constant '1' value labeled by application version",
+		ConstLabels: prometheus.Labels{
+			"version": version,
+		},
+	})
+	g.Set(1)
+	m.registry.MustRegister(g)
+}
