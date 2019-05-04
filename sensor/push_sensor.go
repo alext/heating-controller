@@ -13,13 +13,11 @@ type pushSensor struct {
 }
 
 func NewPushSensor(name, id string) SettableSensor {
-	return &pushSensor{
-		baseSensor: baseSensor{
-			name:     name,
-			deviceID: id,
-			temp:     initialValue,
-		},
+	ps := &pushSensor{
+		baseSensor: newBaseSensor(name, id),
 	}
+	ps.baseSensor.temp = initialValue
+	return ps
 }
 
 func (s *pushSensor) Close() {

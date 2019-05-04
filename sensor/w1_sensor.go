@@ -19,11 +19,8 @@ type w1Sensor struct {
 
 func NewW1Sensor(name, deviceID string) Sensor {
 	s := &w1Sensor{
-		baseSensor: baseSensor{
-			name:     name,
-			deviceID: deviceID,
-		},
-		closeCh: make(chan struct{}),
+		baseSensor: newBaseSensor(name, deviceID),
+		closeCh:    make(chan struct{}),
 	}
 	s.readTemperature(time.Now())
 	go s.readLoop()

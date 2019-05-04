@@ -17,6 +17,14 @@ type baseSensor struct {
 	subscriptions []chan units.Temperature
 }
 
+func newBaseSensor(name, deviceID string) baseSensor {
+	s := baseSensor{
+		name:     name,
+		deviceID: deviceID,
+	}
+	return s
+}
+
 func (s *baseSensor) DeviceId() string {
 	return s.deviceID
 }
