@@ -49,12 +49,7 @@ func (s *baseSensor) set(temp units.Temperature, updatedAt time.Time) {
 	s.temp = temp
 	s.updatedAt = updatedAt
 	log.Printf("[Sensor:%s] updated to %s, (updatedAt: %s)", s.name, temp, updatedAt)
-	go s.notifySubscribers()
-}
 
-func (s *baseSensor) notifySubscribers() {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
 	for _, ch := range s.subscriptions {
 		select {
 		case ch <- s.temp:
