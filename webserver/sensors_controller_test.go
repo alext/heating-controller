@@ -14,7 +14,7 @@ import (
 )
 
 type dummySensor struct {
-	deviceID   string
+	id         string
 	temp       units.Temperature
 	updateTime time.Time
 }
@@ -22,7 +22,7 @@ type dummySensor struct {
 func (s *dummySensor) Read() (units.Temperature, time.Time) {
 	return s.temp, s.updateTime
 }
-func (s *dummySensor) DeviceId() string                    { return s.deviceID }
+func (s *dummySensor) ID() string                          { return s.id }
 func (s *dummySensor) Subscribe() <-chan units.Temperature { return nil }
 
 var _ = Describe("sensors controller", func() {
@@ -113,7 +113,7 @@ var _ = Describe("sensors controller", func() {
 		})
 
 		It("ignores attempts to set a non-settable sensor", func() {
-			s3 := &dummySensor{deviceID: "3456"}
+			s3 := &dummySensor{id: "3456"}
 			ctrl.AddSensor("three", s3)
 			data := map[string]interface{}{
 				"temperatures": map[string]interface{}{

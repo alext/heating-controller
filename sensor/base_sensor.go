@@ -10,23 +10,23 @@ import (
 
 type baseSensor struct {
 	name          string
-	deviceID      string
+	id            string
 	lock          sync.RWMutex
 	temp          units.Temperature
 	updatedAt     time.Time
 	subscriptions []chan units.Temperature
 }
 
-func newBaseSensor(name, deviceID string) baseSensor {
+func newBaseSensor(name, id string) baseSensor {
 	s := baseSensor{
-		name:     name,
-		deviceID: deviceID,
+		name: name,
+		id:   id,
 	}
 	return s
 }
 
-func (s *baseSensor) DeviceId() string {
-	return s.deviceID
+func (s *baseSensor) ID() string {
+	return s.id
 }
 
 func (s *baseSensor) Read() (units.Temperature, time.Time) {

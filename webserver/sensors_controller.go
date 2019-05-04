@@ -31,7 +31,7 @@ func (srv *WebServer) sensorBulkPut(w http.ResponseWriter, req *http.Request) {
 	}
 
 	for id, temp := range reqData.Temperatures {
-		s, ok := srv.controller.SensorsByDeviceID[id]
+		s, ok := srv.controller.SensorsByID[id]
 		if !ok {
 			log.Printf("[webserver] sensor bulk update ignoring unknown sensor '%s'", id)
 			continue

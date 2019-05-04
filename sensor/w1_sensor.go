@@ -17,9 +17,9 @@ type w1Sensor struct {
 	closeCh chan struct{}
 }
 
-func NewW1Sensor(name, deviceID string) Sensor {
+func NewW1Sensor(name, id string) Sensor {
 	s := &w1Sensor{
-		baseSensor: newBaseSensor(name, deviceID),
+		baseSensor: newBaseSensor(name, id),
 		closeCh:    make(chan struct{}),
 	}
 	s.readTemperature(time.Now())
@@ -49,26 +49,26 @@ func (s *w1Sensor) Close() {
 var temperatureRegexp = regexp.MustCompile(`t=(-?\d+)`)
 
 func (s *w1Sensor) readTemperature(updateTime time.Time) {
-	file, err := fs.Open(w1DevicesPath + s.baseSensor.deviceID + "/w1_slave")
+	file, err := fs.Open(w1DevicesPath + s.baseSensor.id + "/w1_slave")
 	if err != nil {
-		log.Printf("[sensor:%s] Error opening device file: %s", s.baseSensor.deviceID, err.Error())
+		log.Printf("[sensor:%s] Error opening device file: %s", s.baseSensor.id, err.Error())
 		return
 	}
 	defer file.Close()
 	data, err := ioutil.ReadAll(file)
 	if err != nil {
-		log.Printf("[sensor:%s] Error reading device: %s", s.baseSensor.deviceID, err.Error())
+		log.Printf("[sensor:%s] Error reading device: %s", s.baseSensor.id, err.Error())
 		return
 	}
 	matches := temperatureRegexp.FindStringSubmatch(string(data))
 	if matches == nil {
-		log.Printf("[sensor:%s] Failed to match temperature in data:\n%s", s.baseSensor.deviceID, string(data))
+		log.Printf("[sensor:%s] Failed to match temperature in data:\n%s", s.baseSensor.id, string(data))
 		return
 	}
 
 	temp, err := strconv.Atoi(matches[1])
 	if err != nil {
-		log.Printf("[sensor:%s] Error parsing temperature value '%s': %s", s.baseSensor.deviceID, matches[1], err.Error())
+		log.Printf("[sensor:%s] Error parsing temperature value '%s': %s", s.baseSensor.id, matches[1], err.Error())
 		return
 	}
 

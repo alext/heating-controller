@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-const testDeviceID = "28-0123456789ab"
+const testSensorID = "28-0123456789ab"
 
 const sampleData1 = `37 01 4b 46 7f ff 09 10 26 : crc=26 YES
 37 01 4b 46 7f ff 09 10 26 t=19437
@@ -64,8 +64,8 @@ var _ = Describe("a w1 sensor", func() {
 		)
 
 		BeforeEach(func() {
-			populateValueFile(testDeviceID, sampleData1)
-			sensor = NewW1Sensor("foo", testDeviceID)
+			populateValueFile(testSensorID, sampleData1)
+			sensor = NewW1Sensor("foo", testSensorID)
 		})
 		AfterEach(func() {
 			if s, ok := sensor.(*w1Sensor); ok {
@@ -73,8 +73,8 @@ var _ = Describe("a w1 sensor", func() {
 			}
 		})
 
-		It("returns the deviceID", func() {
-			Expect(sensor.DeviceId()).To(Equal(testDeviceID))
+		It("returns the ID", func() {
+			Expect(sensor.ID()).To(Equal(testSensorID))
 		})
 
 		It("should read the initial temperature", func() {
@@ -94,13 +94,13 @@ var _ = Describe("a w1 sensor", func() {
 			temperature, _ := sensor.Read()
 			Expect(temperature).To(BeEquivalentTo(19437))
 
-			populateValueFile(testDeviceID, sampleData2)
+			populateValueFile(testSensorID, sampleData2)
 			tkr.C <- time.Now()
 			<-tkrNotify
 			temperature, _ = sensor.Read()
 			Expect(temperature).To(BeEquivalentTo(18062))
 
-			populateValueFile(testDeviceID, sampleData1)
+			populateValueFile(testSensorID, sampleData1)
 			tkr.C <- time.Now()
 			<-tkrNotify
 			temperature, _ = sensor.Read()
@@ -114,7 +114,7 @@ var _ = Describe("a w1 sensor", func() {
 
 			negativeData := `f6 ff 55 00 7f ff 0c 10 47 : crc=47 YES
 f6 ff 55 00 7f ff 0c 10 47 t=-625`
-			populateValueFile(testDeviceID, negativeData)
+			populateValueFile(testSensorID, negativeData)
 			tkr.C <- time.Now()
 			<-tkrNotify
 			temperature, _ := sensor.Read()
@@ -125,7 +125,7 @@ f6 ff 55 00 7f ff 0c 10 47 t=-625`
 
 		It("should track when the temperature was last updated", func(done Done) {
 			<-tkrNotify
-			populateValueFile(testDeviceID, sampleData2)
+			populateValueFile(testSensorID, sampleData2)
 
 			tickTime := time.Now().Add(-15 * time.Minute)
 			tkr.C <- tickTime
@@ -133,7 +133,7 @@ f6 ff 55 00 7f ff 0c 10 47 t=-625`
 			_, updatedAt := sensor.Read()
 			Expect(updatedAt).To(Equal(tickTime))
 
-			populateValueFile(testDeviceID, sampleData1)
+			populateValueFile(testSensorID, sampleData1)
 			tickTime = time.Now().Add(-3 * time.Minute)
 			tkr.C <- tickTime
 			<-tkrNotify
@@ -151,7 +151,7 @@ f6 ff 55 00 7f ff 0c 10 47 t=-625`
 			<-tkrNotify
 			Eventually(ch).Should(Receive(Equal(units.Temperature(19437))))
 
-			populateValueFile(testDeviceID, sampleData2)
+			populateValueFile(testSensorID, sampleData2)
 			tkr.C <- time.Now()
 			<-tkrNotify
 			Eventually(ch).Should(Receive(Equal(units.Temperature(18062))))
@@ -164,8 +164,8 @@ f6 ff 55 00 7f ff 0c 10 47 t=-625`
 		)
 
 		BeforeEach(func() {
-			populateValueFile(testDeviceID, sampleData1)
-			sensor = NewW1Sensor("foo", testDeviceID).(*w1Sensor)
+			populateValueFile(testSensorID, sampleData1)
+			sensor = NewW1Sensor("foo", testSensorID).(*w1Sensor)
 		})
 
 		It("should stop the ticker", func(done Done) {
@@ -179,8 +179,8 @@ f6 ff 55 00 7f ff 0c 10 47 t=-625`
 	})
 })
 
-func populateValueFile(deviceID, contents string) {
-	valueFilePath := w1DevicesPath + deviceID + "/w1_slave"
+func populateValueFile(id, contents string) {
+	valueFilePath := w1DevicesPath + id + "/w1_slave"
 	file, err := fs.OpenFile(valueFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	ExpectWithOffset(1, err).NotTo(HaveOccurred())
 

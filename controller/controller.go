@@ -9,22 +9,22 @@ import (
 )
 
 type Controller struct {
-	SensorsByName     map[string]sensor.Sensor
-	SensorsByDeviceID map[string]sensor.Sensor
-	Zones             map[string]*Zone
+	SensorsByName map[string]sensor.Sensor
+	SensorsByID   map[string]sensor.Sensor
+	Zones         map[string]*Zone
 }
 
 func New() *Controller {
 	return &Controller{
-		SensorsByName:     make(map[string]sensor.Sensor),
-		SensorsByDeviceID: make(map[string]sensor.Sensor),
-		Zones:             make(map[string]*Zone),
+		SensorsByName: make(map[string]sensor.Sensor),
+		SensorsByID:   make(map[string]sensor.Sensor),
+		Zones:         make(map[string]*Zone),
 	}
 }
 
 func (c *Controller) AddSensor(name string, s sensor.Sensor) {
 	c.SensorsByName[name] = s
-	c.SensorsByDeviceID[s.DeviceId()] = s
+	c.SensorsByID[s.ID()] = s
 }
 
 func (c *Controller) AddZone(z *Zone) {
