@@ -39,6 +39,6 @@ var _ = Describe("serving metrics", func() {
 		body, err := ioutil.ReadAll(resp.Body)
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(string(body)).To(ContainSubstring("house_temperature_celcius{device_id=\"1234\",name=\"foo\"} 19.5 %d", now.Unix()))
+		Expect(string(body)).To(ContainSubstring("house_temperature_celcius{name=\"foo\"} 19.5 %d", now.Unix()))
 	})
 })

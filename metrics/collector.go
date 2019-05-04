@@ -10,7 +10,7 @@ func newDensorDesc() *prometheus.Desc {
 	return prometheus.NewDesc(
 		prometheus.BuildFQName("house", "", "temperature_celcius"),
 		"Current temperature in degrees Celcius",
-		[]string{"name", "device_id"},
+		[]string{"name"},
 		nil,
 	)
 }
@@ -41,7 +41,7 @@ func (m *Metrics) collectSensors(ch chan<- prometheus.Metric) {
 			continue
 		}
 
-		metric, err := prometheus.NewConstMetric(m.sensorDesc, prometheus.GaugeValue, temp.Float(), name, s.DeviceId())
+		metric, err := prometheus.NewConstMetric(m.sensorDesc, prometheus.GaugeValue, temp.Float(), name)
 		if err != nil {
 			log.Printf("[metrics] Error constructing sensor metric for %s: %s", name, err.Error())
 			continue

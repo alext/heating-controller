@@ -49,8 +49,8 @@ var _ = Describe("The custom collector", func() {
 
 			lines := getMetricsLines(handler)
 			Expect(lines).To(ContainElement("# TYPE house_temperature_celcius gauge"))
-			Expect(lines).To(ContainElement(fmt.Sprintf(`house_temperature_celcius{device_id="1234",name="one"} 19 %d`, timeMS(t1))))
-			Expect(lines).To(ContainElement(fmt.Sprintf(`house_temperature_celcius{device_id="2345",name="two"} 19.435 %d`, timeMS(t2))))
+			Expect(lines).To(ContainElement(fmt.Sprintf(`house_temperature_celcius{name="one"} 19 %d`, timeMS(t1))))
+			Expect(lines).To(ContainElement(fmt.Sprintf(`house_temperature_celcius{name="two"} 19.435 %d`, timeMS(t2))))
 		})
 
 		It("ignores any sensors that haven't had any readings yet", func() {
