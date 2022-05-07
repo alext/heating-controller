@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/alext/gpio v0.0.0-20170217131543-a971ac03fc91
-	github.com/gorilla/mux v1.4.0
+	github.com/gorilla/mux v1.8.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.10.1
 	github.com/prometheus/client_golang v1.12.1
@@ -18,7 +18,6 @@ require (
 	github.com/davecheney/gpio v0.0.0-20160912024957-a6de66e7e470 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/gorilla/context v0.0.0-20160226214623-1ea25387ff6f // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
