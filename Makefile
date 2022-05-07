@@ -4,8 +4,6 @@ BINARY := heating-controller
 IMPORT_BASE := github.com/alext
 IMPORT_PATH := $(IMPORT_BASE)/heating-controller
 
-export GOFLAGS = -mod=vendor
-
 ifdef RELEASE_VERSION
 VERSION := $(RELEASE_VERSION)
 else
