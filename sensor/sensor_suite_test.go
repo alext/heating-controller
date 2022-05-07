@@ -1,7 +1,6 @@
 package sensor
 
 import (
-	"io/ioutil"
 	"log"
 	"testing"
 
@@ -12,7 +11,7 @@ import (
 func TestSensor(t *testing.T) {
 	RegisterFailHandler(Fail)
 
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(GinkgoWriter)
 
 	RunSpecs(t, "Sensor")
 }

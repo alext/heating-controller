@@ -9,7 +9,6 @@ require (
 	github.com/onsi/gomega v1.10.1
 	github.com/prometheus/client_golang v1.12.1
 	github.com/sclevine/agouti v3.0.0+incompatible
-	github.com/spf13/afero v1.2.0
 )
 
 require (

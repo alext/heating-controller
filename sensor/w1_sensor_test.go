@@ -1,14 +1,12 @@
 package sensor
 
 import (
-	"os"
+	"testing/fstest"
 	"time"
 
 	"github.com/alext/heating-controller/units"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	"github.com/spf13/afero"
 )
 
 const testSensorID = "28-0123456789ab"
@@ -40,12 +38,14 @@ func (t *dummyTicker) Stop() {
 
 var _ = Describe("a w1 sensor", func() {
 	var (
+		testFS    fstest.MapFS
 		tkr       *dummyTicker
 		tkrNotify chan struct{}
 	)
 
 	BeforeEach(func() {
-		fs = &afero.MemMapFs{}
+		testFS = make(fstest.MapFS)
+		fs = testFS
 		tkrNotify = make(chan struct{}, 1)
 
 		newTicker = func(d time.Duration) ticker {
@@ -57,6 +57,13 @@ var _ = Describe("a w1 sensor", func() {
 			return tkr
 		}
 	})
+
+	var populateValueFile = func(id, contents string) {
+		valueFilePath := w1DevicesPath + id + "/w1_slave"
+		testFS[valueFilePath] = &fstest.MapFile{
+			Data: []byte(contents),
+		}
+	}
 
 	Describe("constructing a sensor", func() {
 		var (
@@ -178,12 +185,3 @@ f6 ff 55 00 7f ff 0c 10 47 t=-625`
 		})
 	})
 })
-
-func populateValueFile(id, contents string) {
-	valueFilePath := w1DevicesPath + id + "/w1_slave"
-	file, err := fs.OpenFile(valueFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-	ExpectWithOffset(1, err).NotTo(HaveOccurred())
-
-	_, err = file.Write([]byte(contents))
-	ExpectWithOffset(1, err).NotTo(HaveOccurred())
-}

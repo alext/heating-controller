@@ -2,14 +2,15 @@ package sensor
 
 import (
 	"fmt"
+	iofs "io/fs"
+	"os"
 	"time"
 
 	"github.com/alext/heating-controller/config"
 	"github.com/alext/heating-controller/units"
-	"github.com/spf13/afero"
 )
 
-var fs afero.Fs = &afero.OsFs{}
+var fs iofs.FS = os.DirFS("")
 
 type Sensor interface {
 	ID() string

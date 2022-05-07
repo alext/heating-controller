@@ -10,7 +10,7 @@ import (
 	"github.com/alext/heating-controller/units"
 )
 
-const w1DevicesPath = "/sys/bus/w1/devices/"
+const w1DevicesPath = "sys/bus/w1/devices/"
 
 type w1Sensor struct {
 	baseSensor
