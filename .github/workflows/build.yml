@@ -3,9 +3,12 @@ on: [push]
 jobs:
   run-tests:
     runs-on: ubuntu-latest
+    env:
+      DISPLAY: ":99"
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
           go-version: '1.17'
+      - run: sudo Xvfb -ac "${DISPLAY}" -screen 0 1280x1024x24 > /dev/null 2>&1 &
       - run: make test
