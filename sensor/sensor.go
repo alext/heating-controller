@@ -23,12 +23,14 @@ type SettableSensor interface {
 	Set(units.Temperature, time.Time)
 }
 
-func New(name string, cfg config.SensorConfig) (Sensor, error) {
+func New(name string, cfg config.SensorConfig, subscriber TopicSubscriber) (Sensor, error) {
 	switch cfg.Type {
 	case "w1":
 		return NewW1Sensor(name, cfg.ID), nil
 	case "push":
 		return NewPushSensor(name, cfg.ID), nil
+	case "mqtt":
+		return NewMQTTSensor(name, cfg.Topic, subscriber)
 	default:
 		return nil, fmt.Errorf("Unrecognised sensor type: '%s'", cfg.Type)
 	}

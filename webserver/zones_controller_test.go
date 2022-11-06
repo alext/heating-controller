@@ -24,7 +24,7 @@ var _ = Describe("zones controller", func() {
 	)
 
 	BeforeEach(func() {
-		ctrl = controller.New()
+		ctrl = controller.New(nil)
 		server = webserver.New(ctrl, 8080, "", nil)
 	})
 

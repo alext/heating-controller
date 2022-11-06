@@ -17,7 +17,7 @@ var _ = Describe("Metrics handling", func() {
 	)
 
 	BeforeEach(func() {
-		m = metrics.New(controller.New())
+		m = metrics.New(controller.New(nil))
 		handler = m.Handler()
 	})
 

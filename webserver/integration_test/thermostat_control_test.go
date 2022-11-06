@@ -23,7 +23,7 @@ var _ = Describe("controlling the thermostat", func() {
 	)
 
 	BeforeEach(func() {
-		ctrl = controller.New()
+		ctrl = controller.New(nil)
 		server := webserver.New(ctrl, 8080, "../templates", nil)
 		testServer = httptest.NewServer(server)
 

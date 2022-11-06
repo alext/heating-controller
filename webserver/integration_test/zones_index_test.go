@@ -25,7 +25,7 @@ var _ = Describe("viewing the index", func() {
 	BeforeEach(func() {
 		var err error
 
-		ctrl = controller.New()
+		ctrl = controller.New(nil)
 		server := webserver.New(ctrl, 8080, "../templates", nil)
 		testServer = httptest.NewServer(server)
 

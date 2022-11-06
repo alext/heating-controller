@@ -44,6 +44,50 @@ var _ = Describe("Parsing the config data", func() {
 			Expect(cfg.Port).To(Equal(config.DefaultPort))
 		})
 
+		Describe("loading MQTT details", func() {
+			It("Loads MQTT config", func() {
+				configReader = createConfigReader(configData{
+					"mqtt": map[string]interface{}{
+						"host":     "192.168.1.1",
+						"port":     1234,
+						"username": "something",
+						"password": "secret",
+					},
+				})
+
+				cfg, err := config.LoadConfig(configReader)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(cfg.MQTT).NotTo(BeNil())
+				Expect(cfg.MQTT.Host).To(Equal("192.168.1.1"))
+				Expect(cfg.MQTT.Port).To(Equal(1234))
+				Expect(cfg.MQTT.Username).To(Equal("something"))
+				Expect(cfg.MQTT.Password).To(Equal("secret"))
+			})
+
+			It("defaults the port to 1883 if none given", func() {
+				configReader = createConfigReader(configData{
+					"mqtt": map[string]interface{}{
+						"host": "192.168.1.1",
+					},
+				})
+
+				cfg, err := config.LoadConfig(configReader)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(cfg.MQTT).NotTo(BeNil())
+				Expect(cfg.MQTT.Port).To(Equal(1883))
+			})
+
+			It("leaves MQTT details nil if none present", func() {
+				configReader = createConfigReader(configData{})
+
+				cfg, err := config.LoadConfig(configReader)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(cfg.MQTT).To(BeNil())
+			})
+		})
+
 		It("should setup the sensor details", func() {
 			configReader = createConfigReader(configData{
 				"sensors": map[string]map[string]interface{}{

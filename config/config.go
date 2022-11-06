@@ -11,13 +11,22 @@ const DefaultPort = 8080
 
 type Config struct {
 	Port    int                     `json:"port"`
+	MQTT    *MQTTConfig             `json:"mqtt"`
 	Sensors map[string]SensorConfig `json:"sensors"`
 	Zones   map[string]ZoneConfig   `json:"zones"`
 }
 
+type MQTTConfig struct {
+	Host     string `json:"host"`
+	Port     int    `json:"port"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 type SensorConfig struct {
-	Type string `json:"type"`
-	ID   string `json:"id"`
+	Type  string `json:"type"`
+	ID    string `json:"id"`
+	Topic string `json:"topic"`
 }
 
 type ZoneConfig struct {
@@ -31,20 +40,31 @@ type ThermostatConfig struct {
 	DefaultTarget units.Temperature `json:"default_target"`
 }
 
-func New() *Config {
-	return &Config{
-		Port:    DefaultPort,
-		Sensors: make(map[string]SensorConfig),
-		Zones:   make(map[string]ZoneConfig),
+func (c *Config) populateDefaults() {
+	if c.Port == 0 {
+		c.Port = DefaultPort
+	}
+	if c.MQTT != nil && c.MQTT.Port == 0 {
+		c.MQTT.Port = 1883
 	}
 }
 
-func LoadConfig(input io.Reader) (*Config, error) {
-	c := New()
+func New() *Config {
+	c := &Config{
+		Sensors: make(map[string]SensorConfig),
+		Zones:   make(map[string]ZoneConfig),
+	}
+	c.populateDefaults()
+	return c
+}
 
-	err := json.NewDecoder(input).Decode(c)
+func LoadConfig(input io.Reader) (*Config, error) {
+	var c Config
+
+	err := json.NewDecoder(input).Decode(&c)
 	if err != nil {
 		return nil, err
 	}
-	return c, nil
+	c.populateDefaults()
+	return &c, nil
 }

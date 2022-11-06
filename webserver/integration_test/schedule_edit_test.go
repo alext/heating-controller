@@ -24,7 +24,7 @@ var _ = Describe("Editing the schedule for a zone", func() {
 	)
 
 	BeforeEach(func() {
-		ctrl := controller.New()
+		ctrl := controller.New(nil)
 
 		zone1 = controller.NewZone("one", output.Virtual("one"))
 		zone1.Thermostat = &thermostatfakes.FakeThermostat{}

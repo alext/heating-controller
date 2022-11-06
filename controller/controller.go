@@ -9,13 +9,15 @@ import (
 )
 
 type Controller struct {
+	subscriber    sensor.TopicSubscriber
 	SensorsByName map[string]sensor.Sensor
 	SensorsByID   map[string]sensor.Sensor
 	Zones         map[string]*Zone
 }
 
-func New() *Controller {
+func New(subscriber sensor.TopicSubscriber) *Controller {
 	return &Controller{
+		subscriber:    subscriber,
 		SensorsByName: make(map[string]sensor.Sensor),
 		SensorsByID:   make(map[string]sensor.Sensor),
 		Zones:         make(map[string]*Zone),
@@ -35,7 +37,7 @@ var outputNew = output.New // variable indirection to facilitate testing
 
 func (c *Controller) Setup(cfg *config.Config) error {
 	for name, sensorConfig := range cfg.Sensors {
-		s, err := sensor.New(name, sensorConfig)
+		s, err := sensor.New(name, sensorConfig, c.subscriber)
 		if err != nil {
 			return err
 		}

@@ -21,7 +21,7 @@ var _ = Describe("serving metrics", func() {
 	)
 
 	BeforeEach(func() {
-		ctrl = controller.New()
+		ctrl = controller.New(nil)
 		m := metrics.New(ctrl)
 		server = webserver.New(ctrl, 8080, "", m.Handler())
 	})

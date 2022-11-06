@@ -10,6 +10,7 @@ import (
 
 	"github.com/alext/heating-controller/config"
 	"github.com/alext/heating-controller/output"
+	"github.com/alext/heating-controller/sensor/sensorfakes"
 )
 
 var _ = Describe("Controller", func() {
@@ -24,8 +25,10 @@ var _ = Describe("Controller", func() {
 			DataDir, err = ioutil.TempDir("", "heating-controller-test")
 			Expect(err).NotTo(HaveOccurred())
 
+			fakeSubscriber := &sensorfakes.FakeTopicSubscriber{}
+
 			cfg = config.New()
-			ctrl = New()
+			ctrl = New(fakeSubscriber)
 
 			outputNew = func(id string, pin int) (output.Output, error) {
 				out := output.Virtual(fmt.Sprintf("%s-gpio%d", id, pin))
@@ -62,6 +65,17 @@ var _ = Describe("Controller", func() {
 
 				Expect(ctrl.SensorsByName).To(HaveLen(2))
 				Expect(ctrl.SensorsByID).To(HaveLen(2))
+			})
+
+			It("handles setting up MQTT sensors", func() {
+				cfg.Sensors["foo"] = config.SensorConfig{
+					Type:  "mqtt",
+					Topic: "sensors/foo/temperature",
+				}
+
+				Expect(ctrl.Setup(cfg)).To(Succeed())
+
+				Expect(ctrl.SensorsByName).To(HaveLen(1))
 			})
 
 			It("should return an error if setting up a sensor fails", func() {

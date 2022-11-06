@@ -23,7 +23,7 @@ var _ = Describe("The custom collector", func() {
 	)
 
 	BeforeEach(func() {
-		ctrl = controller.New()
+		ctrl = controller.New(nil)
 		m := metrics.New(ctrl)
 		r := prometheus.NewPedanticRegistry()
 		err := r.Register(m)

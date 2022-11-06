@@ -10,6 +10,7 @@ import (
 	"github.com/alext/heating-controller/config"
 	"github.com/alext/heating-controller/controller"
 	"github.com/alext/heating-controller/metrics"
+	"github.com/alext/heating-controller/mqtt_client"
 	"github.com/alext/heating-controller/webserver"
 )
 
@@ -51,8 +52,16 @@ func main() {
 	}
 
 	setupDataDir(*dataDir)
-	ctrl := controller.New()
 
+	var mqtt *mqtt_client.Client
+	if config.MQTT != nil {
+		mqtt, err = mqtt_client.New(config.MQTT)
+		if err != nil {
+			log.Fatalln("[main] Error setting up MQTT client:", err)
+		}
+	}
+
+	ctrl := controller.New(mqtt)
 	err = ctrl.Setup(config)
 	if err != nil {
 		log.Fatalln("[main] Error setting up controller:", err)

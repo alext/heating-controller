@@ -25,7 +25,7 @@ var _ = Describe("schedule controller", func() {
 	BeforeEach(func() {
 		tempDataDir, _ = ioutil.TempDir("", "schedule_controller_test")
 		controller.DataDir = tempDataDir
-		ctrl = controller.New()
+		ctrl = controller.New(nil)
 		server = webserver.New(ctrl, 8080, "", nil)
 	})
 
