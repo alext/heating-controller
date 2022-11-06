@@ -4,6 +4,17 @@ package controller
 
 import "strconv"
 
+func _() {
+	// An "invalid array index" compiler error signifies that the constant values have changed.
+	// Re-run the stringer command to generate them again.
+	var x [1]struct{}
+	_ = x[Off-0]
+	_ = x[On-1]
+	_ = x[SetTarget-2]
+	_ = x[IncreaseTarget-3]
+	_ = x[DecreaseTarget-4]
+}
+
 const _Action_name = "OffOnSetTargetIncreaseTargetDecreaseTarget"
 
 var _Action_index = [...]uint8{0, 3, 5, 14, 28, 42}

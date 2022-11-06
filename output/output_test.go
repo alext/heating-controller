@@ -1,6 +1,6 @@
 package output
 
-//go:generate counterfeiter -o gpiofakes/fake_pin.go ../vendor/github.com/alext/gpio Pin
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -o gpiofakes/fake_pin.go github.com/alext/gpio.Pin
 
 import (
 	"errors"

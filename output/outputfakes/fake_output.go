@@ -2,9 +2,9 @@
 package outputfakes
 
 import (
-	sync "sync"
+	"sync"
 
-	output "github.com/alext/heating-controller/output"
+	"github.com/alext/heating-controller/output"
 )
 
 type FakeOutput struct {
@@ -69,15 +69,16 @@ func (fake *FakeOutput) Activate() error {
 	ret, specificReturn := fake.activateReturnsOnCall[len(fake.activateArgsForCall)]
 	fake.activateArgsForCall = append(fake.activateArgsForCall, struct {
 	}{})
+	stub := fake.ActivateStub
+	fakeReturns := fake.activateReturns
 	fake.recordInvocation("Activate", []interface{}{})
 	fake.activateMutex.Unlock()
-	if fake.ActivateStub != nil {
-		return fake.ActivateStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.activateReturns
 	return fakeReturns.result1
 }
 
@@ -87,7 +88,15 @@ func (fake *FakeOutput) ActivateCallCount() int {
 	return len(fake.activateArgsForCall)
 }
 
+func (fake *FakeOutput) ActivateCalls(stub func() error) {
+	fake.activateMutex.Lock()
+	defer fake.activateMutex.Unlock()
+	fake.ActivateStub = stub
+}
+
 func (fake *FakeOutput) ActivateReturns(result1 error) {
+	fake.activateMutex.Lock()
+	defer fake.activateMutex.Unlock()
 	fake.ActivateStub = nil
 	fake.activateReturns = struct {
 		result1 error
@@ -95,6 +104,8 @@ func (fake *FakeOutput) ActivateReturns(result1 error) {
 }
 
 func (fake *FakeOutput) ActivateReturnsOnCall(i int, result1 error) {
+	fake.activateMutex.Lock()
+	defer fake.activateMutex.Unlock()
 	fake.ActivateStub = nil
 	if fake.activateReturnsOnCall == nil {
 		fake.activateReturnsOnCall = make(map[int]struct {
@@ -111,15 +122,16 @@ func (fake *FakeOutput) Active() (bool, error) {
 	ret, specificReturn := fake.activeReturnsOnCall[len(fake.activeArgsForCall)]
 	fake.activeArgsForCall = append(fake.activeArgsForCall, struct {
 	}{})
+	stub := fake.ActiveStub
+	fakeReturns := fake.activeReturns
 	fake.recordInvocation("Active", []interface{}{})
 	fake.activeMutex.Unlock()
-	if fake.ActiveStub != nil {
-		return fake.ActiveStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.activeReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -129,7 +141,15 @@ func (fake *FakeOutput) ActiveCallCount() int {
 	return len(fake.activeArgsForCall)
 }
 
+func (fake *FakeOutput) ActiveCalls(stub func() (bool, error)) {
+	fake.activeMutex.Lock()
+	defer fake.activeMutex.Unlock()
+	fake.ActiveStub = stub
+}
+
 func (fake *FakeOutput) ActiveReturns(result1 bool, result2 error) {
+	fake.activeMutex.Lock()
+	defer fake.activeMutex.Unlock()
 	fake.ActiveStub = nil
 	fake.activeReturns = struct {
 		result1 bool
@@ -138,6 +158,8 @@ func (fake *FakeOutput) ActiveReturns(result1 bool, result2 error) {
 }
 
 func (fake *FakeOutput) ActiveReturnsOnCall(i int, result1 bool, result2 error) {
+	fake.activeMutex.Lock()
+	defer fake.activeMutex.Unlock()
 	fake.ActiveStub = nil
 	if fake.activeReturnsOnCall == nil {
 		fake.activeReturnsOnCall = make(map[int]struct {
@@ -156,15 +178,16 @@ func (fake *FakeOutput) Close() error {
 	ret, specificReturn := fake.closeReturnsOnCall[len(fake.closeArgsForCall)]
 	fake.closeArgsForCall = append(fake.closeArgsForCall, struct {
 	}{})
+	stub := fake.CloseStub
+	fakeReturns := fake.closeReturns
 	fake.recordInvocation("Close", []interface{}{})
 	fake.closeMutex.Unlock()
-	if fake.CloseStub != nil {
-		return fake.CloseStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.closeReturns
 	return fakeReturns.result1
 }
 
@@ -174,7 +197,15 @@ func (fake *FakeOutput) CloseCallCount() int {
 	return len(fake.closeArgsForCall)
 }
 
+func (fake *FakeOutput) CloseCalls(stub func() error) {
+	fake.closeMutex.Lock()
+	defer fake.closeMutex.Unlock()
+	fake.CloseStub = stub
+}
+
 func (fake *FakeOutput) CloseReturns(result1 error) {
+	fake.closeMutex.Lock()
+	defer fake.closeMutex.Unlock()
 	fake.CloseStub = nil
 	fake.closeReturns = struct {
 		result1 error
@@ -182,6 +213,8 @@ func (fake *FakeOutput) CloseReturns(result1 error) {
 }
 
 func (fake *FakeOutput) CloseReturnsOnCall(i int, result1 error) {
+	fake.closeMutex.Lock()
+	defer fake.closeMutex.Unlock()
 	fake.CloseStub = nil
 	if fake.closeReturnsOnCall == nil {
 		fake.closeReturnsOnCall = make(map[int]struct {
@@ -198,15 +231,16 @@ func (fake *FakeOutput) Deactivate() error {
 	ret, specificReturn := fake.deactivateReturnsOnCall[len(fake.deactivateArgsForCall)]
 	fake.deactivateArgsForCall = append(fake.deactivateArgsForCall, struct {
 	}{})
+	stub := fake.DeactivateStub
+	fakeReturns := fake.deactivateReturns
 	fake.recordInvocation("Deactivate", []interface{}{})
 	fake.deactivateMutex.Unlock()
-	if fake.DeactivateStub != nil {
-		return fake.DeactivateStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.deactivateReturns
 	return fakeReturns.result1
 }
 
@@ -216,7 +250,15 @@ func (fake *FakeOutput) DeactivateCallCount() int {
 	return len(fake.deactivateArgsForCall)
 }
 
+func (fake *FakeOutput) DeactivateCalls(stub func() error) {
+	fake.deactivateMutex.Lock()
+	defer fake.deactivateMutex.Unlock()
+	fake.DeactivateStub = stub
+}
+
 func (fake *FakeOutput) DeactivateReturns(result1 error) {
+	fake.deactivateMutex.Lock()
+	defer fake.deactivateMutex.Unlock()
 	fake.DeactivateStub = nil
 	fake.deactivateReturns = struct {
 		result1 error
@@ -224,6 +266,8 @@ func (fake *FakeOutput) DeactivateReturns(result1 error) {
 }
 
 func (fake *FakeOutput) DeactivateReturnsOnCall(i int, result1 error) {
+	fake.deactivateMutex.Lock()
+	defer fake.deactivateMutex.Unlock()
 	fake.DeactivateStub = nil
 	if fake.deactivateReturnsOnCall == nil {
 		fake.deactivateReturnsOnCall = make(map[int]struct {
@@ -240,15 +284,16 @@ func (fake *FakeOutput) Id() string {
 	ret, specificReturn := fake.idReturnsOnCall[len(fake.idArgsForCall)]
 	fake.idArgsForCall = append(fake.idArgsForCall, struct {
 	}{})
+	stub := fake.IdStub
+	fakeReturns := fake.idReturns
 	fake.recordInvocation("Id", []interface{}{})
 	fake.idMutex.Unlock()
-	if fake.IdStub != nil {
-		return fake.IdStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.idReturns
 	return fakeReturns.result1
 }
 
@@ -258,7 +303,15 @@ func (fake *FakeOutput) IdCallCount() int {
 	return len(fake.idArgsForCall)
 }
 
+func (fake *FakeOutput) IdCalls(stub func() string) {
+	fake.idMutex.Lock()
+	defer fake.idMutex.Unlock()
+	fake.IdStub = stub
+}
+
 func (fake *FakeOutput) IdReturns(result1 string) {
+	fake.idMutex.Lock()
+	defer fake.idMutex.Unlock()
 	fake.IdStub = nil
 	fake.idReturns = struct {
 		result1 string
@@ -266,6 +319,8 @@ func (fake *FakeOutput) IdReturns(result1 string) {
 }
 
 func (fake *FakeOutput) IdReturnsOnCall(i int, result1 string) {
+	fake.idMutex.Lock()
+	defer fake.idMutex.Unlock()
 	fake.IdStub = nil
 	if fake.idReturnsOnCall == nil {
 		fake.idReturnsOnCall = make(map[int]struct {

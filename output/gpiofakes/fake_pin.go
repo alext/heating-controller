@@ -2,9 +2,9 @@
 package gpiofakes
 
 import (
-	sync "sync"
+	"sync"
 
-	gpio "github.com/alext/gpio"
+	"github.com/alext/gpio"
 )
 
 type FakePin struct {
@@ -111,15 +111,16 @@ func (fake *FakePin) BeginWatch(arg1 gpio.Edge, arg2 gpio.IRQEvent) error {
 		arg1 gpio.Edge
 		arg2 gpio.IRQEvent
 	}{arg1, arg2})
+	stub := fake.BeginWatchStub
+	fakeReturns := fake.beginWatchReturns
 	fake.recordInvocation("BeginWatch", []interface{}{arg1, arg2})
 	fake.beginWatchMutex.Unlock()
-	if fake.BeginWatchStub != nil {
-		return fake.BeginWatchStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.beginWatchReturns
 	return fakeReturns.result1
 }
 
@@ -127,6 +128,12 @@ func (fake *FakePin) BeginWatchCallCount() int {
 	fake.beginWatchMutex.RLock()
 	defer fake.beginWatchMutex.RUnlock()
 	return len(fake.beginWatchArgsForCall)
+}
+
+func (fake *FakePin) BeginWatchCalls(stub func(gpio.Edge, gpio.IRQEvent) error) {
+	fake.beginWatchMutex.Lock()
+	defer fake.beginWatchMutex.Unlock()
+	fake.BeginWatchStub = stub
 }
 
 func (fake *FakePin) BeginWatchArgsForCall(i int) (gpio.Edge, gpio.IRQEvent) {
@@ -137,6 +144,8 @@ func (fake *FakePin) BeginWatchArgsForCall(i int) (gpio.Edge, gpio.IRQEvent) {
 }
 
 func (fake *FakePin) BeginWatchReturns(result1 error) {
+	fake.beginWatchMutex.Lock()
+	defer fake.beginWatchMutex.Unlock()
 	fake.BeginWatchStub = nil
 	fake.beginWatchReturns = struct {
 		result1 error
@@ -144,6 +153,8 @@ func (fake *FakePin) BeginWatchReturns(result1 error) {
 }
 
 func (fake *FakePin) BeginWatchReturnsOnCall(i int, result1 error) {
+	fake.beginWatchMutex.Lock()
+	defer fake.beginWatchMutex.Unlock()
 	fake.BeginWatchStub = nil
 	if fake.beginWatchReturnsOnCall == nil {
 		fake.beginWatchReturnsOnCall = make(map[int]struct {
@@ -160,15 +171,16 @@ func (fake *FakePin) Clear() error {
 	ret, specificReturn := fake.clearReturnsOnCall[len(fake.clearArgsForCall)]
 	fake.clearArgsForCall = append(fake.clearArgsForCall, struct {
 	}{})
+	stub := fake.ClearStub
+	fakeReturns := fake.clearReturns
 	fake.recordInvocation("Clear", []interface{}{})
 	fake.clearMutex.Unlock()
-	if fake.ClearStub != nil {
-		return fake.ClearStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.clearReturns
 	return fakeReturns.result1
 }
 
@@ -178,7 +190,15 @@ func (fake *FakePin) ClearCallCount() int {
 	return len(fake.clearArgsForCall)
 }
 
+func (fake *FakePin) ClearCalls(stub func() error) {
+	fake.clearMutex.Lock()
+	defer fake.clearMutex.Unlock()
+	fake.ClearStub = stub
+}
+
 func (fake *FakePin) ClearReturns(result1 error) {
+	fake.clearMutex.Lock()
+	defer fake.clearMutex.Unlock()
 	fake.ClearStub = nil
 	fake.clearReturns = struct {
 		result1 error
@@ -186,6 +206,8 @@ func (fake *FakePin) ClearReturns(result1 error) {
 }
 
 func (fake *FakePin) ClearReturnsOnCall(i int, result1 error) {
+	fake.clearMutex.Lock()
+	defer fake.clearMutex.Unlock()
 	fake.ClearStub = nil
 	if fake.clearReturnsOnCall == nil {
 		fake.clearReturnsOnCall = make(map[int]struct {
@@ -202,15 +224,16 @@ func (fake *FakePin) Close() error {
 	ret, specificReturn := fake.closeReturnsOnCall[len(fake.closeArgsForCall)]
 	fake.closeArgsForCall = append(fake.closeArgsForCall, struct {
 	}{})
+	stub := fake.CloseStub
+	fakeReturns := fake.closeReturns
 	fake.recordInvocation("Close", []interface{}{})
 	fake.closeMutex.Unlock()
-	if fake.CloseStub != nil {
-		return fake.CloseStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.closeReturns
 	return fakeReturns.result1
 }
 
@@ -220,7 +243,15 @@ func (fake *FakePin) CloseCallCount() int {
 	return len(fake.closeArgsForCall)
 }
 
+func (fake *FakePin) CloseCalls(stub func() error) {
+	fake.closeMutex.Lock()
+	defer fake.closeMutex.Unlock()
+	fake.CloseStub = stub
+}
+
 func (fake *FakePin) CloseReturns(result1 error) {
+	fake.closeMutex.Lock()
+	defer fake.closeMutex.Unlock()
 	fake.CloseStub = nil
 	fake.closeReturns = struct {
 		result1 error
@@ -228,6 +259,8 @@ func (fake *FakePin) CloseReturns(result1 error) {
 }
 
 func (fake *FakePin) CloseReturnsOnCall(i int, result1 error) {
+	fake.closeMutex.Lock()
+	defer fake.closeMutex.Unlock()
 	fake.CloseStub = nil
 	if fake.closeReturnsOnCall == nil {
 		fake.closeReturnsOnCall = make(map[int]struct {
@@ -244,15 +277,16 @@ func (fake *FakePin) EndWatch() error {
 	ret, specificReturn := fake.endWatchReturnsOnCall[len(fake.endWatchArgsForCall)]
 	fake.endWatchArgsForCall = append(fake.endWatchArgsForCall, struct {
 	}{})
+	stub := fake.EndWatchStub
+	fakeReturns := fake.endWatchReturns
 	fake.recordInvocation("EndWatch", []interface{}{})
 	fake.endWatchMutex.Unlock()
-	if fake.EndWatchStub != nil {
-		return fake.EndWatchStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.endWatchReturns
 	return fakeReturns.result1
 }
 
@@ -262,7 +296,15 @@ func (fake *FakePin) EndWatchCallCount() int {
 	return len(fake.endWatchArgsForCall)
 }
 
+func (fake *FakePin) EndWatchCalls(stub func() error) {
+	fake.endWatchMutex.Lock()
+	defer fake.endWatchMutex.Unlock()
+	fake.EndWatchStub = stub
+}
+
 func (fake *FakePin) EndWatchReturns(result1 error) {
+	fake.endWatchMutex.Lock()
+	defer fake.endWatchMutex.Unlock()
 	fake.EndWatchStub = nil
 	fake.endWatchReturns = struct {
 		result1 error
@@ -270,6 +312,8 @@ func (fake *FakePin) EndWatchReturns(result1 error) {
 }
 
 func (fake *FakePin) EndWatchReturnsOnCall(i int, result1 error) {
+	fake.endWatchMutex.Lock()
+	defer fake.endWatchMutex.Unlock()
 	fake.EndWatchStub = nil
 	if fake.endWatchReturnsOnCall == nil {
 		fake.endWatchReturnsOnCall = make(map[int]struct {
@@ -286,15 +330,16 @@ func (fake *FakePin) Get() (bool, error) {
 	ret, specificReturn := fake.getReturnsOnCall[len(fake.getArgsForCall)]
 	fake.getArgsForCall = append(fake.getArgsForCall, struct {
 	}{})
+	stub := fake.GetStub
+	fakeReturns := fake.getReturns
 	fake.recordInvocation("Get", []interface{}{})
 	fake.getMutex.Unlock()
-	if fake.GetStub != nil {
-		return fake.GetStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.getReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -304,7 +349,15 @@ func (fake *FakePin) GetCallCount() int {
 	return len(fake.getArgsForCall)
 }
 
+func (fake *FakePin) GetCalls(stub func() (bool, error)) {
+	fake.getMutex.Lock()
+	defer fake.getMutex.Unlock()
+	fake.GetStub = stub
+}
+
 func (fake *FakePin) GetReturns(result1 bool, result2 error) {
+	fake.getMutex.Lock()
+	defer fake.getMutex.Unlock()
 	fake.GetStub = nil
 	fake.getReturns = struct {
 		result1 bool
@@ -313,6 +366,8 @@ func (fake *FakePin) GetReturns(result1 bool, result2 error) {
 }
 
 func (fake *FakePin) GetReturnsOnCall(i int, result1 bool, result2 error) {
+	fake.getMutex.Lock()
+	defer fake.getMutex.Unlock()
 	fake.GetStub = nil
 	if fake.getReturnsOnCall == nil {
 		fake.getReturnsOnCall = make(map[int]struct {
@@ -331,15 +386,16 @@ func (fake *FakePin) Mode() (gpio.Mode, error) {
 	ret, specificReturn := fake.modeReturnsOnCall[len(fake.modeArgsForCall)]
 	fake.modeArgsForCall = append(fake.modeArgsForCall, struct {
 	}{})
+	stub := fake.ModeStub
+	fakeReturns := fake.modeReturns
 	fake.recordInvocation("Mode", []interface{}{})
 	fake.modeMutex.Unlock()
-	if fake.ModeStub != nil {
-		return fake.ModeStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.modeReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -349,7 +405,15 @@ func (fake *FakePin) ModeCallCount() int {
 	return len(fake.modeArgsForCall)
 }
 
+func (fake *FakePin) ModeCalls(stub func() (gpio.Mode, error)) {
+	fake.modeMutex.Lock()
+	defer fake.modeMutex.Unlock()
+	fake.ModeStub = stub
+}
+
 func (fake *FakePin) ModeReturns(result1 gpio.Mode, result2 error) {
+	fake.modeMutex.Lock()
+	defer fake.modeMutex.Unlock()
 	fake.ModeStub = nil
 	fake.modeReturns = struct {
 		result1 gpio.Mode
@@ -358,6 +422,8 @@ func (fake *FakePin) ModeReturns(result1 gpio.Mode, result2 error) {
 }
 
 func (fake *FakePin) ModeReturnsOnCall(i int, result1 gpio.Mode, result2 error) {
+	fake.modeMutex.Lock()
+	defer fake.modeMutex.Unlock()
 	fake.ModeStub = nil
 	if fake.modeReturnsOnCall == nil {
 		fake.modeReturnsOnCall = make(map[int]struct {
@@ -376,15 +442,16 @@ func (fake *FakePin) Set() error {
 	ret, specificReturn := fake.setReturnsOnCall[len(fake.setArgsForCall)]
 	fake.setArgsForCall = append(fake.setArgsForCall, struct {
 	}{})
+	stub := fake.SetStub
+	fakeReturns := fake.setReturns
 	fake.recordInvocation("Set", []interface{}{})
 	fake.setMutex.Unlock()
-	if fake.SetStub != nil {
-		return fake.SetStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.setReturns
 	return fakeReturns.result1
 }
 
@@ -394,7 +461,15 @@ func (fake *FakePin) SetCallCount() int {
 	return len(fake.setArgsForCall)
 }
 
+func (fake *FakePin) SetCalls(stub func() error) {
+	fake.setMutex.Lock()
+	defer fake.setMutex.Unlock()
+	fake.SetStub = stub
+}
+
 func (fake *FakePin) SetReturns(result1 error) {
+	fake.setMutex.Lock()
+	defer fake.setMutex.Unlock()
 	fake.SetStub = nil
 	fake.setReturns = struct {
 		result1 error
@@ -402,6 +477,8 @@ func (fake *FakePin) SetReturns(result1 error) {
 }
 
 func (fake *FakePin) SetReturnsOnCall(i int, result1 error) {
+	fake.setMutex.Lock()
+	defer fake.setMutex.Unlock()
 	fake.SetStub = nil
 	if fake.setReturnsOnCall == nil {
 		fake.setReturnsOnCall = make(map[int]struct {
@@ -419,15 +496,16 @@ func (fake *FakePin) SetMode(arg1 gpio.Mode) error {
 	fake.setModeArgsForCall = append(fake.setModeArgsForCall, struct {
 		arg1 gpio.Mode
 	}{arg1})
+	stub := fake.SetModeStub
+	fakeReturns := fake.setModeReturns
 	fake.recordInvocation("SetMode", []interface{}{arg1})
 	fake.setModeMutex.Unlock()
-	if fake.SetModeStub != nil {
-		return fake.SetModeStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.setModeReturns
 	return fakeReturns.result1
 }
 
@@ -435,6 +513,12 @@ func (fake *FakePin) SetModeCallCount() int {
 	fake.setModeMutex.RLock()
 	defer fake.setModeMutex.RUnlock()
 	return len(fake.setModeArgsForCall)
+}
+
+func (fake *FakePin) SetModeCalls(stub func(gpio.Mode) error) {
+	fake.setModeMutex.Lock()
+	defer fake.setModeMutex.Unlock()
+	fake.SetModeStub = stub
 }
 
 func (fake *FakePin) SetModeArgsForCall(i int) gpio.Mode {
@@ -445,6 +529,8 @@ func (fake *FakePin) SetModeArgsForCall(i int) gpio.Mode {
 }
 
 func (fake *FakePin) SetModeReturns(result1 error) {
+	fake.setModeMutex.Lock()
+	defer fake.setModeMutex.Unlock()
 	fake.SetModeStub = nil
 	fake.setModeReturns = struct {
 		result1 error
@@ -452,6 +538,8 @@ func (fake *FakePin) SetModeReturns(result1 error) {
 }
 
 func (fake *FakePin) SetModeReturnsOnCall(i int, result1 error) {
+	fake.setModeMutex.Lock()
+	defer fake.setModeMutex.Unlock()
 	fake.SetModeStub = nil
 	if fake.setModeReturnsOnCall == nil {
 		fake.setModeReturnsOnCall = make(map[int]struct {
@@ -468,9 +556,10 @@ func (fake *FakePin) Wait(arg1 bool) {
 	fake.waitArgsForCall = append(fake.waitArgsForCall, struct {
 		arg1 bool
 	}{arg1})
+	stub := fake.WaitStub
 	fake.recordInvocation("Wait", []interface{}{arg1})
 	fake.waitMutex.Unlock()
-	if fake.WaitStub != nil {
+	if stub != nil {
 		fake.WaitStub(arg1)
 	}
 }
@@ -479,6 +568,12 @@ func (fake *FakePin) WaitCallCount() int {
 	fake.waitMutex.RLock()
 	defer fake.waitMutex.RUnlock()
 	return len(fake.waitArgsForCall)
+}
+
+func (fake *FakePin) WaitCalls(stub func(bool)) {
+	fake.waitMutex.Lock()
+	defer fake.waitMutex.Unlock()
+	fake.WaitStub = stub
 }
 
 func (fake *FakePin) WaitArgsForCall(i int) bool {

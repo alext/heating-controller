@@ -9,7 +9,7 @@ import (
 // Variable indirection to facilitate testing.
 var pinOpener = gpio.OpenPin
 
-//go:generate counterfeiter . Output
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Output
 type Output interface {
 	Id() string
 	Active() (bool, error)

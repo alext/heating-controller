@@ -14,7 +14,7 @@ var timeNow = time.Now
 
 var ErrInvalidJob = errors.New("invalid job")
 
-//go:generate counterfeiter . Scheduler
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Scheduler
 type Scheduler interface {
 	Start()
 	Stop()

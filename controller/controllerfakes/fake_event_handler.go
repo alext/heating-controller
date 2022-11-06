@@ -2,11 +2,11 @@
 package controllerfakes
 
 import (
-	sync "sync"
-	time "time"
+	"sync"
+	"time"
 
-	controller "github.com/alext/heating-controller/controller"
-	units "github.com/alext/heating-controller/units"
+	"github.com/alext/heating-controller/controller"
+	"github.com/alext/heating-controller/units"
 )
 
 type FakeEventHandler struct {
@@ -106,15 +106,16 @@ func (fake *FakeEventHandler) AddEvent(arg1 controller.Event) error {
 	fake.addEventArgsForCall = append(fake.addEventArgsForCall, struct {
 		arg1 controller.Event
 	}{arg1})
+	stub := fake.AddEventStub
+	fakeReturns := fake.addEventReturns
 	fake.recordInvocation("AddEvent", []interface{}{arg1})
 	fake.addEventMutex.Unlock()
-	if fake.AddEventStub != nil {
-		return fake.AddEventStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.addEventReturns
 	return fakeReturns.result1
 }
 
@@ -122,6 +123,12 @@ func (fake *FakeEventHandler) AddEventCallCount() int {
 	fake.addEventMutex.RLock()
 	defer fake.addEventMutex.RUnlock()
 	return len(fake.addEventArgsForCall)
+}
+
+func (fake *FakeEventHandler) AddEventCalls(stub func(controller.Event) error) {
+	fake.addEventMutex.Lock()
+	defer fake.addEventMutex.Unlock()
+	fake.AddEventStub = stub
 }
 
 func (fake *FakeEventHandler) AddEventArgsForCall(i int) controller.Event {
@@ -132,6 +139,8 @@ func (fake *FakeEventHandler) AddEventArgsForCall(i int) controller.Event {
 }
 
 func (fake *FakeEventHandler) AddEventReturns(result1 error) {
+	fake.addEventMutex.Lock()
+	defer fake.addEventMutex.Unlock()
 	fake.AddEventStub = nil
 	fake.addEventReturns = struct {
 		result1 error
@@ -139,6 +148,8 @@ func (fake *FakeEventHandler) AddEventReturns(result1 error) {
 }
 
 func (fake *FakeEventHandler) AddEventReturnsOnCall(i int, result1 error) {
+	fake.addEventMutex.Lock()
+	defer fake.addEventMutex.Unlock()
 	fake.AddEventStub = nil
 	if fake.addEventReturnsOnCall == nil {
 		fake.addEventReturnsOnCall = make(map[int]struct {
@@ -155,9 +166,10 @@ func (fake *FakeEventHandler) Boost(arg1 time.Duration) {
 	fake.boostArgsForCall = append(fake.boostArgsForCall, struct {
 		arg1 time.Duration
 	}{arg1})
+	stub := fake.BoostStub
 	fake.recordInvocation("Boost", []interface{}{arg1})
 	fake.boostMutex.Unlock()
-	if fake.BoostStub != nil {
+	if stub != nil {
 		fake.BoostStub(arg1)
 	}
 }
@@ -166,6 +178,12 @@ func (fake *FakeEventHandler) BoostCallCount() int {
 	fake.boostMutex.RLock()
 	defer fake.boostMutex.RUnlock()
 	return len(fake.boostArgsForCall)
+}
+
+func (fake *FakeEventHandler) BoostCalls(stub func(time.Duration)) {
+	fake.boostMutex.Lock()
+	defer fake.boostMutex.Unlock()
+	fake.BoostStub = stub
 }
 
 func (fake *FakeEventHandler) BoostArgsForCall(i int) time.Duration {
@@ -180,15 +198,16 @@ func (fake *FakeEventHandler) Boosted() bool {
 	ret, specificReturn := fake.boostedReturnsOnCall[len(fake.boostedArgsForCall)]
 	fake.boostedArgsForCall = append(fake.boostedArgsForCall, struct {
 	}{})
+	stub := fake.BoostedStub
+	fakeReturns := fake.boostedReturns
 	fake.recordInvocation("Boosted", []interface{}{})
 	fake.boostedMutex.Unlock()
-	if fake.BoostedStub != nil {
-		return fake.BoostedStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.boostedReturns
 	return fakeReturns.result1
 }
 
@@ -198,7 +217,15 @@ func (fake *FakeEventHandler) BoostedCallCount() int {
 	return len(fake.boostedArgsForCall)
 }
 
+func (fake *FakeEventHandler) BoostedCalls(stub func() bool) {
+	fake.boostedMutex.Lock()
+	defer fake.boostedMutex.Unlock()
+	fake.BoostedStub = stub
+}
+
 func (fake *FakeEventHandler) BoostedReturns(result1 bool) {
+	fake.boostedMutex.Lock()
+	defer fake.boostedMutex.Unlock()
 	fake.BoostedStub = nil
 	fake.boostedReturns = struct {
 		result1 bool
@@ -206,6 +233,8 @@ func (fake *FakeEventHandler) BoostedReturns(result1 bool) {
 }
 
 func (fake *FakeEventHandler) BoostedReturnsOnCall(i int, result1 bool) {
+	fake.boostedMutex.Lock()
+	defer fake.boostedMutex.Unlock()
 	fake.BoostedStub = nil
 	if fake.boostedReturnsOnCall == nil {
 		fake.boostedReturnsOnCall = make(map[int]struct {
@@ -221,9 +250,10 @@ func (fake *FakeEventHandler) CancelBoost() {
 	fake.cancelBoostMutex.Lock()
 	fake.cancelBoostArgsForCall = append(fake.cancelBoostArgsForCall, struct {
 	}{})
+	stub := fake.CancelBoostStub
 	fake.recordInvocation("CancelBoost", []interface{}{})
 	fake.cancelBoostMutex.Unlock()
-	if fake.CancelBoostStub != nil {
+	if stub != nil {
 		fake.CancelBoostStub()
 	}
 }
@@ -234,21 +264,28 @@ func (fake *FakeEventHandler) CancelBoostCallCount() int {
 	return len(fake.cancelBoostArgsForCall)
 }
 
+func (fake *FakeEventHandler) CancelBoostCalls(stub func()) {
+	fake.cancelBoostMutex.Lock()
+	defer fake.cancelBoostMutex.Unlock()
+	fake.CancelBoostStub = stub
+}
+
 func (fake *FakeEventHandler) FindEvent(arg1 units.TimeOfDay) (controller.Event, bool) {
 	fake.findEventMutex.Lock()
 	ret, specificReturn := fake.findEventReturnsOnCall[len(fake.findEventArgsForCall)]
 	fake.findEventArgsForCall = append(fake.findEventArgsForCall, struct {
 		arg1 units.TimeOfDay
 	}{arg1})
+	stub := fake.FindEventStub
+	fakeReturns := fake.findEventReturns
 	fake.recordInvocation("FindEvent", []interface{}{arg1})
 	fake.findEventMutex.Unlock()
-	if fake.FindEventStub != nil {
-		return fake.FindEventStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.findEventReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
@@ -256,6 +293,12 @@ func (fake *FakeEventHandler) FindEventCallCount() int {
 	fake.findEventMutex.RLock()
 	defer fake.findEventMutex.RUnlock()
 	return len(fake.findEventArgsForCall)
+}
+
+func (fake *FakeEventHandler) FindEventCalls(stub func(units.TimeOfDay) (controller.Event, bool)) {
+	fake.findEventMutex.Lock()
+	defer fake.findEventMutex.Unlock()
+	fake.FindEventStub = stub
 }
 
 func (fake *FakeEventHandler) FindEventArgsForCall(i int) units.TimeOfDay {
@@ -266,6 +309,8 @@ func (fake *FakeEventHandler) FindEventArgsForCall(i int) units.TimeOfDay {
 }
 
 func (fake *FakeEventHandler) FindEventReturns(result1 controller.Event, result2 bool) {
+	fake.findEventMutex.Lock()
+	defer fake.findEventMutex.Unlock()
 	fake.FindEventStub = nil
 	fake.findEventReturns = struct {
 		result1 controller.Event
@@ -274,6 +319,8 @@ func (fake *FakeEventHandler) FindEventReturns(result1 controller.Event, result2
 }
 
 func (fake *FakeEventHandler) FindEventReturnsOnCall(i int, result1 controller.Event, result2 bool) {
+	fake.findEventMutex.Lock()
+	defer fake.findEventMutex.Unlock()
 	fake.FindEventStub = nil
 	if fake.findEventReturnsOnCall == nil {
 		fake.findEventReturnsOnCall = make(map[int]struct {
@@ -292,15 +339,16 @@ func (fake *FakeEventHandler) NextEvent() *controller.Event {
 	ret, specificReturn := fake.nextEventReturnsOnCall[len(fake.nextEventArgsForCall)]
 	fake.nextEventArgsForCall = append(fake.nextEventArgsForCall, struct {
 	}{})
+	stub := fake.NextEventStub
+	fakeReturns := fake.nextEventReturns
 	fake.recordInvocation("NextEvent", []interface{}{})
 	fake.nextEventMutex.Unlock()
-	if fake.NextEventStub != nil {
-		return fake.NextEventStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.nextEventReturns
 	return fakeReturns.result1
 }
 
@@ -310,7 +358,15 @@ func (fake *FakeEventHandler) NextEventCallCount() int {
 	return len(fake.nextEventArgsForCall)
 }
 
+func (fake *FakeEventHandler) NextEventCalls(stub func() *controller.Event) {
+	fake.nextEventMutex.Lock()
+	defer fake.nextEventMutex.Unlock()
+	fake.NextEventStub = stub
+}
+
 func (fake *FakeEventHandler) NextEventReturns(result1 *controller.Event) {
+	fake.nextEventMutex.Lock()
+	defer fake.nextEventMutex.Unlock()
 	fake.NextEventStub = nil
 	fake.nextEventReturns = struct {
 		result1 *controller.Event
@@ -318,6 +374,8 @@ func (fake *FakeEventHandler) NextEventReturns(result1 *controller.Event) {
 }
 
 func (fake *FakeEventHandler) NextEventReturnsOnCall(i int, result1 *controller.Event) {
+	fake.nextEventMutex.Lock()
+	defer fake.nextEventMutex.Unlock()
 	fake.NextEventStub = nil
 	if fake.nextEventReturnsOnCall == nil {
 		fake.nextEventReturnsOnCall = make(map[int]struct {
@@ -334,15 +392,16 @@ func (fake *FakeEventHandler) ReadEvents() []controller.Event {
 	ret, specificReturn := fake.readEventsReturnsOnCall[len(fake.readEventsArgsForCall)]
 	fake.readEventsArgsForCall = append(fake.readEventsArgsForCall, struct {
 	}{})
+	stub := fake.ReadEventsStub
+	fakeReturns := fake.readEventsReturns
 	fake.recordInvocation("ReadEvents", []interface{}{})
 	fake.readEventsMutex.Unlock()
-	if fake.ReadEventsStub != nil {
-		return fake.ReadEventsStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.readEventsReturns
 	return fakeReturns.result1
 }
 
@@ -352,7 +411,15 @@ func (fake *FakeEventHandler) ReadEventsCallCount() int {
 	return len(fake.readEventsArgsForCall)
 }
 
+func (fake *FakeEventHandler) ReadEventsCalls(stub func() []controller.Event) {
+	fake.readEventsMutex.Lock()
+	defer fake.readEventsMutex.Unlock()
+	fake.ReadEventsStub = stub
+}
+
 func (fake *FakeEventHandler) ReadEventsReturns(result1 []controller.Event) {
+	fake.readEventsMutex.Lock()
+	defer fake.readEventsMutex.Unlock()
 	fake.ReadEventsStub = nil
 	fake.readEventsReturns = struct {
 		result1 []controller.Event
@@ -360,6 +427,8 @@ func (fake *FakeEventHandler) ReadEventsReturns(result1 []controller.Event) {
 }
 
 func (fake *FakeEventHandler) ReadEventsReturnsOnCall(i int, result1 []controller.Event) {
+	fake.readEventsMutex.Lock()
+	defer fake.readEventsMutex.Unlock()
 	fake.ReadEventsStub = nil
 	if fake.readEventsReturnsOnCall == nil {
 		fake.readEventsReturnsOnCall = make(map[int]struct {
@@ -377,15 +446,16 @@ func (fake *FakeEventHandler) RemoveEvent(arg1 units.TimeOfDay) error {
 	fake.removeEventArgsForCall = append(fake.removeEventArgsForCall, struct {
 		arg1 units.TimeOfDay
 	}{arg1})
+	stub := fake.RemoveEventStub
+	fakeReturns := fake.removeEventReturns
 	fake.recordInvocation("RemoveEvent", []interface{}{arg1})
 	fake.removeEventMutex.Unlock()
-	if fake.RemoveEventStub != nil {
-		return fake.RemoveEventStub(arg1)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.removeEventReturns
 	return fakeReturns.result1
 }
 
@@ -393,6 +463,12 @@ func (fake *FakeEventHandler) RemoveEventCallCount() int {
 	fake.removeEventMutex.RLock()
 	defer fake.removeEventMutex.RUnlock()
 	return len(fake.removeEventArgsForCall)
+}
+
+func (fake *FakeEventHandler) RemoveEventCalls(stub func(units.TimeOfDay) error) {
+	fake.removeEventMutex.Lock()
+	defer fake.removeEventMutex.Unlock()
+	fake.RemoveEventStub = stub
 }
 
 func (fake *FakeEventHandler) RemoveEventArgsForCall(i int) units.TimeOfDay {
@@ -403,6 +479,8 @@ func (fake *FakeEventHandler) RemoveEventArgsForCall(i int) units.TimeOfDay {
 }
 
 func (fake *FakeEventHandler) RemoveEventReturns(result1 error) {
+	fake.removeEventMutex.Lock()
+	defer fake.removeEventMutex.Unlock()
 	fake.RemoveEventStub = nil
 	fake.removeEventReturns = struct {
 		result1 error
@@ -410,6 +488,8 @@ func (fake *FakeEventHandler) RemoveEventReturns(result1 error) {
 }
 
 func (fake *FakeEventHandler) RemoveEventReturnsOnCall(i int, result1 error) {
+	fake.removeEventMutex.Lock()
+	defer fake.removeEventMutex.Unlock()
 	fake.RemoveEventStub = nil
 	if fake.removeEventReturnsOnCall == nil {
 		fake.removeEventReturnsOnCall = make(map[int]struct {
@@ -428,15 +508,16 @@ func (fake *FakeEventHandler) ReplaceEvent(arg1 units.TimeOfDay, arg2 controller
 		arg1 units.TimeOfDay
 		arg2 controller.Event
 	}{arg1, arg2})
+	stub := fake.ReplaceEventStub
+	fakeReturns := fake.replaceEventReturns
 	fake.recordInvocation("ReplaceEvent", []interface{}{arg1, arg2})
 	fake.replaceEventMutex.Unlock()
-	if fake.ReplaceEventStub != nil {
-		return fake.ReplaceEventStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.replaceEventReturns
 	return fakeReturns.result1
 }
 
@@ -444,6 +525,12 @@ func (fake *FakeEventHandler) ReplaceEventCallCount() int {
 	fake.replaceEventMutex.RLock()
 	defer fake.replaceEventMutex.RUnlock()
 	return len(fake.replaceEventArgsForCall)
+}
+
+func (fake *FakeEventHandler) ReplaceEventCalls(stub func(units.TimeOfDay, controller.Event) error) {
+	fake.replaceEventMutex.Lock()
+	defer fake.replaceEventMutex.Unlock()
+	fake.ReplaceEventStub = stub
 }
 
 func (fake *FakeEventHandler) ReplaceEventArgsForCall(i int) (units.TimeOfDay, controller.Event) {
@@ -454,6 +541,8 @@ func (fake *FakeEventHandler) ReplaceEventArgsForCall(i int) (units.TimeOfDay, c
 }
 
 func (fake *FakeEventHandler) ReplaceEventReturns(result1 error) {
+	fake.replaceEventMutex.Lock()
+	defer fake.replaceEventMutex.Unlock()
 	fake.ReplaceEventStub = nil
 	fake.replaceEventReturns = struct {
 		result1 error
@@ -461,6 +550,8 @@ func (fake *FakeEventHandler) ReplaceEventReturns(result1 error) {
 }
 
 func (fake *FakeEventHandler) ReplaceEventReturnsOnCall(i int, result1 error) {
+	fake.replaceEventMutex.Lock()
+	defer fake.replaceEventMutex.Unlock()
 	fake.ReplaceEventStub = nil
 	if fake.replaceEventReturnsOnCall == nil {
 		fake.replaceEventReturnsOnCall = make(map[int]struct {

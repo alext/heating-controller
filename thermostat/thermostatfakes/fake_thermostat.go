@@ -2,10 +2,10 @@
 package thermostatfakes
 
 import (
-	sync "sync"
+	"sync"
 
-	thermostat "github.com/alext/heating-controller/thermostat"
-	units "github.com/alext/heating-controller/units"
+	"github.com/alext/heating-controller/thermostat"
+	"github.com/alext/heating-controller/units"
 )
 
 type FakeThermostat struct {
@@ -46,9 +46,10 @@ func (fake *FakeThermostat) Close() {
 	fake.closeMutex.Lock()
 	fake.closeArgsForCall = append(fake.closeArgsForCall, struct {
 	}{})
+	stub := fake.CloseStub
 	fake.recordInvocation("Close", []interface{}{})
 	fake.closeMutex.Unlock()
-	if fake.CloseStub != nil {
+	if stub != nil {
 		fake.CloseStub()
 	}
 }
@@ -59,20 +60,27 @@ func (fake *FakeThermostat) CloseCallCount() int {
 	return len(fake.closeArgsForCall)
 }
 
+func (fake *FakeThermostat) CloseCalls(stub func()) {
+	fake.closeMutex.Lock()
+	defer fake.closeMutex.Unlock()
+	fake.CloseStub = stub
+}
+
 func (fake *FakeThermostat) Current() units.Temperature {
 	fake.currentMutex.Lock()
 	ret, specificReturn := fake.currentReturnsOnCall[len(fake.currentArgsForCall)]
 	fake.currentArgsForCall = append(fake.currentArgsForCall, struct {
 	}{})
+	stub := fake.CurrentStub
+	fakeReturns := fake.currentReturns
 	fake.recordInvocation("Current", []interface{}{})
 	fake.currentMutex.Unlock()
-	if fake.CurrentStub != nil {
-		return fake.CurrentStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.currentReturns
 	return fakeReturns.result1
 }
 
@@ -82,7 +90,15 @@ func (fake *FakeThermostat) CurrentCallCount() int {
 	return len(fake.currentArgsForCall)
 }
 
+func (fake *FakeThermostat) CurrentCalls(stub func() units.Temperature) {
+	fake.currentMutex.Lock()
+	defer fake.currentMutex.Unlock()
+	fake.CurrentStub = stub
+}
+
 func (fake *FakeThermostat) CurrentReturns(result1 units.Temperature) {
+	fake.currentMutex.Lock()
+	defer fake.currentMutex.Unlock()
 	fake.CurrentStub = nil
 	fake.currentReturns = struct {
 		result1 units.Temperature
@@ -90,6 +106,8 @@ func (fake *FakeThermostat) CurrentReturns(result1 units.Temperature) {
 }
 
 func (fake *FakeThermostat) CurrentReturnsOnCall(i int, result1 units.Temperature) {
+	fake.currentMutex.Lock()
+	defer fake.currentMutex.Unlock()
 	fake.CurrentStub = nil
 	if fake.currentReturnsOnCall == nil {
 		fake.currentReturnsOnCall = make(map[int]struct {
@@ -106,9 +124,10 @@ func (fake *FakeThermostat) Set(arg1 units.Temperature) {
 	fake.setArgsForCall = append(fake.setArgsForCall, struct {
 		arg1 units.Temperature
 	}{arg1})
+	stub := fake.SetStub
 	fake.recordInvocation("Set", []interface{}{arg1})
 	fake.setMutex.Unlock()
-	if fake.SetStub != nil {
+	if stub != nil {
 		fake.SetStub(arg1)
 	}
 }
@@ -117,6 +136,12 @@ func (fake *FakeThermostat) SetCallCount() int {
 	fake.setMutex.RLock()
 	defer fake.setMutex.RUnlock()
 	return len(fake.setArgsForCall)
+}
+
+func (fake *FakeThermostat) SetCalls(stub func(units.Temperature)) {
+	fake.setMutex.Lock()
+	defer fake.setMutex.Unlock()
+	fake.SetStub = stub
 }
 
 func (fake *FakeThermostat) SetArgsForCall(i int) units.Temperature {
@@ -131,15 +156,16 @@ func (fake *FakeThermostat) Target() units.Temperature {
 	ret, specificReturn := fake.targetReturnsOnCall[len(fake.targetArgsForCall)]
 	fake.targetArgsForCall = append(fake.targetArgsForCall, struct {
 	}{})
+	stub := fake.TargetStub
+	fakeReturns := fake.targetReturns
 	fake.recordInvocation("Target", []interface{}{})
 	fake.targetMutex.Unlock()
-	if fake.TargetStub != nil {
-		return fake.TargetStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.targetReturns
 	return fakeReturns.result1
 }
 
@@ -149,7 +175,15 @@ func (fake *FakeThermostat) TargetCallCount() int {
 	return len(fake.targetArgsForCall)
 }
 
+func (fake *FakeThermostat) TargetCalls(stub func() units.Temperature) {
+	fake.targetMutex.Lock()
+	defer fake.targetMutex.Unlock()
+	fake.TargetStub = stub
+}
+
 func (fake *FakeThermostat) TargetReturns(result1 units.Temperature) {
+	fake.targetMutex.Lock()
+	defer fake.targetMutex.Unlock()
 	fake.TargetStub = nil
 	fake.targetReturns = struct {
 		result1 units.Temperature
@@ -157,6 +191,8 @@ func (fake *FakeThermostat) TargetReturns(result1 units.Temperature) {
 }
 
 func (fake *FakeThermostat) TargetReturnsOnCall(i int, result1 units.Temperature) {
+	fake.targetMutex.Lock()
+	defer fake.targetMutex.Unlock()
 	fake.TargetStub = nil
 	if fake.targetReturnsOnCall == nil {
 		fake.targetReturnsOnCall = make(map[int]struct {

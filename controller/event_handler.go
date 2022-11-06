@@ -14,7 +14,7 @@ var (
 	ErrEventNotFound = errors.New("event not found")
 )
 
-//go:generate counterfeiter . EventHandler
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . EventHandler
 type EventHandler interface {
 	AddEvent(Event) error
 	ReplaceEvent(units.TimeOfDay, Event) error

@@ -7,8 +7,7 @@ import (
 	"github.com/alext/heating-controller/units"
 )
 
-// golang.org/x/tools/cmd/stringer
-//go:generate stringer -type=Action
+//go:generate go run golang.org/x/tools/cmd/stringer -type=Action
 
 type Action uint8
 
