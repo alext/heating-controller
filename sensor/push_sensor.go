@@ -6,18 +6,14 @@ import (
 	"github.com/alext/heating-controller/units"
 )
 
-const initialValue = 21000
-
 type pushSensor struct {
 	baseSensor
 }
 
 func NewPushSensor(name, id string) SettableSensor {
-	ps := &pushSensor{
+	return &pushSensor{
 		baseSensor: newBaseSensor(name, id),
 	}
-	ps.baseSensor.temp = initialValue
-	return ps
 }
 
 func (s *pushSensor) Close() {

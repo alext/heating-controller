@@ -8,6 +8,8 @@ import (
 	"github.com/alext/heating-controller/units"
 )
 
+const initialValue = 21_000
+
 type baseSensor struct {
 	name          string
 	id            string
@@ -21,6 +23,7 @@ func newBaseSensor(name, id string) baseSensor {
 	s := baseSensor{
 		name: name,
 		id:   id,
+		temp: initialValue,
 	}
 	return s
 }
