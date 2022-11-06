@@ -21,6 +21,7 @@ type MQTTConfig struct {
 	Port     int    `json:"port"`
 	Username string `json:"username"`
 	Password string `json:"password"`
+	ClientID string `json:"client_id"`
 }
 
 type SensorConfig struct {

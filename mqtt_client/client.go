@@ -19,7 +19,9 @@ func New(cfg *config.MQTTConfig) (*Client, error) {
 
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(fmt.Sprintf("tcp://%s:%d", cfg.Host, cfg.Port))
-	opts.SetClientID("heating-controller")
+	if cfg.ClientID != "" {
+		opts.SetClientID(cfg.ClientID)
+	}
 	opts.SetOrderMatters(false)
 	if cfg.Username != "" {
 		opts.SetUsername(cfg.Username)
